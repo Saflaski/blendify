@@ -3,7 +3,6 @@ package auth
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"net"
 	"net/url"
 	"os"
 	"sync"
@@ -25,14 +24,14 @@ func getOAuthLoginURL(userid string, tx *Tx) string {
 
 	q := url.Values{}
 	q.Set("api_key", os.Getenv("LASTFM_API_KEY"))
-	q.Set("state", tx.StateVerifier)
+	q.Set("sid", tx.SessIDVerifier)
 	return LASTFM_BASE_AUTH_API
 }
 
-func getInitLoginURL(api_key string, stateVerifier string) string {
+func getInitLoginURL(api_key string, sessIDVerifier string) string {
 	q := url.Values{}
 	q.Set("api_key", api_key)
-	q.Set("cb", string(LASTFM_CALLBACK+"?state="+stateVerifier))
+	q.Set("cb", string(LASTFM_CALLBACK+"?sid="+sessIDVerifier))
 
 	requestURL := LASTFM_BASE_AUTH_API + "?" + q.Encode()
 	glog.Info(requestURL)
@@ -52,7 +51,7 @@ func getSessionAPISignature(api_key string, token string) string {
 		return signature
 	} else {
 		glog.Fatal("MD5 fail")
-		return ""
+		panic("")
 	}
 
 }
@@ -70,9 +69,9 @@ func getNewWebSessionURL(api_key string, token string) (string, url.Values) {
 }
 
 type Tx struct {
-	StateVerifier string
-	CreatedAt     time.Time
-	IP            string
+	SessIDVerifier string
+	CreatedAt      time.Time
+	IP             string
 }
 
 type memStore struct {
@@ -80,12 +79,12 @@ type memStore struct {
 	m  map[string]Tx //Map for mapping UUID to Tx?
 }
 
-func generateNewTx(userIP net.IP) *Tx {
-	stateVerifier := uuid.New().String()
+func generateNewTx(userIP string) *Tx {
+	sessIDVerifier := uuid.New().String()
 	tx := Tx{
-		StateVerifier: stateVerifier,
-		CreatedAt:     time.Now(),
-		IP:            userIP.String(),
+		SessIDVerifier: sessIDVerifier,
+		CreatedAt:      time.Now(),
+		IP:             userIP,
 	}
 
 	return &tx //Return a pointer to tx

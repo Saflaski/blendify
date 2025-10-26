@@ -6,5 +6,4 @@ require (
 	github.com/golang/glog v1.2.5
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
-	golang.org/x/oauth2 v0.32.0
 )

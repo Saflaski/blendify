@@ -4,7 +4,7 @@ import Navbar from './Navbar';
 
 function App() {
 
-  // const handleLastFMClick = useLoginClick("lastFM");
+  
 
   return (
     <div className=''>
@@ -29,10 +29,6 @@ function App() {
 }
 
 
-function navigateTo(path) {
-  // This function would handle navigation logic, e.g., using React Router
-  console.log(`Navigating to ${path}`);
-}
 
 
 function loginButton2(platform) {
@@ -41,6 +37,7 @@ function loginButton2(platform) {
       src: './src/assets/lastfm.svg',
       alt: 'LastFM Logo',
       wrapperClass: 'mx-5 my-4',
+      handleFunc: handleLastFMClick
     },
     apple: {
       src: './src/assets/apple2.svg',
@@ -72,6 +69,10 @@ function loginButton2(platform) {
 
 }
 
+function handleLastFMClick() {
+  window.location.href = "http://127.0.0.1:3000/oauth/lastfm/login";
+}
+
 function Title() {
   return (
     <div className="w-full max-w-screen-sm px-4 mx-auto flex flex-col items-center mb-8  text-center">
@@ -86,59 +87,59 @@ function Title() {
   );
 }
 
-function loginButton(platform) {
-  switch (platform) {
-    case 'spotify':
-      return (
+// function loginButton(platform) {
+//   switch (platform) {
+//     case 'spotify':
+//       return (
 
-        <button
-          className="login-button-box "
-        >
-          <div className="mx-5 my-4">
-          <img
-            src=".\src\assets\lastfm.svg"
-            alt="LastFM Logo"
-            className=" object-center my-40 image-render-pixel bg-white "
-          />
-        </div>
-        </button>
+//         <button
+//           className="login-button-box "
+//         >
+//           <div className="mx-5 my-4">
+//           <img
+//             src=".\src\assets\lastfm.svg"
+//             alt="LastFM Logo"
+//             className=" object-center my-40 image-render-pixel bg-white "
+//           />
+//         </div>
+//         </button>
 
-      );
+//       );
 
-    case 'apple':
-      return (
+//     case 'apple':
+//       return (
 
-        <button
-          className="login-button-box">
-          <div className="mx-1">
-          <img
-            src=".\src\assets\apple2.svg"
-            alt="LastFM Logo"
-            className=" object-center my-40 image-render-pixel bg-white "
-          />
-        </div>
+//         <button
+//           className="login-button-box">
+//           <div className="mx-1">
+//           <img
+//             src=".\src\assets\apple2.svg"
+//             alt="LastFM Logo"
+//             className=" object-center my-40 image-render-pixel bg-white "
+//           />
+//         </div>
 
-        </button>
+//         </button>
 
-      );
-    case 'tidal':
-      return (
+//       );
+//     case 'tidal':
+//       return (
 
-        <button
-          className="login-button-box">
-          <div className="mx-1">
-          <img
-            src=".\src\assets\tidal.svg"
-            alt="Tidal Logo"
-            className=" object-center image-render-pixel bg-white "
-          /></div>
-        </button>
+//         <button
+//           className="login-button-box">
+//           <div className="mx-1">
+//           <img
+//             src=".\src\assets\tidal.svg"
+//             alt="Tidal Logo"
+//             className=" object-center image-render-pixel bg-white "
+//           /></div>
+//         </button>
 
-      );
-    default:
-      return <button className="btn btn-default">Login</button>;
-  }
-}
+//       );
+//     default:
+//       return <button className="btn btn-default">Login</button>;
+//   }
+// }
 
 
 
