@@ -1,6 +1,5 @@
 
-import './src/assets/styles/App.css'
-import Navbar from './Navbar';
+import '/src/assets/styles/App.css'
 
 function App() {
 
@@ -18,9 +17,9 @@ function App() {
         <Title />
         {/* New section for login buttons */}
         <div className="flex justify-center flex-wrap gap-4"> {/* Using flex-wrap and gap for responsiveness and spacing */}
-          {loginButton2('spotify')}
-          {loginButton2('apple')}
-          {loginButton2('tidal')}
+          {loginButton('spotify')}
+          {loginButton('apple')}
+          {loginButton('tidal')}
         </div>
       </div>
       </div>
@@ -31,21 +30,21 @@ function App() {
 
 
 
-function loginButton2(platform) {
+function loginButton(platform) {
   const platforms = {
      spotify: {
-      src: './src/assets/lastfm.svg',
+      src: './src//assets/images/lastfm.svg',
       alt: 'LastFM Logo',
-      wrapperClass: 'mx-5 my-4',
+      wrapperClass: 'mx-8',
       handleFunc: handleLastFMClick
     },
     apple: {
-      src: './src/assets/apple2.svg',
+      src: './src//assets/images/apple2.svg',
       alt: 'Apple Logo',
       wrapperClass: 'mx-1',
     },
     tidal: {
-      src: './src/assets/tidal.svg',
+      src: './src//assets/images/tidal.svg',
       alt: 'Tidal Logo',
       wrapperClass: 'mx-1',
     },
@@ -76,15 +75,17 @@ function handleLastFMClick() {
 
 function Title() {
   return (
-    <div className="w-full max-w-screen-sm px-4 mx-auto flex flex-col items-center mb-8  text-center">
-      <h1 className=" text-gray-800 mb-2 break-words">
+    <div className="">
+      <h1 className="w-full max-w-screen-sm px-4 mx-auto flex flex-col items-center  text-center text-gray-800 mb-2">
         Blendify
       </h1>
-
-      <p className="subheading break-words">
-        Blend your music the way you know it. But cross-platform and better.
+      <p className='subheading text-gray-500 text-center break-words'>
+        Blend your music tastes and more
       </p>
+
+      
     </div>
+    
   );
 }
 
