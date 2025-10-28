@@ -1,11 +1,9 @@
-
 import '/src/assets/styles/App.css'
 
-function App() {
+export function Login() {
 
-  
 
-  return (
+    return (
     <div className=''>
       {/* <Navbar /> */}
     <div className="responsive-position">
@@ -89,5 +87,3 @@ function Title() {
   );
 }
 
-
-export default App
