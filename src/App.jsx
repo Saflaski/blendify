@@ -34,18 +34,18 @@ function App() {
 function loginButton2(platform) {
   const platforms = {
      spotify: {
-      src: './assets/lastfm.svg',
+      src: './src/assets/lastfm.svg',
       alt: 'LastFM Logo',
       wrapperClass: 'mx-5 my-4',
       handleFunc: handleLastFMClick
     },
     apple: {
-      src: './assets/apple2.svg',
+      src: './src/assets/apple2.svg',
       alt: 'Apple Logo',
       wrapperClass: 'mx-1',
     },
     tidal: {
-      src: './assets/tidal.svg',
+      src: './src/assets/tidal.svg',
       alt: 'Tidal Logo',
       wrapperClass: 'mx-1',
     },
