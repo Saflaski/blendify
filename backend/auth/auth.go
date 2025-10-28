@@ -44,7 +44,7 @@ func GetClientCookie(val string) *http.Cookie {
 	cookieReturn := http.Cookie{
 		Name:  "sid",
 		Value: val,
-		Path:  "127.0.0.1:5174/",
+		Path:  "/",
 		// MaxAge:   0,
 		Expires:  time.Now().Add(24 * time.Hour), //Cookie expires in 24 hours
 		Secure:   secure,

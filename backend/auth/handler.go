@@ -2,6 +2,7 @@ package auth
 
 import (
 	"backend-lastfm/utility"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -14,7 +15,7 @@ import (
 
 var sessionIDTokenMap map[string]string = make(map[string]string)
 var SIDCOOKIE = "sid"
-var FRONTEND_ROOT_URL = "127.0.0.1:5174/"
+var FRONTEND_ROOT_URL = "http://127.0.0.1:5173/"
 
 func handleRoot(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, FRONTEND_ROOT_URL+"/login", http.StatusTemporaryRedirect)
@@ -29,7 +30,7 @@ func handleLoginFlow(w http.ResponseWriter, r *http.Request) {
 
 	if resp, ok := checkCookieValidity(r); ok {
 		//Redirect to /Home
-		http.Redirect(w, r, "http://127.0.0.1:5174/home", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "http://127.0.0.1:5173/home", http.StatusTemporaryRedirect)
 
 	} else {
 		glog.Warning(resp)
@@ -46,6 +47,13 @@ func handleLoginFlow(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+// func handleCookieValidation(w http.ResponseWriter, r *http.Request) {
+// 	if resp, ok := checkCookieValidity(r); ok {
+// 		//Redirect to /Home
+
+// 	}
+// }
 
 func checkCookieValidity(r *http.Request) (string, bool) {
 
@@ -132,10 +140,45 @@ func handleCallbackFlow(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, cookieToBeSet)
 
 	//Perm redirect back to the original frontend.
-	http.Redirect(w, r, "http://127.0.0.1:5174/home", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, "http://127.0.0.1:5173/home", http.StatusTemporaryRedirect)
 
 	glog.Info("End of authentication flow")
 
+}
+
+// CORS MIDDLWARE
+func cors(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Origin") == "http://127.0.0.1:5173" || true {
+			w.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:5173")
+			w.Header().Set("Vary", "Origin")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			w.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		}
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func handleAPIValidation(w http.ResponseWriter, r *http.Request) {
+
+	if resp, ok := checkCookieValidity(r); ok {
+		//Redirect to /Home
+		// http.Redirect(w, r, "http://127.0.0.1:5173/home", http.StatusTemporaryRedirect)
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, "Cookie Valid")
+		glog.Info(resp)
+	} else {
+		glog.Info(resp)
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, "Cookie Invalid")
+	}
 }
 
 func ServerStart() {
@@ -144,9 +187,12 @@ func ServerStart() {
 	glog.Info("Backend started with ClientID", os.Getenv("LASTFM_ID"))
 
 	// http.HandleFunc("/", handleRoot)
-	http.HandleFunc("/oauth/lastfm/login", handleLoginFlow)
-	http.HandleFunc("/oauth/lastfm/callback", handleCallbackFlow)
+	mux := http.NewServeMux()
+	handler := cors(mux)
+	mux.HandleFunc("/api/validate/", handleAPIValidation)
+	mux.HandleFunc("/oauth/lastfm/login", handleLoginFlow)
+	mux.HandleFunc("/oauth/lastfm/callback", handleCallbackFlow)
 
-	http.ListenAndServe(":3000", nil) //127.0.0.1:3000
+	http.ListenAndServe(":3000", handler) //127.0.0.1:3000
 
 }

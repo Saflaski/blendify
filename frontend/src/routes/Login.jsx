@@ -31,18 +31,18 @@ export function Login() {
 function loginButton(platform) {
   const platforms = {
      spotify: {
-      src: './src//assets/images/lastfm.svg',
+      src: '/src//assets/images/lastfm.svg',
       alt: 'LastFM Logo',
       wrapperClass: 'mx-8',
       handleFunc: handleLastFMClick
     },
     apple: {
-      src: './src//assets/images/apple2.svg',
+      src: '/src//assets/images/apple2.svg',
       alt: 'Apple Logo',
       wrapperClass: 'mx-1',
     },
     tidal: {
-      src: './src//assets/images/tidal.svg',
+      src: '/src//assets/images/tidal.svg',
       alt: 'Tidal Logo',
       wrapperClass: 'mx-1',
     },
@@ -67,7 +67,7 @@ function loginButton(platform) {
 }
 
 function handleLastFMClick() {
-  const returnTo = encodeURIComponent('http://127.0.0.1:5174/home');
+  const returnTo = encodeURIComponent('http://127.0.0.1:5173/home');
   window.location.href = `http://127.0.0.1:3000/oauth/lastfm/login?return_to=${returnTo}`;
 }
 
