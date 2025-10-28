@@ -14,8 +14,11 @@ import (
 
 var sessionIDTokenMap map[string]string = make(map[string]string)
 var SIDCOOKIE = "sid"
+var FRONTEND_ROOT_URL = "127.0.0.1:5174/"
 
-var FRONTEND_ROOT_URL = "127.0.0.1:5174:/"
+func handleRoot(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, FRONTEND_ROOT_URL+"/login", http.StatusTemporaryRedirect)
+}
 
 // When the user hits /login by virtue of not being logged in already (eg. no token found on db)
 // or the user is whimsical and explicitly goes to /login, this function will initiate the token
@@ -26,19 +29,20 @@ func handleLoginFlow(w http.ResponseWriter, r *http.Request) {
 
 	if resp, ok := checkCookieValidity(r); ok {
 		//Redirect to /Home
-		http.Redirect(w, r, FRONTEND_ROOT_URL+"/home", http.StatusFound)
+		http.Redirect(w, r, "http://127.0.0.1:5174/home", http.StatusTemporaryRedirect)
 
 	} else {
 		glog.Warning(resp)
-
 		//Code bit to start a new login flow.
-		//TODO set cookie later
 		sessionID := *generateNewTx(r.RemoteAddr)
 		glog.Infof("Recorded Login \n\tFrom IP: %s\n\tAssigned SessionID: %s\n\tCreated at: %s\n",
-			sessionID.IP, sessionID.SessIDVerifier, sessionID.CreatedAt)
+			sessionID.IP,
+			sessionID.SessIDVerifier,
+			sessionID.CreatedAt)
 		url := getInitLoginURL(os.Getenv("LASTFM_API_KEY"), sessionID.SessIDVerifier)
 		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
-		glog.Infof("Redirected URL: %s", url)
+
+		// glog.Infof("Redirected URL: %s", url)
 	}
 
 }
@@ -62,7 +66,7 @@ func checkCookieValidity(r *http.Request) (string, bool) {
 
 	_, ok := sessionIDTokenMap[cookie.Value]
 	if !ok {
-		return "SID not found in map", false
+		return string("SID not found in map. Given value: " + cookie.Value), false
 	}
 
 	return cookie.Value, true
@@ -123,8 +127,12 @@ func handleCallbackFlow(w http.ResponseWriter, r *http.Request) {
 	//Assigning the mapping for recording users for later re-auth between frontend and backend
 	sessionIDTokenMap[sessionID] = sessionKey
 
-	//TODO Set cookie
-	//TODO Perm redirect back to the original frontend.
+	//Set cookie
+	cookieToBeSet := GetClientCookie(sessionID)
+	http.SetCookie(w, cookieToBeSet)
+
+	//Perm redirect back to the original frontend.
+	http.Redirect(w, r, "http://127.0.0.1:5174/home", http.StatusTemporaryRedirect)
 
 	glog.Info("End of authentication flow")
 
@@ -135,6 +143,7 @@ func ServerStart() {
 
 	glog.Info("Backend started with ClientID", os.Getenv("LASTFM_ID"))
 
+	// http.HandleFunc("/", handleRoot)
 	http.HandleFunc("/oauth/lastfm/login", handleLoginFlow)
 	http.HandleFunc("/oauth/lastfm/callback", handleCallbackFlow)
 

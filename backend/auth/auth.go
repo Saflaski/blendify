@@ -3,6 +3,7 @@ package auth
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"net/http"
 	"net/url"
 	"os"
 	"sync"
@@ -17,15 +18,40 @@ type ClientKey string
 
 var LASTFM_BASE_AUTH_API = "http://www.last.fm/api/auth/"
 var LASTFM_ROOT_API = "http://ws.audioscrobbler.com/2.0/"
+
 var HOME_URL = "http://127.0.0.1:3000/"
 var LASTFM_CALLBACK = HOME_URL + "oauth/lastfm/callback"
 
-func getOAuthLoginURL(userid string, tx *Tx) string {
+type clientCookie struct {
+	Name  string
+	Value string
 
-	q := url.Values{}
-	q.Set("api_key", os.Getenv("LASTFM_API_KEY"))
-	q.Set("sid", tx.SessIDVerifier)
-	return LASTFM_BASE_AUTH_API
+	Path       string
+	Expires    time.Time
+	Rawexpires string
+
+	MaxAge   int
+	Secure   bool
+	HttpOnly bool
+	Samesite http.SameSite
+	Raw      string
+	Unparsed []string
+}
+
+func GetClientCookie(val string) *http.Cookie {
+
+	secure := false //TODO SET TRUE FOR PROD
+	cookieReturn := http.Cookie{
+		Name:  "sid",
+		Value: val,
+		Path:  "127.0.0.1:5174/",
+		// MaxAge:   0,
+		Expires:  time.Now().Add(24 * time.Hour), //Cookie expires in 24 hours
+		Secure:   secure,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	return &cookieReturn
 }
 
 func getInitLoginURL(api_key string, sessIDVerifier string) string {
@@ -34,7 +60,7 @@ func getInitLoginURL(api_key string, sessIDVerifier string) string {
 	q.Set("cb", string(LASTFM_CALLBACK+"?sid="+sessIDVerifier))
 
 	requestURL := LASTFM_BASE_AUTH_API + "?" + q.Encode()
-	glog.Info(requestURL)
+	// glog.Info(requestURL)
 	return requestURL
 }
 

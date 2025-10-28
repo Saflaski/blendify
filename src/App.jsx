@@ -54,7 +54,7 @@ function loginButton2(platform) {
   const config = platforms[platform];
 
   return (
-      <button className="login-button-box">
+      <button className="login-button-box" onClick={config.handleFunc}>
         <div className={config.wrapperClass}>
           <img 
               src={config.src}
@@ -70,7 +70,8 @@ function loginButton2(platform) {
 }
 
 function handleLastFMClick() {
-  window.location.href = "http://127.0.0.1:3000/oauth/lastfm/login";
+  const returnTo = encodeURIComponent('http://127.0.0.1:5174/home');
+  window.location.href = `http://127.0.0.1:3000/oauth/lastfm/login?return_to=${returnTo}`;
 }
 
 function Title() {
