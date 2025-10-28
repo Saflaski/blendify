@@ -1,6 +1,10 @@
 @import "tailwindcss";
 
 /* Basic Reset & Body Styling */
+root:focus{
+    outline: none;
+}
+
 .grid-container {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr ; /* 3 equal rows */
@@ -9,27 +13,55 @@
   background-color: #333;
 }
 
+.grid-container:focus{
+    outline: none !important;
+}
+
 .nav-right button {
     font-family: 'Roboto Mono', 'monospace';
     src: url('/public/fonts/RobotoMono-Medium.ttf') format('truetype');
-    font-size:2.5vh;
-    height: 5vh;
+    font-size:2h;
+    height: 3vh;
     min-height: 30px;
     background-color: #333;
+    margin-right: 1px;
+}
+
+.nav-right button:focus{
+    outline: none !important;
+    box-shadow: none;
 }
 
 .button-blendify {
+    justify-self:center;
+}
+
+.button-blendify button{
     background-color: #333;
-    font-family: 'Transcity', 'open';
-    src: url('/public/fonts/Transcity.otf') format('opentype');
+    font-family: 'Uni Sans', 'opentype';
+    src: url('/public/fonts/Uni Sans Heavy.otf') format('opentype');
+    font-weight: bold;
     font-size:4vh;
     height: 5vh;
     min-height: 30px;
-    text-align: left;
-    
-    
-    
+    text-align: center;
+    outline: #333;
+    outline-offset: 1px;
+    outline-width: 3px;
+    text-shadow: 2px 2px 0 #000;
+    transition: all 75ms ease-in-out;
+
 }
+
+.button-blendify button:hover{
+  text-shadow: 2px 2px 0 #E0AD46 ;
+}
+
+.button-blendify button:focus{
+    outline: none;
+}
+
+
 
 
 
