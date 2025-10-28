@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './navbar.css'; // Import the CSS file
+import './src/assets/styles/navbar.css'; // Import the CSS file
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(true); // State to manage mobile menu visibility

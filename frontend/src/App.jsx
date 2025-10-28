@@ -1,5 +1,5 @@
 
-import './App.css'
+import './src/assets/styles/App.css'
 import Navbar from './Navbar';
 
 function App() {
@@ -87,61 +87,6 @@ function Title() {
     </div>
   );
 }
-
-// function loginButton(platform) {
-//   switch (platform) {
-//     case 'spotify':
-//       return (
-
-//         <button
-//           className="login-button-box "
-//         >
-//           <div className="mx-5 my-4">
-//           <img
-//             src=".\src\assets\lastfm.svg"
-//             alt="LastFM Logo"
-//             className=" object-center my-40 image-render-pixel bg-white "
-//           />
-//         </div>
-//         </button>
-
-//       );
-
-//     case 'apple':
-//       return (
-
-//         <button
-//           className="login-button-box">
-//           <div className="mx-1">
-//           <img
-//             src=".\src\assets\apple2.svg"
-//             alt="LastFM Logo"
-//             className=" object-center my-40 image-render-pixel bg-white "
-//           />
-//         </div>
-
-//         </button>
-
-//       );
-//     case 'tidal':
-//       return (
-
-//         <button
-//           className="login-button-box">
-//           <div className="mx-1">
-//           <img
-//             src=".\src\assets\tidal.svg"
-//             alt="Tidal Logo"
-//             className=" object-center image-render-pixel bg-white "
-//           /></div>
-//         </button>
-
-//       );
-//     default:
-//       return <button className="btn btn-default">Login</button>;
-//   }
-// }
-
 
 
 export default App
