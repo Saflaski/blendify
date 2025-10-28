@@ -5,22 +5,26 @@ export function Navbar() {
     return (
         
         <div className='grid-container'>
-            <div></div>
-            <div>
+            <div className='justify-self-start mx-4'>
                 <Link to="/">
-             <button className="mx-2">Home</button>
-         </Link>
+                        <button className=" button-blendify">Blendify</button>
+                    </Link>
             </div>
-        
+                <div className=' flex space-x-4 nav-right'>
+                    <Link to="/">
+                        <button className="mx-2">Home</button>
+                    </Link>
+                </div>
+            
 
-         <div className="ml-auto flex space-x-4 px-3">
-             <Link to="/about">
-             <button>About</button>
-             </Link>
-             <Link to="/privacy">
-             <button>Privacy Policy</button>
-             </Link>
-         </div>
+            <div className="ml-auto flex space-x-4 px-3 nav-right">
+                <Link to="/about">
+                    <button className='mx-2'>About</button>
+                </Link>
+                <Link to="/privacy">
+                    <button className='mx-2'>Privacy Policy</button>
+                </Link>
+            </div>
         </div>
 
 
