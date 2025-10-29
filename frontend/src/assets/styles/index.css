@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @font-face {
-  font-family: 'Transcity';
-  src: url('/public/fonts/Transcity.otf') format('opentype');
+  font-family: 'Uni Sans', 'opentype';
+    src: url('/public/fonts/Uni Sans Heavy.otf') format('opentype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -140,8 +140,8 @@ title {
 @import "tailwindcss";
 
 @font-face {
-  font-family: 'Transcity';
-  src: url('/public/fonts/Transcity.otf') format('opentype');
+  font-family: 'Uni Sans', 'opentype';
+    src: url('/public/fonts/Uni Sans Heavy.otf') format('opentype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -198,8 +198,8 @@ body {
 }
 
 .login-button-box {
-  position: relative; /* Changed from fixed to relative for better mobile positioning */
-  margin: 24px auto; /* Centered the button horizontally */
+  position: relative; 
+  margin: 20px auto 1px auto; /* Centered the button horizontally */
   width: 15em;
   height: 4em;
   border-width: 1px;

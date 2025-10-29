@@ -1,4 +1,4 @@
-import '/src/assets/styles/App.css'
+import '/src/assets/styles/Login.css'
 
 export function Login() {
 
@@ -14,8 +14,8 @@ export function Login() {
        
         <Title />
         {/* New section for login buttons */}
-        <div className="flex justify-center flex-wrap gap-4"> {/* Using flex-wrap and gap for responsiveness and spacing */}
-          {loginButton('spotify')}
+        <div className="mt-1 flex justify-center flex-wrap gap-4"> {/* Using flex-wrap and gap for responsiveness and spacing */}
+          {loginButton('lastfm')}
           {loginButton('apple')}
           {loginButton('tidal')}
         </div>
@@ -30,7 +30,7 @@ export function Login() {
 
 function loginButton(platform) {
   const platforms = {
-     spotify: {
+     lastfm: {
       src: '/src//assets/images/lastfm.svg',
       alt: 'LastFM Logo',
       wrapperClass: 'mx-8',
@@ -44,7 +44,7 @@ function loginButton(platform) {
     tidal: {
       src: '/src//assets/images/tidal.svg',
       alt: 'Tidal Logo',
-      wrapperClass: 'mx-1',
+      wrapperClass: '',
     },
   }
 
@@ -74,7 +74,7 @@ function handleLastFMClick() {
 function Title() {
   return (
     <div className="">
-      <h1 className="w-full max-w-screen-sm px-4 mx-auto flex flex-col items-center  text-center text-gray-800 mb-2">
+      <h1 className= "">
         Blendify
       </h1>
       <p className='subheading text-gray-500 text-center break-words'>

@@ -1,15 +1,9 @@
 @import "tailwindcss";
 
-h1 {
+.maintitle {
     font-family: 'Magnolia Script', 'opentype';
     src: url('/public/fonts/Magnolia Script.otf') format('opentype');
     font-weight: 600;
-    font-size: 10xl;
-    color: #333;
     margin-bottom: 2rem;
-}
-
-.subheading {
-    font-family: 'Roboto Mono', 'monospace';
-    src: url('/public/fonts/RobotoMono-Medium.ttf') format('truetype');
+    font-size: large;
 }
