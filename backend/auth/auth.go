@@ -54,10 +54,56 @@ func GetClientCookie(val string) *http.Cookie {
 	return &cookieReturn
 }
 
-func getInitLoginURL(api_key string, sessIDVerifier string) string {
+func GetDeletedCookie() *http.Cookie {
+
+	secure := false //TODO Set true for PROD
+	cookieReturn := http.Cookie{
+		Name:  "sid",
+		Value: "",
+		Path:  "/",
+		// MaxAge:   0,
+		Expires:  time.Unix(0, 0), //Cookie expires in 24 hours
+		Secure:   secure,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	return &cookieReturn
+}
+
+// Returns
+// string: Cookie value if success, error message if not
+// bool: success value of operation
+func checkCookieValidity(r *http.Request) (string, bool) {
+
+	cookie, err := r.Cookie(SIDCOOKIE)
+
+	//Check if we even get a cookie first
+	if err != nil {
+		if err == http.ErrNoCookie {
+			return "No cookie recieved, starting fresh login flow", false
+		} else {
+			return "Error during cookie retrieval", false
+		}
+	}
+
+	if cookie.Value == "" {
+		return "Cookie value \"\"", false
+	}
+
+	// _, ok := sessionIDTokenMap[cookie.Value]
+	_, ok := getSidKey(cookie.Value)
+	if !ok {
+		return string("SID not found in map. Given value: " + cookie.Value), false
+	}
+
+	return cookie.Value, true
+
+}
+
+func getInitLoginURL(api_key string, state string) string {
 	q := url.Values{}
 	q.Set("api_key", api_key)
-	q.Set("cb", string(LASTFM_CALLBACK+"?sid="+sessIDVerifier))
+	q.Set("cb", string(LASTFM_CALLBACK+"?state="+state))
 
 	requestURL := LASTFM_BASE_AUTH_API + "?" + q.Encode()
 	// glog.Info(requestURL)

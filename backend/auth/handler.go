@@ -2,24 +2,21 @@ package auth
 
 import (
 	"backend-lastfm/utility"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/golang/glog"
 	_ "github.com/joho/godotenv/autoload"
 )
 
-var sessionIDTokenMap map[string]string = make(map[string]string)
 var SIDCOOKIE = "sid"
-var FRONTEND_ROOT_URL = "http://127.0.0.1:5173/"
-
-func handleRoot(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, FRONTEND_ROOT_URL+"/login", http.StatusTemporaryRedirect)
-}
+var FRONTEND_ROOT_URL = "http://127.0.0.1:5173"
 
 // When the user hits /login by virtue of not being logged in already (eg. no token found on db)
 // or the user is whimsical and explicitly goes to /login, this function will initiate the token
@@ -27,20 +24,46 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 func handleLoginFlow(w http.ResponseWriter, r *http.Request) {
 
 	//Check if cookie exists
-
+	glog.Info("Pass1")
 	if resp, ok := checkCookieValidity(r); ok {
 		//Redirect to /Home
 		http.Redirect(w, r, "http://127.0.0.1:5173/home", http.StatusTemporaryRedirect)
 
 	} else {
-		glog.Warning(resp)
+		glog.Info(resp)
 		//Code bit to start a new login flow.
 		sessionID := *generateNewTx(r.RemoteAddr)
-		glog.Infof("Recorded Login \n\tFrom IP: %s\n\tAssigned SessionID: %s\n\tCreated at: %s\n",
+
+		glog.Infof("Recorded Login Attempt\n\tFrom IP: %s\n\tAssigned SessionID: %s\n\tCreated at: %s\n",
 			sessionID.IP,
 			sessionID.SessIDVerifier,
 			sessionID.CreatedAt)
-		url := getInitLoginURL(os.Getenv("LASTFM_API_KEY"), sessionID.SessIDVerifier)
+
+		//Set sid cookie to client
+		http.SetCookie(w, &http.Cookie{
+			Name:  "sid",
+			Value: sessionID.SessIDVerifier,
+
+			Expires:  time.Now().Add(time.Second * 100),
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   false,
+			SameSite: http.SameSiteLaxMode,
+		})
+
+		randomStateByte := make([]byte, 16)
+		_, err := rand.Read(randomStateByte)
+		randomState := hex.EncodeToString(randomStateByte)
+		if err != nil {
+			glog.Warning("Cannot create state token")
+			panic("")
+		}
+
+		//Saving state : SID map internally
+		setStateSid(randomState, sessionID.SessIDVerifier)
+
+		//Sending login url with callback and state token
+		url := getInitLoginURL(os.Getenv("LASTFM_API_KEY"), randomState)
 		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 
 		// glog.Infof("Redirected URL: %s", url)
@@ -48,59 +71,45 @@ func handleLoginFlow(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// func handleCookieValidation(w http.ResponseWriter, r *http.Request) {
-// 	if resp, ok := checkCookieValidity(r); ok {
-// 		//Redirect to /Home
-
-// 	}
-// }
-
-func checkCookieValidity(r *http.Request) (string, bool) {
-
-	cookie, err := r.Cookie(SIDCOOKIE)
-
-	//Check if we even get a cookie first
-	if err != nil {
-		if err == http.ErrNoCookie {
-			return "No cookie recieved, starting fresh login flow", false
-		} else {
-			return "Error during cookie retrieval", false
-		}
-	}
-
-	if cookie.Value == "" {
-		return "Cookie value \"\"", false
-	}
-
-	_, ok := sessionIDTokenMap[cookie.Value]
-	if !ok {
-		return string("SID not found in map. Given value: " + cookie.Value), false
-	}
-
-	return cookie.Value, true
-
-}
-
 func handleCallbackFlow(w http.ResponseWriter, r *http.Request) {
 
+	//Sample URL Path given is
+	//http://127.0.0.1:3000/oauth/lastfm/callback?sid={SID}&token={TOKEN}
+
+	//Validate
+	// _, timeout := context.WithTimeout(r.Context(), 10*time.Second)
+	// defer timeout()
+
+	//Security fix to set no cache and no referrer
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Referrer-Policy", "no-referrer")
+
+	//Retrieve State, Token
+	stateReturned := r.URL.Query().Get("state")
 	tokenReturned := r.URL.Query().Get("token")
-	callbackReturned := r.URL.Query().Get("sid")
-	glog.Info("Callback returned:")
-	path := strings.TrimPrefix(callbackReturned, LASTFM_CALLBACK)
-	path = strings.TrimSuffix(path, "/")
 
-	if path == "" {
-		glog.Infof("No Session ID provided, ignoring")
-		return
-	}
-
-	sessionID, err := url.QueryUnescape(path)
+	//Retrieve SID
+	cookieSidReturned, err := r.Cookie("sid")
 	if err != nil {
-		glog.Fatal("Could not decode callback URL: ", path)
-	}
-	glog.Infof(sessionID)
+		glog.Info(cookieSidReturned.Value) //DEV
 
-	glog.Infof("SID-Token association[%s : %s]", sessionID, tokenReturned)
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, "Cookie not found or invalid. Retry request.")
+
+	}
+
+	//Perform SID and State verification check
+
+	validationSid, ok := getStateSid(stateReturned)
+	if !ok {
+		glog.Warning("State does not exist on state sid map")
+	}
+
+	if validationSid != cookieSidReturned.Value {
+		glog.Warning("Invalid validation sid match try")
+	}
+
+	//If execution has reached this state, then we have verified that the callback is genuine
 
 	//Fetch a web session
 	webSessionURL, form := getNewWebSessionURL(
@@ -119,6 +128,7 @@ func handleCallbackFlow(w http.ResponseWriter, r *http.Request) {
 		glog.Errorf("Request failed: %v", err)
 		return
 	}
+
 	defer resp.Body.Close() // always close body
 
 	body, err := io.ReadAll(resp.Body)
@@ -133,14 +143,12 @@ func handleCallbackFlow(w http.ResponseWriter, r *http.Request) {
 	sessionKey := xmlStruct.Session.Key
 
 	//Assigning the mapping for recording users for later re-auth between frontend and backend
-	sessionIDTokenMap[sessionID] = sessionKey
-
-	//Set cookie
-	cookieToBeSet := GetClientCookie(sessionID)
-	http.SetCookie(w, cookieToBeSet)
+	setSidKey(validationSid, sessionKey)
+	delStateSid(stateReturned)
 
 	//Perm redirect back to the original frontend.
-	http.Redirect(w, r, "http://127.0.0.1:5173/home", http.StatusTemporaryRedirect)
+	// http.Redirect(w, r, "http://127.0.0.1:5173/home", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, "http://127.0.0.1:5173/home", http.StatusSeeOther)
 
 	glog.Info("End of authentication flow")
 
@@ -148,9 +156,15 @@ func handleCallbackFlow(w http.ResponseWriter, r *http.Request) {
 
 // CORS MIDDLWARE
 func cors(next http.Handler) http.Handler {
+
+	allowed := map[string]bool{
+		"http://127.0.0.1:5173": true,
+		"http://localhost:5173": true,
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("Origin") == "http://127.0.0.1:5173" || true {
-			w.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:5173")
+		origin := r.Header.Get("Origin")
+		if origin != "" && allowed[origin] {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Vary", "Origin")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS")
@@ -168,16 +182,33 @@ func cors(next http.Handler) http.Handler {
 
 func handleAPIValidation(w http.ResponseWriter, r *http.Request) {
 
-	if resp, ok := checkCookieValidity(r); ok {
+	if _, ok := checkCookieValidity(r); ok {
 		//Redirect to /Home
-		// http.Redirect(w, r, "http://127.0.0.1:5173/home", http.StatusTemporaryRedirect)
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, "Cookie Valid")
-		glog.Info(resp)
 	} else {
-		glog.Info(resp)
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintf(w, "Cookie Invalid")
+
+	}
+}
+
+func handleLogOut(w http.ResponseWriter, r *http.Request) {
+	if resp, ok := checkCookieValidity(r); ok {
+		newCookie := GetDeletedCookie() //Cookie value set to auto-expire yesterday
+		http.SetCookie(w, newCookie)
+		// delete(sessionIDTokenMap, resp)
+		delSidKey(resp)
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, "Log out successful")
+
+	} else {
+
+		glog.Warningf("%s unsuccessfully tried to request log-out. UA: %s", r.RemoteAddr, r.UserAgent())
+		glog.Warning(resp)
+
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, "Log out unsuccessful")
 	}
 }
 
@@ -189,6 +220,8 @@ func ServerStart() {
 	// http.HandleFunc("/", handleRoot)
 	mux := http.NewServeMux()
 	handler := cors(mux)
+
+	mux.HandleFunc("/api/logout/", handleLogOut)
 	mux.HandleFunc("/api/validate/", handleAPIValidation)
 	mux.HandleFunc("/oauth/lastfm/login", handleLoginFlow)
 	mux.HandleFunc("/oauth/lastfm/callback", handleCallbackFlow)

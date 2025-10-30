@@ -12,6 +12,6 @@ export async function authLoader() {
     if (res.ok) {
         return null;
     } else {
-        throw redirect('/login/');
+        throw redirect('/login/')
     }
 }
