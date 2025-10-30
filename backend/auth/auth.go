@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/golang/glog"
@@ -21,22 +20,6 @@ var LASTFM_ROOT_API = "http://ws.audioscrobbler.com/2.0/"
 
 var HOME_URL = "http://127.0.0.1:3000/"
 var LASTFM_CALLBACK = HOME_URL + "oauth/lastfm/callback"
-
-type clientCookie struct {
-	Name  string
-	Value string
-
-	Path       string
-	Expires    time.Time
-	Rawexpires string
-
-	MaxAge   int
-	Secure   bool
-	HttpOnly bool
-	Samesite http.SameSite
-	Raw      string
-	Unparsed []string
-}
 
 func GetClientCookie(val string) *http.Cookie {
 
@@ -144,11 +127,6 @@ type Tx struct {
 	SessIDVerifier string
 	CreatedAt      time.Time
 	IP             string
-}
-
-type memStore struct {
-	mu sync.Mutex    //Mutex for keeping locks
-	m  map[string]Tx //Map for mapping UUID to Tx?
 }
 
 func generateNewTx(userIP string) *Tx {
