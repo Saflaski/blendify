@@ -41,27 +41,27 @@ var (
 
 // Create + Update
 func setSidKey(sessionID, sessionKey string) {
-	mapMu.Lock()
+	mapSKMutex.Lock()
 	sidKeyMap[sessionID] = sessionKey
-	mapMu.Unlock()
+	mapSKMutex.Unlock()
 }
 
 // Read
 // sessionID (str) : SessionID
 // Returns sessionKey (str), ok
 func getSidKey(sessionID string) (string, bool) {
-	mapMu.Lock()
+	mapSKMutex.Lock()
 	key, ok := sidKeyMap[sessionID]
-	mapMu.Unlock()
+	mapSKMutex.Unlock()
 	return key, ok
 
 }
 
 // Delete
 func delSidKey(sessionID string) {
-	mapMu.Lock()
+	mapSKMutex.Lock()
 	delete(sidKeyMap, sessionID)
-	mapMu.Unlock()
+	mapSKMutex.Unlock()
 
 }
 
