@@ -2,6 +2,10 @@
 
 /* Basic Reset & Body Styling */
 
+.Navbar {
+    position:fixed;
+}
+
 .menuButton {
     height: 2rem;
     width: 2rem;
@@ -10,17 +14,20 @@
 }
 
 .grid-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr ;
-  min-height: 40px;
-  height: 2.8rem;
-  background-color: #E0AD46;
-  align-items: center;
+    z-index: 10;
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr ;
+    min-height: 3rem;
+    height: 3rem;
+    background-color: #E0AD46;
+    align-items: center;
 }
 
 
 .dropdown-menu {
-    
+    z-index: 10;
+    position: absolute;
     background-color: #FFF;
     max-width: fit-content;
     display: inline-block; 
@@ -59,7 +66,7 @@ ul {
 
 li {
     font-family: 'Roboto Mono', 'monospace';
-    font-size: 1vw;
+    font-size: 1rem;
     background-color: #FFF;
 }
 
@@ -116,9 +123,10 @@ a {
     font-family: 'Uni Sans', 'opentype';
     src: url('/public/fonts/Uni Sans Heavy.otf') format('opentype');
     font-weight: bold;
-    font-size:4vh;
-    height: 5vh;
-    min-height: 30px;
+    font-size:2rem;
+    justify-content: center;
+    align-items: center;
+    min-height: 5px;
     text-align: center;
     outline: #333;
     outline-offset: 1px;
@@ -149,7 +157,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
 }
 /* Navbar Container */
 .navbar {
@@ -163,7 +171,6 @@ a {
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     position: sticky; /* Makes it stick to the top when scrolling */
     top: 0;
-    z-index: 1000; /* Ensures it stays on top of other content */
 }
 
 /* Navbar Brand/Logo */

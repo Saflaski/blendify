@@ -1,11 +1,14 @@
 import { Navbar } from "./components/Navbar"
-import {Outlet} from "react-router-dom"
+import { Outlet } from "react-router-dom"
+import '/src/assets/styles/index.css'
 export function Layout() {
     return (
         <>
             <Navbar/>
             <main>
-                <Outlet/>
+                <div className="route-layer">
+                <Outlet />
+                </div>
             </main>
         </>
     )

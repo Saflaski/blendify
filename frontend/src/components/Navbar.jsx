@@ -28,7 +28,7 @@ export function Navbar() {
     
 
     return (
-        <div>
+        <div className>
         <div className='grid-container'>
             <div className='menuOver'>
                 <div className='menu-trigger' ref={dropButtonRef}>
