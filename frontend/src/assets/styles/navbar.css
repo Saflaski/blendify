@@ -2,18 +2,94 @@
 
 /* Basic Reset & Body Styling */
 
+.menuButton {
+    height: 2rem;
+    width: 2rem;
+    align-items: center;
+
+}
 
 .grid-container {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr ; /* 3 equal rows */
+  grid-template-columns: 1fr 1fr 1fr ;
   min-height: 40px;
-  height: 6vh;
+  height: 2.8rem;
   background-color: #E0AD46;
+  align-items: center;
 }
 
-.grid-container:focus{
-    outline: none !important;
+
+.dropdown-menu {
+    
+    background-color: #FFF;
+    max-width: fit-content;
+    display: inline-block; 
+    margin-top: 8px;
+    margin-left: 0.4rem;
+    padding: 10px 20px;
+    background: #FFF;
+    outline: 2px solid #000;
+    
 }
+
+.dropdown-menu.active {
+    opacity: 1;
+    visibility: visible;
+    transition: all 50ms ease-in-out;
+    transform: translateY(0);
+}
+
+.dropdown-menu.inactive {
+    opacity: 0;
+    visibility: hidden;
+    transition: all 50ms ease-in-out;
+    transform: translateY(-5px);
+}
+
+/* .dropdown-menu h3 {
+    text-align: left;
+    font-family: 'Roboto Mono', 'monospace';
+    color: #333;
+    justify-self: center;
+} */
+
+ul {
+    list-style: none;
+}
+
+li {
+    font-family: 'Roboto Mono', 'monospace';
+    font-size: 1vw;
+    background-color: #FFF;
+}
+
+li button{
+    background-color: inherit;
+}
+
+
+a {
+    text-decoration: none;
+}
+
+.menuOver {
+    width: 1.8rem;
+    height: 1.8rem;
+    margin-top: 0.4rem;
+    margin-left: 0.4rem;
+
+}
+
+.menuOver button {
+    background-color: rgba(0,0,0,0.0);
+    color: #000;
+    width: 2rem;
+    height: 2rem;
+    
+    
+}
+
+
 
 .nav-right button {
     font-family: 'Roboto Mono', 'monospace';
