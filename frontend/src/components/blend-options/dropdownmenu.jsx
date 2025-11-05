@@ -2,7 +2,7 @@ import React from "react";
 
 export function DropDownMenu() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-inherit p-6">
+    <div className="flex items-center justify-center bg-inherit">
       <div className="flex gap-3 border-2 border-black bg-neutral-100 p-3">
         <TileButton>
           <img className="scale-130" src="/src/assets/images/dddefault.svg" />
@@ -24,8 +24,9 @@ export function DropDownMenu() {
 function TileButton({ children, label, onClick }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="group relative aspect-square w-14 select-none bg-neutral-200 p-3 text-neutral-900 outline-2 outline-black transition-all"
+      className="group relative aspect-square w-14 select-none bg-neutral-200 p-3 text-neutral-900 outline-2 transition-all"
     >
       <div className="flex items-center justify-center flex-1 w-full">
         <div className="w-15 scale-110 flex items-center justify-center">

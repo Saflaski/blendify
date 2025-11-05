@@ -61,14 +61,14 @@ ul {
   list-style: none;
 }
 
-li {
+.dropDownItem {
   font-family: "Roboto Mono", "monospace";
   font-weight: 500;
   font-size: 1rem;
   background-color: #fff;
 }
 
-li button {
+.dropDownItem button {
   background-color: inherit;
 }
 

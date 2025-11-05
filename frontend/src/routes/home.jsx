@@ -1,43 +1,138 @@
-import { DropDownMenu } from "../components/blend-options/dropdownmenu";
-import React from "react";
+// import { DropDownMenu } from "../components/blend-options/dropdownmenu";
+import { ControlPanel } from "../components/blend-options/ControlPanel";
+
+import React, { useRef, useState, useEffect } from "react";
+import { toBlob } from "html-to-image";
 
 export function Home() {
+  // ----- Copy button functionality -----
+  const captureRef = useRef(null); //Div to be captured
+  const [isCapturing, setIsCapturing] = useState(false); //To hide the button during screenshot
+
+  const [copied, setCopied] = useState(false); //For tooltip
+  const hideTimer = useRef(null); //Tooltip hide timer
+
+  useEffect(() => {
+    return () => clearTimeout(hideTimer.current); // cleanup on unmount
+  }, []);
+
+  const handleScreenshot = async () => {
+    setIsCapturing(true);
+    await new Promise((r) => setTimeout(r, 50));
+    if (!captureRef.current) return;
+
+    try {
+      const blob = await toBlob(captureRef.current, {
+        pixelRatio: 2, // like scale
+        cacheBust: true,
+        backgroundColor: "#F8F3E9",
+        skipFonts: true, // ← avoids parsing/embedding fonts
+      });
+
+      setIsCapturing(false);
+
+      if (!blob) throw new Error("Failed to create screenshot");
+
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "image/png": blob,
+        }),
+      ]);
+
+      setCopied(true);
+      clearTimeout(hideTimer.current);
+      hideTimer.current = setTimeout(() => setCopied(false), 1400);
+    } catch (err) {
+      console.error("Clipboard fail", err);
+    }
+
+    // const link = document.createElement("a");
+    // link.download = "screenshot.png";
+    // link.href = dataUrl;
+    // link.click();
+  };
+
   return (
     <div className="w-full flex justify-center">
       <div className="w-full md:w-[60%] mx-auto text-center px-4 md:px-0 py-0 md:py-5">
         <div className="flex justify-left">
           <button
             type="button"
-            className="inline-flex items-center gap-2 outline-2 font-[Roboto_Mono] font-bold border border-black/10 bg-white px-4 py-2 text-sm text-black shadow-sm hover:shadow md:text-base"
+            className="inline-flex items-center gap-2 outline-2 outline-black font-[Roboto_Mono] font-bold border border-black/10 bg-white px-4 py-2 text-sm text-black shadow-sm hover:shadow md:text-base"
           >
             &lt; Your blends
           </button>
         </div>
 
-        {/* Hero number */}
-        <h1 className="mt-8 text-7xl leading-none font-[Roboto_Mono] tracking-tight text-black md:text-8xl lg:text-9xl">
-          80
-        </h1>
+        {/* --- Blendify Card ---*/}
+        <div className="w-full flex justify-center">
+          <div //Div to be screenshotted
+            ref={captureRef}
+            className="shine-element relative outline-2 outline-black bg-neutral-200 w-80 h-auto p-10 aspect-2/3
+             bg-size-[auto_200px] bg-[url(/src/assets/images/topography.svg)]"
+          >
+            {/* Copy button */}
+            {!isCapturing && (
+              <button
+                onClick={handleScreenshot}
+                className="absolute outline-1 active:bg-green-600  outline-black top-2 right-2 bg-inherit text-white px-1 py-1 "
+              >
+                <img src="/src/assets/images/copy.svg" />
+              </button>
+            )}
 
-        {/* Buttons directly below 80% */}
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          {/* Replace this block with <DropDownMenu /> if you already have it */}
-          <button className="rounded-xl bg-black text-white px-5 py-2 text-sm md:text-base hover:opacity-90">
-            Blend more
-          </button>
-          <button className="rounded-xl bg-white border border-black/10 px-5 py-2 text-sm md:text-base hover:shadow">
-            Share
-          </button>
-          <button className="rounded-xl bg-white border border-black/10 px-5 py-2 text-sm md:text-base hover:shadow">
-            Details
-          </button>
-          {/* <DropDownMenu /> */}
+            {/* Tooltip */}
+            {copied && (
+              <div
+                className=" absolute right-15 top-3 bg-gray-500 text-white 
+              text-xs px-3 py-1 shadow-lg animate-fade-in-out"
+              >
+                Copied!
+              </div>
+            )}
+
+            {/* Hero number */}
+            <h1 className="mt-4 text-6xl leading-none font-[Roboto_Mono] tracking-tight text-black md:text-4xl lg:text-7xl">
+              80%
+            </h1>
+
+            {/* Big important text under the 80% */}
+            <p className="mt-2 text-3xl md:text-3xl lg:text-4xl font-semibold text-gray-800">
+              Ethan + Saf
+            </p>
+
+            <p className="mt-2 text-1xl md:text-1xl lg:text-1xl font-semibold text-gray-800">
+              Default Mode
+            </p>
+
+            <div className="grid grid-row-2 gap-3 text-left text-black font-[Roboto_Mono] ">
+              <ul>
+                <p className="font-black">Top Artists</p>
+                <li>Clairo</li>
+                <li>Men I Trust</li>
+                <li>Bring Me The Horizon</li>
+              </ul>
+              <ul>
+                <p className="font-black">Top Songs</p>
+                <li>Bababooey 2</li>
+                <li>Come Down</li>
+                <li>Bags</li>
+              </ul>
+            </div>
+
+            <img
+              className=" absolute bottom-3 left-1/2 -translate-x-1/2 size-15 h-auto"
+              src="/src/assets/images/lastfm.svg"
+            />
+          </div>
         </div>
 
-        {/* Big important text under the 80% */}
-        <p className="mt-6 text-3xl md:text-4xl lg:text-5xl font-semibold text-black">
-          X + Y
-        </p>
+        {/* End of player card */}
+
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          {/* Replace this block with <DropDownMenu /> if you already have it */}
+          <ControlPanel />
+        </div>
 
         {/* Top blend artists section */}
         <section className="mt-12 text-left">
