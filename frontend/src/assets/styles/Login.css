@@ -1,15 +1,23 @@
 @import "tailwindcss";
 
-h1 {
-    font-family: 'Magnolia Script', 'opentype';
-    src: url('/public/fonts/Magnolia Script.otf') format('opentype');
-    font-weight: 600;
-    font-size: 10xl;
-    color: #333;
-    margin-bottom: 2rem;
+.login h1 {
+  font-family: "Magnolia Script";
+  font-style: normal;
+  font-weight: 600;
+  font-display: block;
+  color: black;
+  font-size: clamp(4rem, 9vw, 7rem);
+  line-height: 1.1;
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  word-wrap: break-word;
+  line-height: 1.5;
 }
 
 .subheading {
-    font-family: 'Roboto Mono', 'monospace';
-    src: url('/public/fonts/RobotoMono-Medium.ttf') format('truetype');
+  font-family: "Roboto Mono", "monospace";
+  src: url("/public/fonts/RobotoMono-Medium.ttf") format("truetype");
 }

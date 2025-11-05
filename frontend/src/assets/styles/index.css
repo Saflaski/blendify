@@ -1,30 +1,43 @@
 @import "tailwindcss";
 
 @font-face {
-  font-family: 'Uni Sans', 'opentype';
-    src: url('/public/fonts/Uni Sans Heavy.otf') format('opentype');
+  font-family: "Uni Sans", "opentype";
+  src: url("/public/fonts/Uni Sans Heavy.otf") format("opentype");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 
+@font-face {
+  font-family: "Roboto Mono", "monospace";
+  src: url("/public/fonts/RobotoMono-Medium.ttf") format("truetype");
+}
+
 /* latin-ext */
 @font-face {
-  font-family: 'Lato';
+  font-family: "Lato";
   font-style: normal;
   font-weight: 700;
   font-display: block;
-  src: url(https://design.penpot.app/internal/gfonts/font/lato/v24/S6u9w4BMUTPHh6UVSwaPGR_p.woff2) format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  src: url(https://design.penpot.app/internal/gfonts/font/lato/v24/S6u9w4BMUTPHh6UVSwaPGR_p.woff2)
+    format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
+    U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 /* latin */
 @font-face {
-  font-family: 'Lato';
+  font-family: "Lato";
   font-style: normal;
   font-weight: 700;
   font-display: block;
-  src: url(https://design.penpot.app/internal/gfonts/font/lato/v24/S6u9w4BMUTPHh6UVSwiPGQ.woff2) format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  src: url(https://design.penpot.app/internal/gfonts/font/lato/v24/S6u9w4BMUTPHh6UVSwiPGQ.woff2)
+    format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
 }
 
 /* main > * {
@@ -32,15 +45,14 @@
   z-index: 2;
 } */
 
-main > * { 
-  z-index: 1; 
-  position: relative; 
-  padding-top: 10rem; 
-  flex: 1;           
+main > * {
+  z-index: 1;
+  position: relative;
+  padding-top: 10rem;
+  flex: 1;
   padding-top: var(--nav-h, 64px); /* reserve navbar height */
   height: calc(100vh - var(--nav-h, 64px));
-  overflow-y: auto; 
-
+  overflow-y: auto;
 }
 
 /* .route-layer {
@@ -48,7 +60,7 @@ main > * {
   z-index: 2;        
 } */
 
- /* main { outline: 1px solid red; }
+/* main { outline: 1px solid red; }
 .route-layer { outline: 1px dashed blue; } */
 
 :root {
@@ -60,25 +72,23 @@ main > * {
   margin: 0 0 0 0;
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #F8F3E9;
+  background-color: #f8f3e9;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
 }
 
 body {
-  
   min-height: 100vh; /* Ensures the body takes up the full viewport height */
-  background-color: #F8F3E9;
+  background-color: #f8f3e9;
   box-sizing: border-box; /* Ensures padding and border are included in the element's total width and height */
 }
 
 .center-div {
   flex-direction: column; /* Changed to column for better mobile layout */
   align-items: center; /* Centered items horizontally */
-  justify-content:calc(90%); /* Centered items vertically */
+  justify-content: calc(90%); /* Centered items vertically */
   width: 100%;
   padding: 20px; /* Added padding for better spacing on smaller screens */
 }
@@ -91,7 +101,7 @@ body {
   border-width: 1px;
   border-style: solid;
   border-color: black;
-  box-shadow: 4px 4px 0 0 #E0AD46;
+  box-shadow: 4px 4px 0 0 #e0ad46;
   background-color: white;
   padding: 3px;
   overflow: hidden;
@@ -114,8 +124,8 @@ body {
   image-rendering: pixelated;
 }
 
-h1 {
-  font-family: 'Transcity';
+/* .Login h1 {
+  font-family: "Transcity";
   font-style: normal;
   font-weight: 400;
   font-display: block;
@@ -126,14 +136,14 @@ h1 {
   margin: 0 auto;
   padding: 0;
   text-align: center;
-  word-wrap: break-word; /* Prevents long words from overflowing on small screens */
-}
+  word-wrap: break-word;
+} */
 
 @media (max-width: 768px) {
-  h1 {
-    font-size: 5em; /* Adjusted font size for smaller screens */
-    line-height: 1; /* Adjusted line height for better spacing */
-  }
+  /* .Login h1 {
+    font-size: 5em; 
+    line-height: 1; 
+  } */
 
   .login-button-box {
     margin: 20px auto; /* Adjusted margin for better spacing on mobile */
@@ -145,7 +155,7 @@ btn-spotify {
 }
 
 title {
-  font-family: 'Transcity';
+  font-family: "Transcity";
   font-style: normal;
   font-weight: 400;
   font-display: block;
@@ -154,7 +164,7 @@ title {
 }
 
 .subheading {
-  font-family: 'Lato';
+  font-family: "Lato";
   font-style: normal;
   font-weight: 700;
   font-display: block;
@@ -165,8 +175,8 @@ title {
 @import "tailwindcss";
 
 @font-face {
-  font-family: 'Uni Sans', 'opentype';
-    src: url('/public/fonts/Uni Sans Heavy.otf') format('opentype');
+  font-family: "Uni Sans", "opentype";
+  src: url("/public/fonts/Uni Sans Heavy.otf") format("opentype");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -174,21 +184,29 @@ title {
 
 /* latin-ext */
 @font-face {
-  font-family: 'Lato';
+  font-family: "Lato";
   font-style: normal;
   font-weight: 700;
   font-display: block;
-  src: url(https://design.penpot.app/internal/gfonts/font/lato/v24/S6u9w4BMUTPHh6UVSwaPGR_p.woff2) format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  src: url(https://design.penpot.app/internal/gfonts/font/lato/v24/S6u9w4BMUTPHh6UVSwaPGR_p.woff2)
+    format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
+    U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 /* latin */
 @font-face {
-  font-family: 'Lato';
+  font-family: "Lato";
   font-style: normal;
   font-weight: 700;
   font-display: block;
-  src: url(https://design.penpot.app/internal/gfonts/font/lato/v24/S6u9w4BMUTPHh6UVSwiPGQ.woff2) format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  src: url(https://design.penpot.app/internal/gfonts/font/lato/v24/S6u9w4BMUTPHh6UVSwiPGQ.woff2)
+    format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
 }
 
 :root {
@@ -203,39 +221,38 @@ title {
   margin: 0 0 0 0;
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #F8F3E9;
+  background-color: #f8f3e9;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
 }
 
 body {
   height: 100%;
   margin: 0;
-   /* Ensures the body takes up the full viewport height */
-  background-color: #F8F3E9;
+  /* Ensures the body takes up the full viewport height */
+  background-color: #f8f3e9;
   box-sizing: border-box; /* Ensures padding and border are included in the element's total width and height */
 }
 
 .center-div {
   flex-direction: column; /* Changed to column for better mobile layout */
   align-items: center; /* Centered items horizontally */
-  justify-content:calc(90%); /* Centered items vertically */
+  justify-content: calc(90%); /* Centered items vertically */
   width: 100%;
   padding: 20px; /* Added padding for better spacing on smaller screens */
 }
 
 .login-button-box {
-  position: relative; 
+  position: relative;
   margin: 20px auto 1px auto; /* Centered the button horizontally */
   width: 15em;
   height: 4em;
   border-width: 1px;
   border-style: solid;
   border-color: black;
-  box-shadow: 4px 4px 0 0 #E0AD46;
+  box-shadow: 4px 4px 0 0 #e0ad46;
   background-color: white;
   padding: 3px;
   overflow: hidden;
@@ -258,8 +275,8 @@ body {
   image-rendering: pixelated;
 }
 
-h1 {
-  font-family: 'Transcity';
+/* h1 {
+  font-family: "Transcity";
   font-style: normal;
   font-weight: 400;
   font-display: block;
@@ -270,8 +287,8 @@ h1 {
   margin: 0 auto;
   padding: 0;
   text-align: center;
-  word-wrap: break-word; /* Prevents long words from overflowing on small screens */
-}
+  word-wrap: break-word; 
+} */
 
 @media (max-width: 768px) {
   h1 {
@@ -293,21 +310,20 @@ btn-spotify {
 }
 
 .default-text {
-  font-family: 'Courier New', Courier, monospace;
+  font-family: "Courier New", Courier, monospace;
   font-style: normal;
   font-weight: 500;
-  font-size: medium;  
+  font-size: medium;
   color: #000;
   text-align: center;
   justify-items: center;
-  width: 50%;         /* 50% of the viewport width */
-  margin: 0 auto;      /* centers the block horizontally */
-  display: block; 
-  
+  width: 50%; /* 50% of the viewport width */
+  margin: 0 auto; /* centers the block horizontally */
+  display: block;
 }
 
 title {
-  font-family: 'Transcity';
+  font-family: "Transcity";
   font-style: normal;
   font-weight: 400;
   font-display: block;
@@ -316,7 +332,7 @@ title {
 }
 
 .subheading {
-  font-family: 'Lato';
+  font-family: "Lato";
   font-style: normal;
   font-weight: 700;
   font-display: block;
@@ -325,6 +341,10 @@ title {
 }
 
 button {
+  cursor: pointer;
+}
+
+.login-button-box button {
   background-clip: padding-box;
 
   border-radius: 0px;
