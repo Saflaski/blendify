@@ -4,10 +4,10 @@ function ControlPanelTileButton({ children, label, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="group relative aspect-square w-20 select-none bg-white p-3 outline-2 outline-black transition-all flex flex-col items-center justify-center gap-1"
+      className="group relative aspect-square w-18.75 select-none bg-white p-3 outline-2 outline-black transition-all flex flex-col items-center justify-center gap-1"
     >
       <div className="flex items-center justify-center flex-1 w-full">
-        <div className="w-6 h-6 flex items-center justify-center">
+        <div className="w-3 h-3 flex items-center justify-center">
           {children}
         </div>
       </div>
@@ -23,23 +23,10 @@ function ControlPanelTileButton({ children, label, onClick }) {
 
 export function ControlPanel() {
   return (
-    <div className="flex items-center justify-center bg-inherit outline-2 outline-black p-5">
-      <div className="flex flex-row items-center gap-8">
-        {/* --- DEFAULT --- */}
-        <div>
-          <ControlPanelTileButton label="Default">
-            <svg
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              stroke="black"
-              strokeWidth="2"
-            >
-              <circle cx="12" cy="12" r="9" />
-            </svg>
-          </ControlPanelTileButton>
-        </div>
-
-        <div className="flex gap-4">
+    <div className=" flex items-center justify-center md:pt-5 bg-inherit outline-black p-5">
+      <div className="grid grid-row-3 items-center gap-8">
+        {/* DATE RANGES */}
+        <div className="outline-2 outline-black p-2 flex gap-4">
           <ControlPanelTileButton label="Last 1 Month">
             <svg
               viewBox="0 0 24 24"
@@ -73,7 +60,7 @@ export function ControlPanel() {
         </div>
 
         {/* --- ARTIST / GENRE / SONG  --- */}
-        <div className="flex gap-4">
+        <div className="outline-2 outline-black p-2 flex gap-4">
           <ControlPanelTileButton label="Artists Only">
             <svg
               viewBox="0 0 24 24"
@@ -102,6 +89,20 @@ export function ControlPanel() {
               strokeWidth="2"
             >
               <path d="M3 3h18v18H3z M3 9h18M9 3v18" />
+            </svg>
+          </ControlPanelTileButton>
+        </div>
+
+        {/* --- DEFAULT --- */}
+        <div className="outline-2 outline-black w-fit mx-auto p-2">
+          <ControlPanelTileButton label="Default">
+            <svg
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              stroke="black"
+              strokeWidth="2"
+            >
+              <circle cx="12" cy="12" r="9" />
             </svg>
           </ControlPanelTileButton>
         </div>

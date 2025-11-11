@@ -64,74 +64,72 @@ export function Home() {
           </button>
         </div>
 
-        {/* --- Blendify Card ---*/}
-        <div className="w-full flex justify-center">
-          <div //Div to be screenshotted
-            ref={captureRef}
-            className="shine-element relative outline-2 outline-black bg-neutral-200 w-80 h-auto p-10 aspect-2/3
+        <div className="md:flex md:flex-wrap pr-2 mt-8 lg:grid lg:grid-cols-2 ">
+          {/* --- Blendify Card ---*/}
+          <div className="w-full flex justify-center md:mb-10 ">
+            <div //Div to be screenshotted
+              ref={captureRef}
+              className="shine-element relative outline-2 outline-black bg-neutral-200 lg:w-80 md:w-50 h-auto p-10 aspect-2/3
              bg-size-[auto_200px] bg-[url(/src/assets/images/topography.svg)]"
-          >
-            {/* Copy button */}
-            {!isCapturing && (
-              <button
-                onClick={handleScreenshot}
-                className="absolute outline-1 active:bg-green-600  outline-black top-2 right-2 bg-inherit text-white px-1 py-1 "
-              >
-                <img src="/src/assets/images/copy.svg" />
-              </button>
-            )}
-
-            {/* Tooltip */}
-            {copied && (
-              <div
-                className=" absolute right-15 top-3 bg-gray-500 text-white 
+            >
+              {/* Copy button */}
+              {!isCapturing && (
+                <button
+                  onClick={handleScreenshot}
+                  className="absolute outline-1 active:bg-green-600  outline-black top-2 right-2 bg-inherit text-white px-1 py-1 "
+                >
+                  <img src="/src/assets/images/copy.svg" />
+                </button>
+              )}
+              {/* Tooltip */}
+              {copied && (
+                <div
+                  className=" absolute right-15 top-3 bg-gray-500 text-white 
               text-xs px-3 py-1 shadow-lg animate-fade-in-out"
-              >
-                Copied!
+                >
+                  Copied!
+                </div>
+              )}
+              {/* Hero number */}
+              <h1 className="mt-0 text-6xl leading-none font-[Roboto_Mono] tracking-tight text-black md:text-4xl lg:text-7xl">
+                80%
+              </h1>
+              {/* Big important text under the 80% */}
+              <p className="mt-2 text-3xl md:text-3xl lg:text-4xl font-semibold text-gray-800">
+                Ethan + Saf
+              </p>
+              {/* Filtering Mode */}
+              <p className="mt-2 text-1xl md:text-1xl lg:text-1xl font-semibold text-gray-800">
+                Default Mode
+              </p>
+              {/* Top Songs and Artists */}
+              <div className="grid grid-row-2 gap-3 text-left text-black font-[Roboto_Mono] ">
+                <ul>
+                  <p className="font-black">Top Artists</p>
+                  <li>Clairo</li>
+                  <li>Men I Trust</li>
+                  <li>Bring Me The Horizon</li>
+                </ul>
+                <ul>
+                  <p className="font-black">Top Songs</p>
+                  <li>Bababooey 2</li>
+                  <li>Come Down</li>
+                  <li>Bags</li>
+                </ul>
               </div>
-            )}
+              <div className="flex justify-between gap-3 absolute bottom-3 left-1/2 -translate-x-1/1 size-12 h-auto">
+                <img src="/src/assets/images/lastfm.svg" />
 
-            {/* Hero number */}
-            <h1 className="mt-4 text-6xl leading-none font-[Roboto_Mono] tracking-tight text-black md:text-4xl lg:text-7xl">
-              80%
-            </h1>
-
-            {/* Big important text under the 80% */}
-            <p className="mt-2 text-3xl md:text-3xl lg:text-4xl font-semibold text-gray-800">
-              Ethan + Saf
-            </p>
-
-            <p className="mt-2 text-1xl md:text-1xl lg:text-1xl font-semibold text-gray-800">
-              Default Mode
-            </p>
-
-            <div className="grid grid-row-2 gap-3 text-left text-black font-[Roboto_Mono] ">
-              <ul>
-                <p className="font-black">Top Artists</p>
-                <li>Clairo</li>
-                <li>Men I Trust</li>
-                <li>Bring Me The Horizon</li>
-              </ul>
-              <ul>
-                <p className="font-black">Top Songs</p>
-                <li>Bababooey 2</li>
-                <li>Come Down</li>
-                <li>Bags</li>
-              </ul>
+                <img src="/src/assets/images/apple.svg" />
+              </div>
             </div>
-
-            <img
-              className=" absolute bottom-3 left-1/2 -translate-x-1/2 size-15 h-auto"
-              src="/src/assets/images/lastfm.svg"
-            />
           </div>
-        </div>
+          {/* End of player card */}
 
-        {/* End of player card */}
-
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          {/* Replace this block with <DropDownMenu /> if you already have it */}
-          <ControlPanel />
+          <div className=" flex flex-wrap justify-center items-center  lg:pl-10 gap-3">
+            {/* Replace this block with <DropDownMenu /> if you already have it */}
+            <ControlPanel />
+          </div>
         </div>
 
         {/* Top blend artists section */}
