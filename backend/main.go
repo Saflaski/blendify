@@ -1,7 +1,6 @@
 package main
 
 import (
-	"backend-lastfm/auth"
 	"flag"
 
 	"github.com/golang/glog"
@@ -18,5 +17,5 @@ func main() {
 	}
 
 	glog.Info("Started Main")
-	auth.ServerStart()
+	ServerStart()
 }

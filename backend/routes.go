@@ -1,6 +1,7 @@
-package auth
+package main
 
 import (
+	"backend-lastfm/auth"
 	"backend-lastfm/utility"
 	"crypto/rand"
 	"encoding/hex"
@@ -15,7 +16,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
-var SIDCOOKIE = "sid"
+
 var FRONTEND_ROOT_URL = "http://127.0.0.1:5173"
 
 // When the user hits /login by virtue of not being logged in already (eg. no token found on db)
@@ -25,14 +26,14 @@ func handleLoginFlow(w http.ResponseWriter, r *http.Request) {
 
 	//Check if cookie exists
 	glog.Info("Pass1")
-	if resp, ok := checkCookieValidity(r); ok {
+	if resp, ok := auth.CheckCookieValidity(r); ok {
 		//Redirect to /Home
 		http.Redirect(w, r, "http://127.0.0.1:5173/home", http.StatusTemporaryRedirect)
 
 	} else {
 		glog.Info(resp)
 		//Code bit to start a new login flow.
-		sessionID := *generateNewTx(r.RemoteAddr)
+		sessionID := *auth.GenerateNewTx(r.RemoteAddr)
 
 		glog.Infof("Recorded Login Attempt\n\tFrom IP: %s\n\tAssigned SessionID: %s\n\tCreated at: %s\n",
 			sessionID.IP,
@@ -60,10 +61,10 @@ func handleLoginFlow(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//Saving state : SID map internally
-		setStateSid(randomState, sessionID.SessIDVerifier)
+		auth.SetStateSid(randomState, sessionID.SessIDVerifier)
 
 		//Sending login url with callback and state token
-		url := getInitLoginURL(os.Getenv("LASTFM_API_KEY"), randomState)
+		url := auth.GetInitLoginURL(os.Getenv("LASTFM_API_KEY"), randomState)
 		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 
 		// glog.Infof("Redirected URL: %s", url)
@@ -100,7 +101,7 @@ func handleCallbackFlow(w http.ResponseWriter, r *http.Request) {
 
 	//Perform SID and State verification check
 
-	validationSid, ok := getStateSid(stateReturned)
+	validationSid, ok := auth.GetStateSid(stateReturned)
 	if !ok {
 		glog.Warning("State does not exist on state sid map")
 	}
@@ -112,7 +113,7 @@ func handleCallbackFlow(w http.ResponseWriter, r *http.Request) {
 	//If execution has reached this state, then we have verified that the callback is genuine
 
 	//Fetch a web session
-	webSessionURL, form := getNewWebSessionURL(
+	webSessionURL, form := auth.GetNewWebSessionURL(
 		os.Getenv("LASTFM_API_KEY"),
 		tokenReturned,
 	)
@@ -143,8 +144,8 @@ func handleCallbackFlow(w http.ResponseWriter, r *http.Request) {
 	sessionKey := xmlStruct.Session.Key
 
 	//Assigning the mapping for recording users for later re-auth between frontend and backend
-	setSidKey(validationSid, sessionKey)
-	delStateSid(stateReturned)
+	auth.SetSidKey(validationSid, sessionKey)
+	auth.DelStateSid(stateReturned)
 
 	//Perm redirect back to the original frontend.
 	// http.Redirect(w, r, "http://127.0.0.1:5173/home", http.StatusTemporaryRedirect)
@@ -182,7 +183,7 @@ func cors(next http.Handler) http.Handler {
 
 func handleAPIValidation(w http.ResponseWriter, r *http.Request) {
 
-	if _, ok := checkCookieValidity(r); ok {
+	if _, ok := auth.CheckCookieValidity(r); ok {
 		//Redirect to /Home
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, "Cookie Valid")
@@ -194,11 +195,11 @@ func handleAPIValidation(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleLogOut(w http.ResponseWriter, r *http.Request) {
-	if resp, ok := checkCookieValidity(r); ok {
-		newCookie := GetDeletedCookie() //Cookie value set to auto-expire yesterday
+	if resp, ok := auth.CheckCookieValidity(r); ok {
+		newCookie := auth.GetDeletedCookie() //Cookie value set to auto-expire yesterday
 		http.SetCookie(w, newCookie)
 		// delete(sessionIDTokenMap, resp)
-		delSidKey(resp)
+		auth.DelSidKey(resp)
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, "Log out successful")
 

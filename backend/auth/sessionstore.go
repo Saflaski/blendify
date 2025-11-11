@@ -9,14 +9,14 @@ var (
 )
 
 // Create + Update
-func setStateSid(stateToken, sessionID string) {
+func SetStateSid(stateToken, sessionID string) {
 	mapMu.Lock()
 	stateSidMap[stateToken] = sessionID
 	mapMu.Unlock()
 }
 
 // Read
-func getStateSid(sessionID string) (string, bool) {
+func GetStateSid(sessionID string) (string, bool) {
 	mapMu.Lock()
 	key, ok := stateSidMap[sessionID]
 	mapMu.Unlock()
@@ -25,7 +25,7 @@ func getStateSid(sessionID string) (string, bool) {
 }
 
 // Delete
-func delStateSid(sessionID string) {
+func DelStateSid(sessionID string) {
 	mapMu.Lock()
 	delete(stateSidMap, sessionID)
 	mapMu.Unlock()
@@ -40,7 +40,7 @@ var (
 )
 
 // Create + Update
-func setSidKey(sessionID, sessionKey string) {
+func SetSidKey(sessionID, sessionKey string) {
 	mapSKMutex.Lock()
 	sidKeyMap[sessionID] = sessionKey
 	mapSKMutex.Unlock()
@@ -49,7 +49,7 @@ func setSidKey(sessionID, sessionKey string) {
 // Read
 // sessionID (str) : SessionID
 // Returns sessionKey (str), ok
-func getSidKey(sessionID string) (string, bool) {
+func GetSidKey(sessionID string) (string, bool) {
 	mapSKMutex.Lock()
 	key, ok := sidKeyMap[sessionID]
 	mapSKMutex.Unlock()
@@ -58,7 +58,7 @@ func getSidKey(sessionID string) (string, bool) {
 }
 
 // Delete
-func delSidKey(sessionID string) {
+func DelSidKey(sessionID string) {
 	mapSKMutex.Lock()
 	delete(sidKeyMap, sessionID)
 	mapSKMutex.Unlock()
@@ -67,4 +67,3 @@ func delSidKey(sessionID string) {
 
 // ------- Dual Map functions ----------
 
-func consumeAndSetSID() {}

@@ -1,0 +1,9 @@
+users : {
+    123123 (UUID) : {
+        userName: ...,
+        token: ...,
+        listenHistory: {
+            "xyz"
+        }
+    }
+}

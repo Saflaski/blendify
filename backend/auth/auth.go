@@ -14,7 +14,7 @@ import (
 )
 
 type ClientKey string
-
+var SIDCOOKIE = "sid"
 var LASTFM_BASE_AUTH_API = "http://www.last.fm/api/auth/"
 var LASTFM_ROOT_API = "http://ws.audioscrobbler.com/2.0/"
 
@@ -56,7 +56,7 @@ func GetDeletedCookie() *http.Cookie {
 // Returns
 // string: Cookie value if success, error message if not
 // bool: success value of operation
-func checkCookieValidity(r *http.Request) (string, bool) {
+func CheckCookieValidity(r *http.Request) (string, bool) {
 
 	cookie, err := r.Cookie(SIDCOOKIE)
 
@@ -74,7 +74,7 @@ func checkCookieValidity(r *http.Request) (string, bool) {
 	}
 
 	// _, ok := sessionIDTokenMap[cookie.Value]
-	_, ok := getSidKey(cookie.Value)
+	_, ok := GetSidKey(cookie.Value)
 	if !ok {
 		return string("SID not found in map. Given value: " + cookie.Value), false
 	}
@@ -83,7 +83,7 @@ func checkCookieValidity(r *http.Request) (string, bool) {
 
 }
 
-func getInitLoginURL(api_key string, state string) string {
+func GetInitLoginURL(api_key string, state string) string {
 	q := url.Values{}
 	q.Set("api_key", api_key)
 	q.Set("cb", string(LASTFM_CALLBACK+"?state="+state))
@@ -93,7 +93,7 @@ func getInitLoginURL(api_key string, state string) string {
 	return requestURL
 }
 
-func getSessionAPISignature(api_key string, token string) string {
+func GetSessionAPISignature(api_key string, token string) string {
 
 	secret := os.Getenv("LASTFM_SECRET")
 	raw_string := string("api_key" + api_key + "method" + "auth.getSession" + "token" + token + secret)
@@ -111,13 +111,13 @@ func getSessionAPISignature(api_key string, token string) string {
 
 }
 
-func getNewWebSessionURL(api_key string, token string) (string, url.Values) {
+func GetNewWebSessionURL(api_key string, token string) (string, url.Values) {
 
 	q := url.Values{}
 	q.Set("method", "auth.getSession")
 	q.Set("api_key", api_key)
 	q.Set("token", token)
-	q.Set("api_sig", getSessionAPISignature(api_key, token))
+	q.Set("api_sig", GetSessionAPISignature(api_key, token))
 
 	// requestURL := LASTFM_ROOT_API + "?" + q.Encode()
 	return LASTFM_ROOT_API, q //Didn't realise POST would require them as different //TODO Make this cleaner
@@ -129,7 +129,7 @@ type Tx struct {
 	IP             string
 }
 
-func generateNewTx(userIP string) *Tx {
+func GenerateNewTx(userIP string) *Tx {
 	sessIDVerifier := uuid.New().String()
 	tx := Tx{
 		SessIDVerifier: sessIDVerifier,

@@ -7,3 +7,5 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 )
+
+require github.com/goccy/go-json v0.10.5 // indirect
