@@ -1,8 +1,8 @@
 package main
 
 import (
-	"backend-lastfm/auth"
-	"backend-lastfm/utility"
+	"backend-lastfm/internal/auth"
+	"backend-lastfm/internal/utility"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -155,31 +155,31 @@ func handleCallbackFlow(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// CORS MIDDLWARE
-func cors(next http.Handler) http.Handler {
+// // CORS MIDDLWARE
+// func cors(next http.Handler) http.Handler {
 
-	allowed := map[string]bool{
-		"http://127.0.0.1:5173": true,
-		"http://localhost:5173": true,
-	}
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		origin := r.Header.Get("Origin")
-		if origin != "" && allowed[origin] {
-			w.Header().Set("Access-Control-Allow-Origin", origin)
-			w.Header().Set("Vary", "Origin")
-			w.Header().Set("Access-Control-Allow-Credentials", "true")
-			w.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS")
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		}
+// 	allowed := map[string]bool{
+// 		"http://127.0.0.1:5173": true,
+// 		"http://localhost:5173": true,
+// 	}
+// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 		origin := r.Header.Get("Origin")
+// 		if origin != "" && allowed[origin] {
+// 			w.Header().Set("Access-Control-Allow-Origin", origin)
+// 			w.Header().Set("Vary", "Origin")
+// 			w.Header().Set("Access-Control-Allow-Credentials", "true")
+// 			w.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS")
+// 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+// 		}
 
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
+// 		if r.Method == http.MethodOptions {
+// 			w.WriteHeader(http.StatusNoContent)
+// 			return
+// 		}
 
-		next.ServeHTTP(w, r)
-	})
-}
+// 		next.ServeHTTP(w, r)
+// 	})
+// }
 
 func handleAPIValidation(w http.ResponseWriter, r *http.Request) {
 
@@ -213,20 +213,24 @@ func handleLogOut(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func ServerStart() {
-	defer glog.Flush()
+// func ServerStart() { //--------------- Scheduled to be deleted
+// 	defer glog.Flush()
 
-	glog.Info("Backend started with ClientID", os.Getenv("LASTFM_ID"))
+// 	glog.Info("Backend started with ClientID", os.Getenv("LASTFM_ID"))
+	
 
-	// http.HandleFunc("/", handleRoot)
-	mux := http.NewServeMux()
-	handler := cors(mux)
 
-	mux.HandleFunc("/api/logout/", handleLogOut)
-	mux.HandleFunc("/api/validate/", handleAPIValidation)
-	mux.HandleFunc("/oauth/lastfm/login", handleLoginFlow)
-	mux.HandleFunc("/oauth/lastfm/callback", handleCallbackFlow)
 
-	http.ListenAndServe(":3000", handler) //127.0.0.1:3000
+// 	// http.HandleFunc("/", handleRoot)
+// 	mux := http.NewServeMux()
+// 	handler := cors(mux)
 
-}
+// 	mux.HandleFunc("/api/logout/", handleLogOut)
+// 	mux.HandleFunc("/api/validate/", handleAPIValidation)
+// 	mux.HandleFunc("/oauth/lastfm/login", handleLoginFlow)
+// 	mux.HandleFunc("/oauth/lastfm/callback", handleCallbackFlow)
+
+// 	http.ListenAndServe(":3000", handler) //127.0.0.1:3000
+
+// }
+

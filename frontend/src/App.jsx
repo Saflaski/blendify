@@ -6,7 +6,7 @@ import { NotFound } from "./routes/NotFound";
 import { About } from "./routes/About";
 import { Privacy } from "./routes/Privacy";
 import { Layout } from "./Layout";
-// import { authLoader } from './utils/authLoader'
+import { authLoader } from "./utils/authLoader";
 
 const router = createBrowserRouter([
   {
@@ -15,10 +15,10 @@ const router = createBrowserRouter([
       { path: "/login/", element: <Login /> },
       { path: "/about/", element: <About /> },
       { path: "/privacy/", element: <Privacy /> },
-      { path: "/", element: <Home /> },
-      // { path: "/", element: <Home />, loader: authLoader },
-      { path: "/home", element: <Home /> },
-      // { path: "/home", element: <Home />, loader: authLoader },
+      // { path: "/", element: <Home /> },
+      { path: "/", element: <Home />, loader: authLoader },
+      // { path: "/home", element: <Home /> },
+      { path: "/home", element: <Home />, loader: authLoader },
 
       { path: "*", element: <NotFound /> },
     ],
