@@ -103,7 +103,7 @@ func (h *AuthHandler) HandleLastFMCallbackFlow(w http.ResponseWriter, r *http.Re
 	}
 
 	//Sample URL Path given is
-	//http://127.0.0.1:3000/oauth/lastfm/callback?sid={SID}&token={TOKEN}
+	//http://127.0.0.1:3000/v1/auth/callback?sid={SID}&token={TOKEN}
 
 	//Validate
 	// _, timeout := context.WithTimeout(r.Context(), 10*time.Second)

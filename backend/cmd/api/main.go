@@ -35,12 +35,6 @@ func main() {
 		glog.Fatal("Server failed to start.", err)
 	}
 
-	// srv := &http.Server{
-	// 	Addr: api.addr,
-	// 	Handler: api,
-	// }
-	
-	// srv.ListenAndServe()
 
 
 }

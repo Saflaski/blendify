@@ -41,12 +41,6 @@ func (app *application) mount() http.Handler{
 
 	blendHandler := blend.NewBlendHandler()
 
-	// Current
-	// r.Get("/api/logout", authHandler.HandleLastFMLogOut)
-	// r.Get("/api/validate/", authHandler.HandleAPIValidation)
-	// r.Get("/oauth/lastfm/login", authHandler.HandleLastFMLoginFlow)
-	// r.Get("/oauth/lastfm/callback", authHandler.HandleLastFMCallbackFlow)
-
 	r.Route("/v1", func(r chi.Router) {
 		r.Route("/blends", func (r chi.Router) {
 			r.Get("/new/{UA}-{UB}", blendHandler.GetNewBlend)
