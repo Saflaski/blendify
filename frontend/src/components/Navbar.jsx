@@ -64,7 +64,7 @@ export function Navbar() {
 }
 
 async function handleLogOut() {
-  await fetch("http://127.0.0.1:3000/api/logout/", {
+  await fetch("http://localhost:3000/v1/auth/logout", {
     method: "POST",
     credentials: "include",
   });

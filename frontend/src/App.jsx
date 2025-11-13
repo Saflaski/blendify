@@ -17,7 +17,7 @@ const router = createBrowserRouter([
       { path: "/privacy/", element: <Privacy /> },
       // { path: "/", element: <Home /> },
       { path: "/", element: <Home />, loader: authLoader },
-      // { path: "/home", element: <Home /> },
+      // { path: "/home/", element: <Home /> },
       { path: "/home", element: <Home />, loader: authLoader },
 
       { path: "*", element: <NotFound /> },

@@ -18,8 +18,8 @@ var SIDCOOKIE = "sid"
 var LASTFM_BASE_AUTH_API = "http://www.last.fm/api/auth/"
 var LASTFM_ROOT_API = "http://ws.audioscrobbler.com/2.0/"
 
-var HOME_URL = "http://127.0.0.1:3000/"
-var LASTFM_CALLBACK = HOME_URL + "oauth/lastfm/callback"
+var HOME_URL = "http://localhost:3000"
+var LASTFM_CALLBACK = HOME_URL + "/v1/auth/callback/lastfm"
 
 func GetClientCookie(val string) *http.Cookie {
 
@@ -136,6 +136,8 @@ func GenerateNewTx(userIP string) *Tx {
 		CreatedAt:      time.Now(),
 		IP:             userIP,
 	}
+	// glog.Info(sessIDVerifier)
+	// glog.Info(userIP)
 
 	return &tx //Return a pointer to tx
 }

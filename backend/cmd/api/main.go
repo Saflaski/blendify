@@ -2,19 +2,11 @@ package main
 
 import (
 	"flag"
-	"net/http"
 
 	"github.com/golang/glog"
 	"github.com/joho/godotenv"
 )
 
-type api struct {
-	addr string
-} 
-
-func (s *api) ServeHTTP(http.ResponseWriter, *http.Request) {
-
-}
 
 
 
@@ -24,7 +16,7 @@ func main() {
 	flag.Parse() // required
 	defer glog.Flush()
 
-	if err := godotenv.Load("../../.env"); err != nil {
+	if err := godotenv.Load(".env"); err != nil {
 		glog.Fatal("godotenv.Load failed")
 	}
 

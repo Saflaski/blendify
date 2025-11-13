@@ -59,8 +59,8 @@ function loginButton(platform) {
 }
 
 function handleLastFMClick() {
-  const returnTo = encodeURIComponent("http://127.0.0.1:5173/home");
-  window.location.href = `http://127.0.0.1:3000/oauth/lastfm/login?return_to=${returnTo}`;
+  const returnTo = encodeURIComponent("http://localhost:5173/home");
+  window.location.href = `http://localhost:3000/v1/auth/login/lastfm?return_to=${returnTo}`;
 }
 
 function Title() {
