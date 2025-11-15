@@ -41,7 +41,7 @@ func (h *AuthHandler) HandleLastFMLoginFlow(w http.ResponseWriter, r *http.Reque
 
 	//Check if cookie exists
 	glog.Info("Pass1")
-	if resp, ok := CheckCookieValidity(r); ok {
+	if resp, ok := CheckCookieValidity(r, h.sessionIdCookieName); ok {
 		//Redirect to /Home
 		url := strings.Join([]string{h.frontendUrl, "home"}, "/")
 		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
@@ -63,7 +63,7 @@ func (h *AuthHandler) HandleLastFMLoginFlow(w http.ResponseWriter, r *http.Reque
 
 
 		http.SetCookie(w, &http.Cookie{
-			Name:  "sid",
+			Name:  h.sessionIdCookieName,
 			Value: sessionID.SessIDVerifier,
 
 			Expires:  time.Now().Add(time.Minute * 100),
@@ -118,7 +118,7 @@ func (h *AuthHandler) HandleLastFMCallbackFlow(w http.ResponseWriter, r *http.Re
 	tokenReturned := r.URL.Query().Get("token")
 
 	//Retrieve SID
-	cookieSidReturned, err := r.Cookie("sid")
+	cookieSidReturned, err := r.Cookie(h.sessionIdCookieName)
 	if err != nil {
 		// glog.Info(cookieSidReturned.Value) //DEV
 
@@ -187,7 +187,7 @@ func (h *AuthHandler) HandleLastFMCallbackFlow(w http.ResponseWriter, r *http.Re
 
 func (h *AuthHandler) HandleAPIValidation(w http.ResponseWriter, r *http.Request) {
 
-	if err, ok := CheckCookieValidity(r); ok {
+	if err, ok := CheckCookieValidity(r, h.sessionIdCookieName); ok {
 		//Redirect to /Home
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, "Cookie Valid")
@@ -195,13 +195,12 @@ func (h *AuthHandler) HandleAPIValidation(w http.ResponseWriter, r *http.Request
 		glog.Infof(err)
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintf(w, "Cookie Invalid")
-
 	}
 }
 
 func (h *AuthHandler) HandleLastFMLogOut(w http.ResponseWriter, r *http.Request) {
-	if resp, ok := CheckCookieValidity(r); ok {
-		newCookie := GetDeletedCookie() //Cookie value set to auto-expire yesterday
+	if resp, ok := CheckCookieValidity(r, h.sessionIdCookieName); ok {
+		newCookie := GetDeletedCookie(h.sessionIdCookieName) //Cookie value set to auto-expire yesterday
 		http.SetCookie(w, newCookie)
 		// delete(sessionIDTokenMap, resp)
 		DelSidKey(resp)
@@ -217,6 +216,7 @@ func (h *AuthHandler) HandleLastFMLogOut(w http.ResponseWriter, r *http.Request)
 		fmt.Fprintf(w, "Log out unsuccessful")
 	}
 }
+
 
 
 

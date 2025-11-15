@@ -14,7 +14,7 @@ import (
 type application struct {
 	config config
 	//logger
-	//db driver
+	dbConfig dbConfig
 }
 
 
@@ -38,6 +38,8 @@ func (app *application) mount() http.Handler{
 		"http://localhost:5173",
 		"sid",
 	)
+
+	
 
 	blendHandler := blend.NewBlendHandler()
 
@@ -68,7 +70,7 @@ func (app *application) run(h http.Handler) error {
 	srv := &http.Server{
 		Addr: app.config.addr,
 		Handler: h,
-		ReadTimeout: time.Second * 10,
+		ReadTimeout: time.Second * 10,		//Blanket Read, Write, Idle Timeouts as safety net.
 		WriteTimeout: time.Second * 30,
 		IdleTimeout: time.Minute * 1,
 	}
@@ -89,5 +91,8 @@ type config struct {
 }
 
 type dbConfig struct {
-	dsn string //Domain String: user=YY password=XX 
+	addrString string
+	password  string
+	db int
+	protocol int
 }

@@ -14,34 +14,33 @@ import (
 )
 
 type ClientKey string
-var SIDCOOKIE = "sid"
 var LASTFM_BASE_AUTH_API = "http://www.last.fm/api/auth/"
 var LASTFM_ROOT_API = "http://ws.audioscrobbler.com/2.0/"
 
 var HOME_URL = "http://localhost:3000"
 var LASTFM_CALLBACK = HOME_URL + "/v1/auth/callback/lastfm"
 
-func GetClientCookie(val string) *http.Cookie {
+// func GetClientCookie(val string) *http.Cookie {
 
-	secure := false //TODO SET TRUE FOR PROD
-	cookieReturn := http.Cookie{
-		Name:  "sid",
-		Value: val,
-		Path:  "/",
-		// MaxAge:   0,
-		Expires:  time.Now().Add(24 * time.Hour), //Cookie expires in 24 hours
-		Secure:   secure,
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-	}
-	return &cookieReturn
-}
+// 	secure := false //TODO SET TRUE FOR PROD
+// 	cookieReturn := http.Cookie{
+// 		Name:  "sid",
+// 		Value: val,
+// 		Path:  "/",
+// 		// MaxAge:   0,
+// 		Expires:  time.Now().Add(24 * time.Hour), //Cookie expires in 24 hours
+// 		Secure:   secure,
+// 		HttpOnly: true,
+// 		SameSite: http.SameSiteLaxMode,
+// 	}
+// 	return &cookieReturn
+// }
 
-func GetDeletedCookie() *http.Cookie {
+func GetDeletedCookie(cookieName string) *http.Cookie {
 
 	secure := false //TODO Set true for PROD
 	cookieReturn := http.Cookie{
-		Name:  "sid",
+		Name:  cookieName,
 		Value: "",
 		Path:  "/",
 		// MaxAge:   0,
@@ -56,9 +55,9 @@ func GetDeletedCookie() *http.Cookie {
 // Returns
 // string: Cookie value if success, error message if not
 // bool: success value of operation
-func CheckCookieValidity(r *http.Request) (string, bool) {
+func CheckCookieValidity(r *http.Request, cookieName string) (string, bool) {
 
-	cookie, err := r.Cookie(SIDCOOKIE)
+	cookie, err := r.Cookie(cookieName)
 
 	//Check if we even get a cookie first
 	if err != nil {
