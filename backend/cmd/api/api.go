@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/golang/glog"
+	"github.com/redis/go-redis/v9"
 )
 
 type application struct {
@@ -34,12 +35,25 @@ func (app *application) mount() http.Handler{
 	})
 
 
+	//Connect to Redis Client
+	
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     app.config.db.addrString,
+		Password: app.config.db.password,
+		DB:       app.config.db.db,
+		Protocol: app.config.db.protocol,
+	})
+	
+	
+	authRepo := auth.NewRedisStateStore(rdb) // Placeholder nil, replace with actual Redis client
+	authService := auth.NewAuthService(authRepo)
 	authHandler := auth.NewAuthHandler(
 		"http://localhost:5173",
 		"sid",
+		authService,
 	)
 
-	
+
 
 	blendHandler := blend.NewBlendHandler()
 

@@ -2,12 +2,9 @@ package auth
 
 import (
 	"backend-lastfm/internal/utility"
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -21,50 +18,68 @@ import (
 type AuthHandler struct {
     frontendUrl string
 	sessionIdCookieName string
-
+	svc AuthService
 }
 
-func NewAuthHandler(frontendUrl, sessionIdCookieName string) *AuthHandler {
-	return &AuthHandler{frontendUrl, sessionIdCookieName}
+func NewAuthHandler(frontendUrl, sessionIdCookieName string, svc AuthService) *AuthHandler {
+	return &AuthHandler{frontendUrl, sessionIdCookieName, svc}
 }
 
 
-// When the user hits /login by virtue of not being logged in already (eg. no token found on db)
-// or the user is whimsical and explicitly goes to /login, this function will initiate the token
-// acquiring flow for achieving the 3 legged Login Authentication flow with LastFM
 func (h *AuthHandler) HandleLastFMLoginFlow(w http.ResponseWriter, r *http.Request) {
-
 	if platform := chi.URLParam(r, "platform") ; platform != "lastfm"{
 		glog.Errorf("Platform %s not implemented yet", platform)
+		w.WriteHeader(http.StatusNotImplemented)
+		fmt.Fprintf(w, "Platform %s not implemented yet", platform)
+	}
+
+	url := strings.Join([]string{h.frontendUrl, "home"}, "/")
+	//Check if cookie exists
+	cookie, err := r.Cookie(h.sessionIdCookieName)
+	if err == nil {
+		found, err := h.svc.CheckCookieValidity(r.Context(), cookie.Value)
+		if err != nil {
+			glog.Errorf("Error checking cookie validity: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Error checking cookie validity")
+			return
+		}
+		if found {
+			//Valid Cookie found - Redirect to /home
+			http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+		} else {
+			//Invalid cookie found - Start new login flow
+			err := h.startNewLoginFlow(w, r)
+			if err != nil {
+				glog.Errorf("Error starting new login flow: %v", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				fmt.Fprintf(w, "Error starting new login flow")
+
+			}
+		}
+	} else {
+		//Error with retrieving cookie
+		glog.Errorf("Error retrieving cookie: %v", err)
+		w.WriteHeader(http.StatusBadRequest) //Bad Request
+		fmt.Fprintf(w, "Error retrieving cookie.")
 		return
 	}
 
-	//Check if cookie exists
-	glog.Info("Pass1")
-	if resp, ok := CheckCookieValidity(r, h.sessionIdCookieName); ok {
-		//Redirect to /Home
-		url := strings.Join([]string{h.frontendUrl, "home"}, "/")
-		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+}
 
-	} else {
-		glog.Info(resp)
-		//Code bit to start a new login flow.
-		sessionID := *GenerateNewTx(r.RemoteAddr)
+func (h *AuthHandler) startNewLoginFlow(w http.ResponseWriter, r *http.Request) error {
 
-		glog.Infof("Recorded Login Attempt\n\tFrom IP: %s\n\tAssigned SessionID: %s\n\tCreated at: %s\n",
-			sessionID.IP,
-			sessionID.SessIDVerifier,
-			sessionID.CreatedAt)
-		
-		//Set sid cookie to client
-
-
-		
-
-
-		http.SetCookie(w, &http.Cookie{
+	
+	sessionID, state, err := h.svc.GenerateNewStateAndSID(r.Context())	//Core logic so...Service?
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error generating security tokens")
+	}
+	
+	
+	http.SetCookie(w, &http.Cookie{					
 			Name:  h.sessionIdCookieName,
-			Value: sessionID.SessIDVerifier,
+			Value: sessionID,
 
 			Expires:  time.Now().Add(time.Minute * 100),
 			Path:     "/",
@@ -72,28 +87,80 @@ func (h *AuthHandler) HandleLastFMLoginFlow(w http.ResponseWriter, r *http.Reque
 			Secure:   false,
 			SameSite: http.SameSiteLaxMode,
 		})
-		
-		
 
-		randomStateByte := make([]byte, 16)
-		_, err := rand.Read(randomStateByte)
-		randomState := hex.EncodeToString(randomStateByte)
-		if err != nil {
-			glog.Warning("Cannot create state token")
-			panic("")
-		}
+	loginURL := h.svc.GetInitLoginURL(state)
+	http.Redirect(w, r, loginURL, http.StatusTemporaryRedirect)
 
-		//Saving state : SID map internally
-		SetStateSid(randomState, sessionID.SessIDVerifier)
-
-		//Sending login url with callback and state token
-		url := GetInitLoginURL(os.Getenv("LASTFM_API_KEY"), randomState)
-		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
-
-		// glog.Infof("Redirected URL: %s", url)
-	}
-
+	return nil
 }
+
+
+
+// // When the user hits /login by virtue of not being logged in already (eg. no token found on db)
+// // or the user is whimsical and explicitly goes to /login, this function will initiate the token
+// // acquiring flow for achieving the 3 legged Login Authentication flow with LastFM
+// func (h *AuthHandler) HandleLastFMLoginFlow(w http.ResponseWriter, r *http.Request) {
+
+// 	if platform := chi.URLParam(r, "platform") ; platform != "lastfm"{
+// 		glog.Errorf("Platform %s not implemented yet", platform)
+// 		return
+// 	}
+
+// 	//TODO Delete this after full HSR implementation
+// 	//h.svc.IsSessionValid(X)
+// 	//if yes then do that
+// 	//if no then redirect
+
+
+// 	//Check if cookie exists
+
+// 	//if _, ok := h.svc.IsSessionValid(Cookie, h.sessionIdCookieName); ok {
+// 	if _, ok := h.svc.CheckCookieValidity(r, h.sessionIdCookieName); ok {
+// 		//Since there is a valid cookie, user is redirected to /home/
+// 		url := strings.Join([]string{h.frontendUrl, "home"}, "/")
+// 		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+
+// 	} else {
+		
+// 		//Code bit to start a new login flow.
+// 		sessionID := *h.svc.GenerateNewTx(r.RemoteAddr)	//Core logic so...Service?
+
+// 		glog.Infof("Recorded Login Attempt\n\tFrom IP: %s\n\tAssigned SessionID: %s\n\tCreated at: %s\n",
+// 			sessionID.IP,
+// 			sessionID.SessIDVerifier,					//Still need this?
+// 			sessionID.CreatedAt)
+		
+// 		http.SetCookie(w, &http.Cookie{					//Keep in H
+// 			Name:  h.sessionIdCookieName,
+// 			Value: sessionID.SessIDVerifier,
+
+// 			Expires:  time.Now().Add(time.Minute * 100),
+// 			Path:     "/",
+// 			HttpOnly: true,
+// 			Secure:   false,
+// 			SameSite: http.SameSiteLaxMode,
+// 		})
+		
+// 		randomStateByte := make([]byte, 16)
+// 		_, err := rand.Read(randomStateByte)
+// 		randomState := hex.EncodeToString(randomStateByte)	//Move to S
+// 		if err != nil {
+// 			glog.Warning("Cannot create state token")
+// 			panic("")
+// 		}
+
+// 		//Saving state : SID map internally
+// 		SetStateSid(randomState, sessionID.SessIDVerifier)	//Move to S
+
+// 		//Sending login url with callback and state token
+// 		url := h.svc.GetInitLoginURL(os.Getenv("LASTFM_API_KEY"), randomState)
+// 		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+
+// 	}
+
+// }
+
+
 
 func (h *AuthHandler) HandleLastFMCallbackFlow(w http.ResponseWriter, r *http.Request) {
 
@@ -109,42 +176,38 @@ func (h *AuthHandler) HandleLastFMCallbackFlow(w http.ResponseWriter, r *http.Re
 	// _, timeout := context.WithTimeout(r.Context(), 10*time.Second)
 	// defer timeout()
 
-	//Security fix to set no cache and no referrer
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Referrer-Policy", "no-referrer")
 
-	//Retrieve State, Token
 	stateReturned := r.URL.Query().Get("state")
 	tokenReturned := r.URL.Query().Get("token")
 
 	//Retrieve SID
 	cookieSidReturned, err := r.Cookie(h.sessionIdCookieName)
 	if err != nil {
-		// glog.Info(cookieSidReturned.Value) //DEV
-
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintf(w, "Cookie not found or invalid. Retry request.")
 		return
 	}
 
 	//Perform SID and State verification check
-
-	validationSid, ok := GetStateSid(stateReturned)
-	if !ok {
-		glog.Warning("State does not exist on state sid map")
+	validationSid, err := h.svc.ConsumeStateAndReturnSID(r.Context(), stateReturned)
+	if err != nil {
+		glog.Errorf("Error starting new login flow, failed callback: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error with callback verification from LastFM. Retry login flow.")
 	}
 
 	if validationSid != cookieSidReturned.Value {
 		glog.Warning("Invalid validation sid match try")
+		w.WriteHeader(http.StatusRequestTimeout)
+		fmt.Fprintf(w, "Error involving SessionID verification. Do you have cookies enabled? Retry login flow.")
 	}
 
 	//If execution has reached this state, then we have verified that the callback is genuine
 
 	//Fetch a web session
-	webSessionURL, form := GetNewWebSessionURL(
-		os.Getenv("LASTFM_API_KEY"),
-		tokenReturned,
-	)
+	webSessionURL, form := h.svc.GetNewWebSessionURL(tokenReturned)
 
 	glog.Info("Web Session Request URL: ", webSessionURL)
 	resp, err := http.Post(
@@ -152,9 +215,10 @@ func (h *AuthHandler) HandleLastFMCallbackFlow(w http.ResponseWriter, r *http.Re
 		"application/x-www-form-urlencoded",
 		strings.NewReader(form.Encode()),
 	)
-
 	if err != nil {
 		glog.Errorf("Request failed: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error requesting web session from LastFM. Clear cookies and retry login flow. Is LastFM up?")
 		return
 	}
 
@@ -162,18 +226,20 @@ func (h *AuthHandler) HandleLastFMCallbackFlow(w http.ResponseWriter, r *http.Re
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		glog.Errorf("Failed to read body: %v", err)
+		glog.Errorf("Request failed: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error reading response from LastFM. Clear cookies and retry login flow. Is LastFM up?")
 		return
 	}
 
-	glog.Infof("Response body: %s", string(body))
+	//Parsing XML response
 
 	xmlStruct := utility.ParseXMLSessionKey(body)
 	sessionKey := xmlStruct.Session.Key
 
 	//Assigning the mapping for recording users for later re-auth between frontend and backend
-	SetSidKey(validationSid, sessionKey)
-	DelStateSid(stateReturned)
+
+	h.svc.SetSessionKey(r.Context(), validationSid, sessionKey)
 
 	//Perm redirect back to the original frontend.
 	// http.Redirect(w, r, "http://127.0.0.1:5173/home", http.StatusTemporaryRedirect)
@@ -186,37 +252,70 @@ func (h *AuthHandler) HandleLastFMCallbackFlow(w http.ResponseWriter, r *http.Re
 
 
 func (h *AuthHandler) HandleAPIValidation(w http.ResponseWriter, r *http.Request) {
-
-	if err, ok := CheckCookieValidity(r, h.sessionIdCookieName); ok {
-		//Redirect to /Home
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, "Cookie Valid")
-	} else {
-		glog.Infof(err)
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintf(w, "Cookie Invalid")
+	
+	cookie, err := r.Cookie(h.sessionIdCookieName)
+	if err == nil {
+		//Validating found cookie
+		found, err := h.svc.CheckCookieValidity(r.Context(), cookie.Value) 
+		if err != nil {
+			glog.Errorf("Error checking cookie validity: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Error checking cookie validity")
+			return
+		} else {
+			if found {
+				//Valid Cookie found - Redirect to /home
+				w.WriteHeader(http.StatusOK)
+				fmt.Fprintf(w, "Cookie Valid")
+				return
+			} else { //Cookie expired or DB mismatch
+				glog.Infof("Cookie invalid or expired for request from %s. UA: %s", r.RemoteAddr, r.UserAgent())
+				w.WriteHeader(http.StatusUnauthorized)
+				fmt.Fprintf(w, "Cookie Expired or Invalid")	
+			}
+		}
 	}
+
 }
 
 func (h *AuthHandler) HandleLastFMLogOut(w http.ResponseWriter, r *http.Request) {
-	if resp, ok := CheckCookieValidity(r, h.sessionIdCookieName); ok {
-		newCookie := GetDeletedCookie(h.sessionIdCookieName) //Cookie value set to auto-expire yesterday
-		http.SetCookie(w, newCookie)
-		// delete(sessionIDTokenMap, resp)
-		DelSidKey(resp)
+
+	newCookie := h.svc.GetDeletedCookie(h.sessionIdCookieName) //Cookie that expires immediately ie a deleted cookie
+	
+	cookie, err := r.Cookie(h.sessionIdCookieName) //Get browser cookie
+	if err == nil {
+		//Validating found cookie
+		found, err := h.svc.CheckCookieValidity(r.Context(), cookie.Value) 
+		if err != nil {
+			glog.Errorf("Error checking cookie validity: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Error checking cookie validity")
+			return
+		} else {
+			if found { //Valid cookie, time to delete
+				http.SetCookie(w, newCookie) //Set deleted cookie
+				w.WriteHeader(http.StatusOK)
+				fmt.Fprintf(w, "Logout successful.")
+
+				//Proceed to delete from repo
+				err := h.svc.DelSidKey(r.Context(), cookie.Value) 
+				if err != nil {
+					glog.Errorf("Error deleting SID key from repository: %v", err)
+					w.WriteHeader(http.StatusInternalServerError)
+					fmt.Fprintf(w, "Error during logout process. Retry logout.")
+					return
+				}
+
+			} 
+		}
+
+		//If there is no cookie found or the cookie is expired/invalid then delete it anyway
+		http.SetCookie(w, newCookie) //Set deleted cookie
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, "Log out successful")
-
-	} else {
-
-		glog.Warningf("%s unsuccessfully tried to request log-out. UA: %s", r.RemoteAddr, r.UserAgent())
-		glog.Warning(resp)
-
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintf(w, "Log out unsuccessful")
-	}
+		fmt.Fprintf(w, "No active session found. Cookie cleared if any.")
+		return
+	} 
 }
-
 
 
 
