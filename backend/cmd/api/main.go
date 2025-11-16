@@ -29,7 +29,7 @@ func main() {
 		glog.Fatal("DB_ADDR not set in env")
 	}
 	DB_PASS := os.Getenv("DB_PASS")
-	if DB_PASS == ""{
+	if _, ok := os.LookupEnv("DB_PASS"); ok == false{ 
 		glog.Fatal("DB_PASS not set in env")
 	}
 	DB_NUM, err := strconv.Atoi(os.Getenv("DB_NUM"))

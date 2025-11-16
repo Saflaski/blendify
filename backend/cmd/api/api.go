@@ -78,7 +78,6 @@ func (app *application) mount() http.Handler{
 	return r
 }
 
-
 //Run
 func (app *application) run(h http.Handler) error {
 	srv := &http.Server{

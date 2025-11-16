@@ -34,7 +34,7 @@ func (s *RedisStateStore) SetNewStateSid(ctx context.Context, stateToken, sessio
 	key := s.prefix + stateToken
 	err := s.client.Set(ctx, key, sessionID, ttl).Err()
 	if err != nil {
-		return fmt.Errorf("Redis set state SID key= %q : %w", key, err)
+		return fmt.Errorf("redis set state SID key= %q : %w", key, err)
 	}
 	return nil
 }
@@ -56,13 +56,13 @@ func (s *RedisStateStore) ConsumeStateSID(ctx context.Context, stateToken string
 	key := s.prefix + stateToken
 	value, err := s.client.Get(ctx, key).Result()
 	if err != nil {
-		return "", fmt.Errorf("Redis get state sid = %q : %w", key, err)
+		return "", fmt.Errorf("redis get state sid = %q : %w", key, err)
 	}
 		//Found value, now delete it.
 
 	delErr := s.client.Del(ctx, key).Err()
 	if delErr != nil {
-		return "", fmt.Errorf("Redis del state sid = %q : %w", key, delErr)
+		return "", fmt.Errorf("redis del state sid = %q : %w", key, delErr)
 	}
 	return value, nil
 }
@@ -71,7 +71,7 @@ func (s *RedisStateStore) SetSidWebSesssionKey(ctx context.Context, sessionID, w
 	key := s.prefix + "sid_key:" + sessionID
 	err := s.client.Set(ctx, key, webSessionKey, ttl).Err()
 	if err != nil {
-		return fmt.Errorf("Redis set sid key= %q : %w", key, err)
+		return fmt.Errorf("redis set sid key= %q : %w", key, err)
 	}
 	return nil
 }

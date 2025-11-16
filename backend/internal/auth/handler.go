@@ -36,36 +36,39 @@ func (h *AuthHandler) HandleLastFMLoginFlow(w http.ResponseWriter, r *http.Reque
 	url := strings.Join([]string{h.frontendUrl, "home"}, "/")
 	//Check if cookie exists
 	cookie, err := r.Cookie(h.sessionIdCookieName)
-	if err == nil {
-		found, err := h.svc.CheckCookieValidity(r.Context(), cookie.Value)
-		if err != nil {
-			glog.Errorf("Error checking cookie validity: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "Error checking cookie validity")
-			return
-		}
-		if found {
-			//Valid Cookie found - Redirect to /home
-			http.Redirect(w, r, url, http.StatusTemporaryRedirect)
-		} else {
-			//Invalid cookie found - Start new login flow
+
+	if err != nil {	//Either no cookie found or error retrieving cookie
+		if err == http.ErrNoCookie {
+			//Start login flow
 			err := h.startNewLoginFlow(w, r)
 			if err != nil {
 				glog.Errorf("Error starting new login flow: %v", err)
 				w.WriteHeader(http.StatusInternalServerError)
 				fmt.Fprintf(w, "Error starting new login flow")
-
+				return
 			}
+		} else {
+			glog.Errorf("Error retrieving cookie: %v", err)
+			w.WriteHeader(http.StatusBadRequest) //Bad Request
+			fmt.Fprintf(w, "Error retrieving cookie.")
+			return
 		}
-	} else {
-		//Error with retrieving cookie
-		glog.Errorf("Error retrieving cookie: %v", err)
-		w.WriteHeader(http.StatusBadRequest) //Bad Request
-		fmt.Fprintf(w, "Error retrieving cookie.")
-		return
-	}
+	} else { //There is a cookie with SID
 
+		found, err := h.svc.CheckCookieValidity(r.Context(), cookie.Value)
+		if err != nil {	//Error during validity check
+			glog.Errorf("Error checking cookie validity: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Error checking cookie validity")
+			return
+		} 
+		if found {
+			//Cookie is found and is valid. Return to home
+			http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+		}
+	}
 }
+	
 
 func (h *AuthHandler) startNewLoginFlow(w http.ResponseWriter, r *http.Request) error {
 
@@ -209,7 +212,6 @@ func (h *AuthHandler) HandleLastFMCallbackFlow(w http.ResponseWriter, r *http.Re
 	//Fetch a web session
 	webSessionURL, form := h.svc.GetNewWebSessionURL(tokenReturned)
 
-	glog.Info("Web Session Request URL: ", webSessionURL)
 	resp, err := http.Post(
 		webSessionURL,
 		"application/x-www-form-urlencoded",
@@ -246,7 +248,6 @@ func (h *AuthHandler) HandleLastFMCallbackFlow(w http.ResponseWriter, r *http.Re
 	url := strings.Join([]string{h.frontendUrl, "home"}, "/")
 	http.Redirect(w, r, url, http.StatusSeeOther)
 
-	glog.Info("End of authentication flow")
 
 }
 
@@ -274,6 +275,12 @@ func (h *AuthHandler) HandleAPIValidation(w http.ResponseWriter, r *http.Request
 				fmt.Fprintf(w, "Cookie Expired or Invalid")	
 			}
 		}
+	} else {
+		//No cookie found or invalid cookie
+		glog.Infof("No cookie found for request from %s. UA: %s", r.RemoteAddr, r.UserAgent())
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, "No Cookie Found")
+		return
 	}
 
 }
@@ -283,38 +290,43 @@ func (h *AuthHandler) HandleLastFMLogOut(w http.ResponseWriter, r *http.Request)
 	newCookie := h.svc.GetDeletedCookie(h.sessionIdCookieName) //Cookie that expires immediately ie a deleted cookie
 	
 	cookie, err := r.Cookie(h.sessionIdCookieName) //Get browser cookie
-	if err == nil {
-		//Validating found cookie
-		found, err := h.svc.CheckCookieValidity(r.Context(), cookie.Value) 
-		if err != nil {
+
+
+	if err != nil {	//Either no cookie found or error retrieving cookie
+		//Nothing to do here. Just delete the cookie
+	} else { //There is a cookie with SID
+
+		found, err := h.svc.CheckCookieValidity(r.Context(), cookie.Value)
+		if err != nil {	//Error during validity check
 			glog.Errorf("Error checking cookie validity: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error checking cookie validity")
 			return
+		} 
+		if found {
+			//Cookie is found and is valid. Return to home
+			http.SetCookie(w, newCookie) //Set deleted cookie
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintf(w, "Logout successful.")
+
+			//Proceed to delete from repo
+			err := h.svc.DelSidKey(r.Context(), cookie.Value) 
+			if err != nil {
+				glog.Errorf("Error deleting SID key from repository: %v", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				fmt.Fprintf(w, "Error during logout process. Retry logout.")
+				return
+			}
 		} else {
-			if found { //Valid cookie, time to delete
-				http.SetCookie(w, newCookie) //Set deleted cookie
-				w.WriteHeader(http.StatusOK)
-				fmt.Fprintf(w, "Logout successful.")
+			//Cookie invalid or expired. Just delete cookie
+			http.SetCookie(w, newCookie) //Set deleted cookie
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintf(w, "Logout successful.")
 
-				//Proceed to delete from repo
-				err := h.svc.DelSidKey(r.Context(), cookie.Value) 
-				if err != nil {
-					glog.Errorf("Error deleting SID key from repository: %v", err)
-					w.WriteHeader(http.StatusInternalServerError)
-					fmt.Fprintf(w, "Error during logout process. Retry logout.")
-					return
-				}
-
-			} 
+			//Cant delete from repo since no valid SID found.
 		}
+	}
 
-		//If there is no cookie found or the cookie is expired/invalid then delete it anyway
-		http.SetCookie(w, newCookie) //Set deleted cookie
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, "No active session found. Cookie cleared if any.")
-		return
-	} 
 }
 
 
