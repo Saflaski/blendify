@@ -1,4 +1,4 @@
-package api
+package musicapi
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func TestLastFMUserFunctions(t *testing.T) {
+func TestEndpoints(t *testing.T) {
 
 	if err := godotenv.Load("../../../.env"); err != nil {
 		t.Fatal("godotenv.Load failed")
@@ -19,9 +19,10 @@ func TestLastFMUserFunctions(t *testing.T) {
 	var apiKey = ApiKey(os.Getenv("LASTFM_API_KEY"))
 	var lastFMURL LastFMURL = LastFMURL("http://ws.audioscrobbler.com/2.0/")
 
-	apiHandler := NewLastFMHAPIHandler(
+	apiHandler := NewLastFMExternalAdapter(
 		apiKey,
 		lastFMURL,
+		true,
 	)
 
 	t.Run("Get User Weekly Chart List", func(t *testing.T) {
@@ -32,7 +33,7 @@ func TestLastFMUserFunctions(t *testing.T) {
 			"to":     "1751803200",
 		}
 
-		resp, err := checkResponseOK(apiHandler.makeRequest(extraURLParams))
+		resp, err := checkResponseOK(apiHandler.MakeRequest(extraURLParams))
 
 		if err != nil {
 			t.Errorf("Error: %q", err)
@@ -54,7 +55,7 @@ func TestLastFMUserFunctions(t *testing.T) {
 			"to":     "1750593600",
 		}
 
-		resp, err := checkResponseOK(apiHandler.makeRequest(extraURLParams))
+		resp, err := checkResponseOK(apiHandler.MakeRequest(extraURLParams))
 
 		if err != nil {
 			t.Errorf("Error: %q", err)
@@ -76,7 +77,7 @@ func TestLastFMUserFunctions(t *testing.T) {
 			"to":     "1750593600",
 		}
 
-		resp, err := checkResponseOK(apiHandler.makeRequest(extraURLParams))
+		resp, err := checkResponseOK(apiHandler.MakeRequest(extraURLParams))
 
 		if err != nil {
 			t.Errorf("Error: %q", err)
@@ -98,7 +99,7 @@ func TestLastFMUserFunctions(t *testing.T) {
 			"to":     "1750593600",
 		}
 
-		resp, err := checkResponseOK(apiHandler.makeRequest(extraURLParams))
+		resp, err := checkResponseOK(apiHandler.MakeRequest(extraURLParams))
 
 		if err != nil {
 			t.Errorf("Error: %q", err)

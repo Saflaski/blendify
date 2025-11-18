@@ -1,14 +1,8 @@
 package blend
 
-type blendService struct {
-	
+type BlendService struct {
 }
-
-
 
 func NewBlendService() *BlendService {
-	return &blendService{
-		
-	}
+	return &BlendService{}
 }
-
