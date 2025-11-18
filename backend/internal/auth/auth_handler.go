@@ -13,21 +13,18 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
-
-
 type AuthHandler struct {
-    frontendUrl string
+	frontendUrl         string
 	sessionIdCookieName string
-	svc AuthService
+	svc                 AuthService
 }
 
 func NewAuthHandler(frontendUrl, sessionIdCookieName string, svc AuthService) *AuthHandler {
 	return &AuthHandler{frontendUrl, sessionIdCookieName, svc}
 }
 
-
 func (h *AuthHandler) HandleLastFMLoginFlow(w http.ResponseWriter, r *http.Request) {
-	if platform := chi.URLParam(r, "platform") ; platform != "lastfm"{
+	if platform := chi.URLParam(r, "platform"); platform != "lastfm" {
 		glog.Errorf("Platform %s not implemented yet", platform)
 		w.WriteHeader(http.StatusNotImplemented)
 		fmt.Fprintf(w, "Platform %s not implemented yet", platform)
@@ -37,7 +34,7 @@ func (h *AuthHandler) HandleLastFMLoginFlow(w http.ResponseWriter, r *http.Reque
 	//Check if cookie exists
 	cookie, err := r.Cookie(h.sessionIdCookieName)
 
-	if err != nil {	//Either no cookie found or error retrieving cookie
+	if err != nil { //Either no cookie found or error retrieving cookie
 		if err == http.ErrNoCookie {
 			//Start login flow
 			err := h.startNewLoginFlow(w, r)
@@ -56,48 +53,43 @@ func (h *AuthHandler) HandleLastFMLoginFlow(w http.ResponseWriter, r *http.Reque
 	} else { //There is a cookie with SID
 
 		found, err := h.svc.CheckCookieValidity(r.Context(), cookie.Value)
-		if err != nil {	//Error during validity check
+		if err != nil { //Error during validity check
 			glog.Errorf("Error checking cookie validity: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error checking cookie validity")
 			return
-		} 
+		}
 		if found {
 			//Cookie is found and is valid. Return to home
 			http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 		}
 	}
 }
-	
 
 func (h *AuthHandler) startNewLoginFlow(w http.ResponseWriter, r *http.Request) error {
 
-	
-	sessionID, state, err := h.svc.GenerateNewStateAndSID(r.Context())	//Core logic so...Service?
+	sessionID, state, err := h.svc.GenerateNewStateAndSID(r.Context()) //Core logic so...Service?
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Error generating security tokens")
 	}
-	
-	
-	http.SetCookie(w, &http.Cookie{					
-			Name:  h.sessionIdCookieName,
-			Value: sessionID,
 
-			Expires:  time.Now().Add(time.Minute * 100),
-			Path:     "/",
-			HttpOnly: true,
-			Secure:   false,
-			SameSite: http.SameSiteLaxMode,
-		})
+	http.SetCookie(w, &http.Cookie{
+		Name:  h.sessionIdCookieName,
+		Value: sessionID,
+
+		Expires:  time.Now().Add(time.Minute * 100),
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+	})
 
 	loginURL := h.svc.GetInitLoginURL(state)
 	http.Redirect(w, r, loginURL, http.StatusTemporaryRedirect)
 
 	return nil
 }
-
-
 
 // // When the user hits /login by virtue of not being logged in already (eg. no token found on db)
 // // or the user is whimsical and explicitly goes to /login, this function will initiate the token
@@ -114,7 +106,6 @@ func (h *AuthHandler) startNewLoginFlow(w http.ResponseWriter, r *http.Request) 
 // 	//if yes then do that
 // 	//if no then redirect
 
-
 // 	//Check if cookie exists
 
 // 	//if _, ok := h.svc.IsSessionValid(Cookie, h.sessionIdCookieName); ok {
@@ -124,7 +115,7 @@ func (h *AuthHandler) startNewLoginFlow(w http.ResponseWriter, r *http.Request) 
 // 		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 
 // 	} else {
-		
+
 // 		//Code bit to start a new login flow.
 // 		sessionID := *h.svc.GenerateNewTx(r.RemoteAddr)	//Core logic so...Service?
 
@@ -132,7 +123,7 @@ func (h *AuthHandler) startNewLoginFlow(w http.ResponseWriter, r *http.Request) 
 // 			sessionID.IP,
 // 			sessionID.SessIDVerifier,					//Still need this?
 // 			sessionID.CreatedAt)
-		
+
 // 		http.SetCookie(w, &http.Cookie{					//Keep in H
 // 			Name:  h.sessionIdCookieName,
 // 			Value: sessionID.SessIDVerifier,
@@ -143,7 +134,7 @@ func (h *AuthHandler) startNewLoginFlow(w http.ResponseWriter, r *http.Request) 
 // 			Secure:   false,
 // 			SameSite: http.SameSiteLaxMode,
 // 		})
-		
+
 // 		randomStateByte := make([]byte, 16)
 // 		_, err := rand.Read(randomStateByte)
 // 		randomState := hex.EncodeToString(randomStateByte)	//Move to S
@@ -162,8 +153,6 @@ func (h *AuthHandler) startNewLoginFlow(w http.ResponseWriter, r *http.Request) 
 // 	}
 
 // }
-
-
 
 func (h *AuthHandler) HandleLastFMCallbackFlow(w http.ResponseWriter, r *http.Request) {
 
@@ -248,16 +237,14 @@ func (h *AuthHandler) HandleLastFMCallbackFlow(w http.ResponseWriter, r *http.Re
 	url := strings.Join([]string{h.frontendUrl, "home"}, "/")
 	http.Redirect(w, r, url, http.StatusSeeOther)
 
-
 }
 
-
 func (h *AuthHandler) HandleAPIValidation(w http.ResponseWriter, r *http.Request) {
-	
+
 	cookie, err := r.Cookie(h.sessionIdCookieName)
 	if err == nil {
 		//Validating found cookie
-		found, err := h.svc.CheckCookieValidity(r.Context(), cookie.Value) 
+		found, err := h.svc.CheckCookieValidity(r.Context(), cookie.Value)
 		if err != nil {
 			glog.Errorf("Error checking cookie validity: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -272,7 +259,7 @@ func (h *AuthHandler) HandleAPIValidation(w http.ResponseWriter, r *http.Request
 			} else { //Cookie expired or DB mismatch
 				glog.Infof("Cookie invalid or expired for request from %s. UA: %s", r.RemoteAddr, r.UserAgent())
 				w.WriteHeader(http.StatusUnauthorized)
-				fmt.Fprintf(w, "Cookie Expired or Invalid")	
+				fmt.Fprintf(w, "Cookie Expired or Invalid")
 			}
 		}
 	} else {
@@ -288,21 +275,20 @@ func (h *AuthHandler) HandleAPIValidation(w http.ResponseWriter, r *http.Request
 func (h *AuthHandler) HandleLastFMLogOut(w http.ResponseWriter, r *http.Request) {
 
 	newCookie := h.svc.GetDeletedCookie(h.sessionIdCookieName) //Cookie that expires immediately ie a deleted cookie
-	
+
 	cookie, err := r.Cookie(h.sessionIdCookieName) //Get browser cookie
 
-
-	if err != nil {	//Either no cookie found or error retrieving cookie
+	if err != nil { //Either no cookie found or error retrieving cookie
 		//Nothing to do here. Just delete the cookie
 	} else { //There is a cookie with SID
 
 		found, err := h.svc.CheckCookieValidity(r.Context(), cookie.Value)
-		if err != nil {	//Error during validity check
+		if err != nil { //Error during validity check
 			glog.Errorf("Error checking cookie validity: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "Error checking cookie validity")
 			return
-		} 
+		}
 		if found {
 			//Cookie is found and is valid. Return to home
 			http.SetCookie(w, newCookie) //Set deleted cookie
@@ -310,7 +296,7 @@ func (h *AuthHandler) HandleLastFMLogOut(w http.ResponseWriter, r *http.Request)
 			fmt.Fprintf(w, "Logout successful.")
 
 			//Proceed to delete from repo
-			err := h.svc.DelSidKey(r.Context(), cookie.Value) 
+			err := h.svc.DelSidKey(r.Context(), cookie.Value)
 			if err != nil {
 				glog.Errorf("Error deleting SID key from repository: %v", err)
 				w.WriteHeader(http.StatusInternalServerError)
@@ -328,6 +314,3 @@ func (h *AuthHandler) HandleLastFMLogOut(w http.ResponseWriter, r *http.Request)
 	}
 
 }
-
-
-
