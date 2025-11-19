@@ -25,11 +25,11 @@ type UserWeeklyArtistList struct {
 }
 
 type Artist struct {
-	MBID       string                 `json:"mbid"`
-	URL        string                 `json:"url"`
-	Name       string                 `json:"name"`
-	Attributes map[string]interface{} `json:"@attr"`
-	Playcount  int                    `json:"playcount"`
+	MBID       string         `json:"mbid"`
+	URL        string         `json:"url"`
+	Name       string         `json:"name"`
+	Attributes map[string]any `json:"@attr"`
+	Playcount  int            `json:"playcount"`
 }
 
 // user.getweeklyalbumchart
@@ -39,12 +39,12 @@ type AlbumArtist struct {
 }
 
 type Album struct {
-	Artist     AlbumArtist            `json:"artist"`
-	MBID       string                 `json:"mbid"`
-	URL        string                 `json:"url"`
-	Name       string                 `json:"name"`
-	Attributes map[string]interface{} `json:"@attr"`
-	Playcount  int                    `json:"playcount"`
+	Artist     AlbumArtist    `json:"artist"`
+	MBID       string         `json:"mbid"`
+	URL        string         `json:"url"`
+	Name       string         `json:"name"`
+	Attributes map[string]any `json:"@attr"`
+	Playcount  int            `json:"playcount"`
 }
 
 type UserWeeklyAlbumList struct {
@@ -60,12 +60,12 @@ type TrackArtist struct {
 }
 
 type Track struct {
-	Artist     TrackArtist            `json:"artist"`
-	MBID       string                 `json:"mbid"`
-	URL        string                 `json:"url"`
-	Name       string                 `json:"name"`
-	Attributes map[string]interface{} `json:"@attr"`
-	Playcount  int                    `json:"playcount"`
+	Artist     TrackArtist    `json:"artist"`
+	MBID       string         `json:"mbid"`
+	URL        string         `json:"url"`
+	Name       string         `json:"name"`
+	Attributes map[string]any `json:"@attr"`
+	Playcount  int            `json:"playcount"`
 }
 
 type UserWeeklyTrackList struct {

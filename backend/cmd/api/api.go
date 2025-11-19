@@ -3,6 +3,8 @@ package main
 import (
 	"backend-lastfm/internal/auth"
 	blend "backend-lastfm/internal/blending"
+	internal_middleware "backend-lastfm/internal/middleware"
+	musicapi "backend-lastfm/internal/music_api/lastfm"
 	"net/http"
 	"time"
 
@@ -16,17 +18,17 @@ type application struct {
 	config config
 	//logger
 	dbConfig dbConfig
+	external externalConfig
 }
 
-
-//Mount
-func (app *application) mount() http.Handler{
+// Mount
+func (app *application) mount() http.Handler {
 	r := chi.NewRouter()
-	r.Use(middleware.RequestID)	//for Rate limiting
-	r.Use(middleware.RealIP) //also for rate limiting + analytics and tracing
+	r.Use(middleware.RequestID) //for Rate limiting
+	r.Use(middleware.RealIP)    //also for rate limiting + analytics and tracing
 	// r.Use(middleware.Logger) //
 	r.Use(middleware.Recoverer) //For crashouts
-	r.Use(cors)
+	r.Use(internal_middleware.Cors)
 
 	r.Use(middleware.Timeout(time.Second * 60))
 
@@ -34,17 +36,24 @@ func (app *application) mount() http.Handler{
 		w.Write([]byte("root."))
 	})
 
-
 	//Connect to Redis Client
-	
+
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     app.config.db.addrString,
 		Password: app.config.db.password,
 		DB:       app.config.db.db,
 		Protocol: app.config.db.protocol,
 	})
-	
-	
+
+	apiKey := app.config.external.apiKey
+	lastFMURL := app.config.external.lastFMURL
+
+	LastFMExternal := musicapi.NewLastFMExternalAdapter(
+		apiKey,
+		lastFMURL,
+		true,
+	)
+
 	authRepo := auth.NewRedisStateStore(rdb) // Placeholder nil, replace with actual Redis client
 	authService := auth.NewAuthService(authRepo)
 	authHandler := auth.NewAuthHandler(
@@ -53,20 +62,22 @@ func (app *application) mount() http.Handler{
 		authService,
 	)
 
-
-
-	blendHandler := blend.NewBlendHandler()
+	blendRepo := blend.NewRedisStateStore(rdb)
+	blendService := blend.NewBlendService(*blendRepo, *LastFMExternal)
+	blendHandler := blend.NewBlendHandler(*blendService)
 
 	r.Route("/v1", func(r chi.Router) {
-		r.Route("/blends", func (r chi.Router) {
-			r.Get("/new/{UA}-{UB}", blendHandler.GetNewBlend)
+		r.Route("/blends", func(r chi.Router) {
+			r.Use(internal_middleware.ValidateCookie(authService))
+			r.Get("/new", blendHandler.GetNewBlend)
 		})
 
-		r.Route("/auth", func (r chi.Router) {
+		r.Route("/auth", func(r chi.Router) {
 			r.Get("/login/{platform}", authHandler.HandleLastFMLoginFlow)
 			r.Post("/logout", authHandler.HandleLastFMLogOut)
 			r.Get("/validate", authHandler.HandleAPIValidation)
 			r.Get("/callback/{platform}", authHandler.HandleLastFMCallbackFlow)
+
 		})
 	})
 
@@ -78,14 +89,14 @@ func (app *application) mount() http.Handler{
 	return r
 }
 
-//Run
+// Run
 func (app *application) run(h http.Handler) error {
 	srv := &http.Server{
-		Addr: app.config.addr,
-		Handler: h,
-		ReadTimeout: time.Second * 10,		//Blanket Read, Write, Idle Timeouts as safety net.
+		Addr:         app.config.addr,
+		Handler:      h,
+		ReadTimeout:  time.Second * 10, //Blanket Read, Write, Idle Timeouts as safety net.
 		WriteTimeout: time.Second * 30,
-		IdleTimeout: time.Minute * 1,
+		IdleTimeout:  time.Minute * 1,
 	}
 
 	glog.Info("Server Started")
@@ -94,18 +105,23 @@ func (app *application) run(h http.Handler) error {
 	glog.Infof("WriteTimeout: %f", srv.WriteTimeout.Seconds())
 	glog.Infof("IdleTimeout: %f", srv.IdleTimeout.Seconds())
 
-
 	return srv.ListenAndServe()
 }
 
 type config struct {
-	addr string //Address
-	db dbConfig
+	addr     string //Address
+	db       dbConfig
+	external externalConfig
 }
 
 type dbConfig struct {
 	addrString string
-	password  string
-	db int
-	protocol int
+	password   string
+	db         int
+	protocol   int
+}
+
+type externalConfig struct {
+	apiKey    string
+	lastFMURL string
 }

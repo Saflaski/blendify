@@ -16,6 +16,15 @@ export function Home() {
     return () => clearTimeout(hideTimer.current); // cleanup on unmount
   }, []);
 
+  const [displayBlendValue, SetBlendValue] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  const setBlendNumber = async (e) => {
+    setLoading(true);
+    const number = await GetBlendValueFromAPI(e);
+    setLoading(false);
+  };
+
   const handleScreenshot = async () => {
     setIsCapturing(true);
     await new Promise((r) => setTimeout(r, 50));
@@ -51,6 +60,7 @@ export function Home() {
     // link.href = dataUrl;
     // link.click();
   };
+  const [blendPercent, setBlendPercent] = useState(3);
 
   return (
     <div className="w-full flex justify-center">
@@ -92,7 +102,7 @@ export function Home() {
               )}
               {/* Hero number */}
               <h1 className="mt-0 text-6xl leading-none font-[Roboto_Mono] tracking-tight text-black md:text-4xl lg:text-7xl">
-                80%
+                {loading ? "--" : blendPercent}%
               </h1>
               {/* Big important text under the 80% */}
               <p className="mt-2 text-3xl md:text-3xl lg:text-4xl font-semibold text-gray-800">
@@ -128,7 +138,7 @@ export function Home() {
 
           <div className=" flex flex-wrap justify-center items-center  lg:pl-10 gap-3">
             {/* Replace this block with <DropDownMenu /> if you already have it */}
-            <ControlPanel />
+            <ControlPanel setBlendPercent={setBlendPercent} />
           </div>
         </div>
 
@@ -191,3 +201,7 @@ export function Home() {
     </div>
   );
 }
+
+const fetchBlendPercentage = async (label) => {
+  await new Promise((r) => setTimeout(r, 500));
+};

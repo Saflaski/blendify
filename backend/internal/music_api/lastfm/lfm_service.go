@@ -1,8 +1,8 @@
 package musicapi
 
 type LastFMServiceConfig struct {
-	ApiKey    ApiKey
-	LastFMURL LastFMURL
+	ApiKey    string
+	LastFMURL string
 }
 
 type LastFMAPIService struct {

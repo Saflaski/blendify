@@ -10,24 +10,23 @@ import (
 	"time"
 )
 
-type ApiKey string
-type LastFMURL string
+type Period string
 
-type PERIOD string
-
-const YEAR PERIOD = "12month"
-const MONTHS_6 PERIOD = "6month"
-const MONTHS_3 PERIOD = "3month"
-const MONTH PERIOD = "1month"
-const WEEK PERIOD = "7day"
+const (
+	YEAR         Period = "12month"
+	SIX_MONTHS   Period = "6month"
+	THREE_MONTHS Period = "3month"
+	ONE_MONTH    Period = "1month"
+	WEEK         Period = "7day"
+)
 
 type LastFMAPIExternal struct {
-	ApiKey
-	LastFMURL
-	setJson bool
+	apiKey    string
+	lastFMURL string
+	setJson   bool
 }
 
-func NewLastFMExternalAdapter(apiKey ApiKey, lastFMURL LastFMURL, setJson bool) *LastFMAPIExternal {
+func NewLastFMExternalAdapter(apiKey, lastFMURL string, setJson bool) *LastFMAPIExternal {
 	return &LastFMAPIExternal{
 		apiKey, lastFMURL, setJson,
 	}
@@ -125,7 +124,7 @@ func (h *LastFMAPIExternal) GetUserWeeklyTracks(userName string, from time.Time,
 	return weeklyTracks, nil
 }
 
-func (h *LastFMAPIExternal) GetUserTopArtists(userName string, period PERIOD, page int, limit int) (weeklyTracks UserWeeklyTrackList, err error) {
+func (h *LastFMAPIExternal) GetUserTopArtists(userName string, period Period, page int, limit int) (weeklyTracks UserWeeklyTrackList, err error) {
 
 	extraURLParams := map[string]string{
 		"method": "user.getweeklytrackchart",
@@ -154,14 +153,14 @@ func (h *LastFMAPIExternal) MakeRequest(extraURLParams map[string]string) (*http
 	for paramName, paramValue := range extraURLParams {
 		q.Set(paramName, paramValue)
 	}
-	q.Set("api_key", string(h.ApiKey))
+	q.Set("api_key", string(h.apiKey))
 
 	if h.setJson {
 		q.Set("format", "json") //JSON RESPONSE
 	}
 
 	resp, err := http.Post(
-		string(h.LastFMURL),
+		string(h.lastFMURL),
 		"application/x-www-form-urlencoded",
 		strings.NewReader(q.Encode()),
 	)
