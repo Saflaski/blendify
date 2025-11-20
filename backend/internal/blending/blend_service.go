@@ -14,6 +14,12 @@ type BlendService struct {
 type blendCategory string
 type blendTimeDuration string
 
+var durationMap = map[blendTimeDuration]musicapi.Period{ //TODO Delete this shit
+	BlendTimeDurationOneMonth:   musicapi.ONE_MONTH,
+	BlendTimeDurationThreeMonth: musicapi.THREE_MONTHS,
+	BlendTimeDurationYear:       musicapi.YEAR,
+}
+
 const (
 	BlendCategoryArtist blendCategory = "artist"
 	BlendCategoryTrack  blendCategory = "track"
@@ -43,14 +49,23 @@ func (s *BlendService) GetBlend(user string, category blendCategory, timeDuratio
 	}
 	_ = userListenHistory // Placeholder to avoid unused variable error
 
+	//For now import from lastfm
+
 	//Mock Changing Data
-	if category == BlendCategoryArtist && timeDuration == BlendTimeDurationOneMonth {
-		return 75, nil
-	} else if category == BlendCategoryArtist && timeDuration == BlendTimeDurationThreeMonth {
-		return 60, nil
-	} else if category == BlendCategoryTrack && timeDuration == BlendTimeDurationOneMonth {
-		return 85, nil
-	}
 
 	return 42, nil
+}
+
+func (s *BlendService) getArists(userName string, timeDuration blendTimeDuration) (map[string]int, error) {
+	topArtist, err := s.LastFMExternal.GetUserTopArtists(
+		userName,
+		durationMap[timeDuration],
+		1,
+		50,
+	)
+	glog.Info(topArtist, err)
+
+	//TODO finish this function
+
+	return make(map[string]int), nil
 }
