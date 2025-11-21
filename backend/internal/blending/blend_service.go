@@ -9,7 +9,7 @@ import (
 )
 
 type BlendService struct {
-	BlendStore     *RedisStateStore
+	repo           *RedisStateStore
 	LastFMExternal *musicapi.LastFMAPIExternal
 }
 
@@ -40,16 +40,21 @@ func NewBlendService(blendStore RedisStateStore, lfmAdapter musicapi.LastFMAPIEx
 	return &BlendService{&blendStore, &lfmAdapter}
 }
 
-func (s *BlendService) GetBlend(userA, userB string, category blendCategory, timeDuration blendTimeDuration) (int, error) {
+func (s *BlendService) GetBlend(userA UUID, userB string, category blendCategory, timeDuration blendTimeDuration) (int, error) {
 	//Implement logic to calculate blend percentage based on user data, category, and time duration
 
 	glog.Info("Calculating blend for users: ", userA, " + ", userB, " category: ",
 		category, " timeDuration: ", timeDuration)
 
+	//Get the username from the UUID of the given user that's sending the request
+	userNameA, err := s.repo.GetUser(userA)
+	if err != nil {
+		return 0, fmt.Errorf("could not extract username from UUID of user with ID: %s, %w", userA, err)
+	}
 	switch {
 	case category == BlendCategoryArtist:
 		glog.Info("Switched to getArtistBlend")
-		return s.getArtistBlend(userA, userB, timeDuration)
+		return s.getArtistBlend(userNameA, userB, timeDuration)
 	case category == BlendCategoryTrack:
 		return 404, nil
 	case category == BlendCategoryAlbum:

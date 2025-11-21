@@ -13,6 +13,8 @@ type BlendHandler struct {
 	svc                 BlendService
 }
 
+type UUID string
+
 func NewBlendHandler(frontendUrl, sidName string, service BlendService) *BlendHandler {
 	return &BlendHandler{
 		frontendUrl:         frontendUrl,
@@ -51,7 +53,7 @@ func (h *BlendHandler) GetNewBlend(w http.ResponseWriter, r *http.Request) {
 		glog.Error("Error during post-validation cookie extraction, %w", err)
 	}
 
-	userA := cookie.Value
+	userA := UUID(cookie.Value)
 	userB := blendReq.user
 	category := blendCategory(blendReq.category) //artist
 	timeDuration := blendTimeDuration(blendReq.timeDuration)

@@ -7,6 +7,10 @@ type RedisStateStore struct {
 	prefix string
 }
 
+func (s *RedisStateStore) GetUser(userA UUID) (string, error) {
+	return "saflas", nil
+}
+
 type UserListenHistory struct {
 	// Define fields for user listen history
 }
