@@ -4,15 +4,15 @@ package musicapi
 type UserInfo struct {
 	User struct {
 		Name            string `json:"name"`
-		Age             int    `json:"age"`
-		Subscribers     int    `json:"subscriber"`
+		Age             string `json:"age"`
+		Subscribers     string `json:"subscriber"`
 		RealName        string `json:"realname"`
 		Bootstraped     string `json:"bootstrap"`
-		Playcount       int    `json:"playcount"`
-		Artist_count    int    `json:"artist_count"`
-		Track_count     int    `json:"track_count"`
-		Album_count     int    `json:"album_count"`
-		Registered_unix int    `json:"registered"`
+		Playcount       string `json:"playcount"`
+		Artist_count    string `json:"artist_count"`
+		Track_count     string `json:"track_count"`
+		Album_count     string `json:"album_count"`
+		Registered_unix string `json:"registered"`
 		URL             string `json:"url"`
 	} `json:"user"`
 }
@@ -29,7 +29,7 @@ type Artist struct {
 	URL        string         `json:"url"`
 	Name       string         `json:"name"`
 	Attributes map[string]any `json:"@attr"`
-	Playcount  int            `json:"playcount"`
+	Playcount  string         `json:"playcount"`
 }
 
 // user.getweeklyalbumchart
@@ -44,7 +44,7 @@ type Album struct {
 	URL        string         `json:"url"`
 	Name       string         `json:"name"`
 	Attributes map[string]any `json:"@attr"`
-	Playcount  int            `json:"playcount"`
+	Playcount  string         `json:"playcount"`
 }
 
 type UserWeeklyAlbumList struct {
@@ -65,7 +65,7 @@ type Track struct {
 	URL        string         `json:"url"`
 	Name       string         `json:"name"`
 	Attributes map[string]any `json:"@attr"`
-	Playcount  int            `json:"playcount"`
+	Playcount  string         `json:"playcount"`
 }
 
 type UserWeeklyTrackList struct {
@@ -77,4 +77,25 @@ type UserWeeklyTrackList struct {
 type ErrorResponse struct {
 	Error   int    `json:"error"`
 	Message string `json:"message"`
+}
+
+// user.getttopartists
+type UserTopArtists struct {
+	TopArtists struct {
+		Artist     []Topartist_artist `json:"artist"`
+		Attributes map[string]any     `json:"@attr"`
+	} `json:"topartists"`
+}
+
+// type TopArtists struct {
+// 	Artist     []Topartist_artist `json:"artist"`
+// 	Attributes map[string]any     `json:"@attr"`
+// }
+
+type Topartist_artist struct {
+	MBID       string         `json:"mbid"`
+	URL        string         `json:"url"`
+	Playcount  string         `json:"playcount"`
+	Attributes map[string]any `json:"attr"`
+	Name       string         `json:"name"`
 }

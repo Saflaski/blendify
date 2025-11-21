@@ -26,6 +26,14 @@ type LastFMAPIExternal struct {
 	setJson   bool
 }
 
+func (h *LastFMAPIExternal) GetUserTopTracks(userName string, period Period, i int, param4 int) (any, any) {
+	panic("unimplemented")
+}
+
+func (h *LastFMAPIExternal) GetUserTopAlbums(userName string, period Period, i int, param4 int) (any, any) {
+	panic("unimplemented")
+}
+
 func NewLastFMExternalAdapter(apiKey, lastFMURL string, setJson bool) *LastFMAPIExternal {
 	return &LastFMAPIExternal{
 		apiKey, lastFMURL, setJson,
@@ -124,10 +132,17 @@ func (h *LastFMAPIExternal) GetUserWeeklyTracks(userName string, from time.Time,
 	return weeklyTracks, nil
 }
 
-func (h *LastFMAPIExternal) GetUserTopArtists(userName string, period Period, page int, limit int) (weeklyTracks UserWeeklyTrackList, err error) {
+func (h *LastFMAPIExternal) GetUserTopArtists(userName string, period Period, page int, limit int) (topArtists UserTopArtists, err error) {
+
+	if page == 0 {
+		page = 1
+	}
+	if limit == 0 {
+		limit = 50
+	}
 
 	extraURLParams := map[string]string{
-		"method": "user.getweeklytrackchart",
+		"method": "user.gettopartists",
 		"user":   userName,
 		"period": string(period),
 		"page":   strconv.Itoa(page),
@@ -136,16 +151,16 @@ func (h *LastFMAPIExternal) GetUserTopArtists(userName string, period Period, pa
 
 	resp, err := h.MakeRequest(extraURLParams)
 	if err != nil {
-		return UserWeeklyTrackList{}, fmt.Errorf("GetUserWeeklyArtists makeRequest Error: %v", err)
+		return UserTopArtists{}, fmt.Errorf("GetUserTopArtists makeRequest Error: %v", err)
 	}
 	defer resp.Body.Close()
 
-	weeklyTracks, err = utility.Decode[UserWeeklyTrackList](resp)
+	topArtists, err = utility.Decode[UserTopArtists](resp)
 	if err != nil {
-		return weeklyTracks, fmt.Errorf("GetUserWeeklyArtists decode Error: %v", err)
+		return topArtists, fmt.Errorf("GetUserTopArtists decode Error: %v", err)
 	}
 
-	return weeklyTracks, nil
+	return topArtists, nil
 }
 
 func (h *LastFMAPIExternal) MakeRequest(extraURLParams map[string]string) (*http.Response, error) {

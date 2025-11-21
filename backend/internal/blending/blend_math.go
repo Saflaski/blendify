@@ -6,12 +6,6 @@ import (
 	"slices"
 )
 
-func CalculateBlendNumber(user1Map, user2Map map[string]int) int {
-	// intersectKeys := findIntersectKeys(user1Map, user2Map)
-
-	return 0
-}
-
 func FindIntersectKeys(m1, m2 map[string]int) []string {
 	//Smaller map on outside loop leads to better stack order
 
@@ -30,14 +24,14 @@ func FindIntersectKeys(m1, m2 map[string]int) []string {
 }
 
 // Calculate Log Weighted Cosine Similarity
-func calculateLWCS(lambda float64, user1Map, user2Map map[string]int) int {
+func CalculateLWCS(lambda float64, user1Map, user2Map map[string]int) int {
 	common_keys := FindIntersectKeys(user1Map, user2Map)
 
-	dot_product := 0
+	dot_product := 0.0
 	for _, v := range common_keys {
 		v1 := user1Map[v]
 		v2 := user2Map[v]
-		dot_product += int(float32(v1 * v2))
+		dot_product += float64(v1 * v2)
 	}
 
 	magA := math.Sqrt(getMagnitude(slices.Collect(maps.Values(user1Map))))
@@ -54,10 +48,10 @@ func calculateLWCS(lambda float64, user1Map, user2Map map[string]int) int {
 		logWeightedValue = 0
 	}
 
-	directCosineValue := float64(dot_product) / (magA * magB)
+	directCosineValue := dot_product / (magA * magB)
 	finalValue := lambda*logWeightedValue + (1-lambda)*directCosineValue
 
-	return int(finalValue)
+	return int(finalValue * 100) //0.X float -> XX int for percentage value
 }
 
 func getMagnitude(arr []int) float64 {

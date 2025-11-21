@@ -2,6 +2,8 @@ package blend
 
 import (
 	musicapi "backend-lastfm/internal/music_api/lastfm"
+	"fmt"
+	"strconv"
 
 	"github.com/golang/glog"
 )
@@ -38,34 +40,99 @@ func NewBlendService(blendStore RedisStateStore, lfmAdapter musicapi.LastFMAPIEx
 	return &BlendService{&blendStore, &lfmAdapter}
 }
 
-func (s *BlendService) GetBlend(user string, category blendCategory, timeDuration blendTimeDuration) (int, error) {
+func (s *BlendService) GetBlend(userA, userB string, category blendCategory, timeDuration blendTimeDuration) (int, error) {
 	//Implement logic to calculate blend percentage based on user data, category, and time duration
-	//For now, return mock data
 
-	glog.Info("Calculating blend for user: ", user, " category: ", category, " timeDuration: ", timeDuration)
-	userListenHistory, err := s.BlendStore.GetUserListenHistory(user)
-	if err != nil {
-		return 0, err
+	glog.Info("Calculating blend for users: ", userA, " + ", userB, " category: ",
+		category, " timeDuration: ", timeDuration)
+
+	switch {
+	case category == BlendCategoryArtist:
+		return s.getArtistBlend(userA, userB, timeDuration)
+	case category == BlendCategoryTrack:
+		return 404, nil
+	case category == BlendCategoryAlbum:
+		return 404, nil
+	default:
+		return 0, fmt.Errorf("category does not match any of the required categories")
 	}
-	_ = userListenHistory // Placeholder to avoid unused variable error
 
-	//For now import from lastfm
-
-	//Mock Changing Data
-
-	return 42, nil
 }
 
-func (s *BlendService) getArists(userName string, timeDuration blendTimeDuration) (map[string]int, error) {
+func (s *BlendService) getArtistBlend(userA, userB string, timeDuration blendTimeDuration) (int, error) {
+
+	listenHistoryA, err := s.getTopArtists(userA, timeDuration)
+	if err != nil {
+		return 0, fmt.Errorf("could not retrieve top artists for %s as it returned error: %w", userA, err)
+	}
+	listenHistoryB, err := s.getTopArtists(userB, timeDuration)
+	if err != nil {
+		return 0, fmt.Errorf("could not retrieve top artists for %s as it returned error: %w", userB, err)
+	}
+	if len(listenHistoryA) == 0 || len(listenHistoryB) == 0 {
+		return 0, fmt.Errorf("inappropriate listen history ranges, userA: %d , userB: %d", len(listenHistoryA), len(listenHistoryB))
+	}
+
+	//Using Log Weighted Cosine Similarity
+	blendNumber := CalculateLWCS(0.5, listenHistoryA, listenHistoryB)
+	return blendNumber, nil
+}
+
+func (s *BlendService) getTrackBlend(userA, userB string, timeDuration blendTimeDuration) (int, error) {
+
+	listenHistoryA, err := s.getTopTracks(userA, timeDuration)
+	if err != nil {
+		return 0, fmt.Errorf("could not retrieve top artists for %s as it returned error: %w", userA, err)
+	}
+	listenHistoryB, err := s.getTopTracks(userB, timeDuration)
+	if err != nil {
+		return 0, fmt.Errorf("could not retrieve top artists for %s as it returned error: %w", userB, err)
+	}
+	//Using Log Weighted Cosine Similarity
+	blendNumber := CalculateLWCS(0.5, listenHistoryA, listenHistoryB)
+	return blendNumber, nil
+}
+
+func (s *BlendService) getTopArtists(userName string, timeDuration blendTimeDuration) (map[string]int, error) {
+	artistToPlaybacks := make(map[string]int)
 	topArtist, err := s.LastFMExternal.GetUserTopArtists(
 		userName,
 		durationMap[timeDuration],
 		1,
 		50,
 	)
-	glog.Info(topArtist, err)
 
-	//TODO finish this function
+	if err != nil {
+		return artistToPlaybacks, fmt.Errorf("could not extract TopArtists object from lastfm adapter, %w", err)
+	}
+	for _, v := range topArtist.TopArtists.Artist {
+		playcount, err := strconv.Atoi(v.Playcount)
+		if err != nil {
+			return artistToPlaybacks, fmt.Errorf("got unparseable string during string -> int conversation: %w", err)
+		}
+		artistToPlaybacks[v.Name] = playcount
+	}
 
-	return make(map[string]int), nil
+	return artistToPlaybacks, nil
+}
+
+func (s *BlendService) getTopTracks(userName string, timeDuration blendTimeDuration) (map[string]int, error) {
+	//TODO UNIMPLEMENTED
+	panic("unimplemented")
+	// tracksToPlaybacks := make(map[string]int)
+	// topTracks, err := s.LastFMExternal.GetUserTopTracks(
+	// 	userName,
+	// 	durationMap[timeDuration],
+	// 	1,
+	// 	50,
+	// )
+
+	// if err != nil {
+	// 	return tracksToPlaybacks, fmt.Errorf("could not extract TopTracks object from lastfm adapter, %w", err)
+	// }
+	// for _, v := range topTracks.TopTracks.Artist {
+	// 	tracksToPlaybacks[v.Name] = v.Playcount
+	// }
+
+	// return tracksToPlaybacks, nil
 }

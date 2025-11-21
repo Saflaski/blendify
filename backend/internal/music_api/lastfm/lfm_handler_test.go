@@ -16,8 +16,8 @@ func TestEndpoints(t *testing.T) {
 	if err := godotenv.Load("../../../.env"); err != nil {
 		t.Fatal("godotenv.Load failed")
 	}
-	var apiKey = ApiKey(os.Getenv("LASTFM_API_KEY"))
-	var lastFMURL LastFMURL = LastFMURL("http://ws.audioscrobbler.com/2.0/")
+	var apiKey = os.Getenv("LASTFM_API_KEY")
+	var lastFMURL = "http://ws.audioscrobbler.com/2.0/"
 
 	apiHandler := NewLastFMExternalAdapter(
 		apiKey,
@@ -109,6 +109,56 @@ func TestEndpoints(t *testing.T) {
 		if err := checkResponseBody(resp); err != nil {
 			t.Errorf("Response error: %q", err)
 		}
+
+	})
+
+	t.Run("Get User Top Artists", func(t *testing.T) {
+
+		extraURLParams := map[string]string{
+			"method": "user.gettopartists",
+			"user":   "saflas",
+			"page":   "1",
+			"limit":  "50",
+		}
+
+		resp, err := checkResponseOK(apiHandler.MakeRequest(extraURLParams))
+
+		if err != nil {
+			t.Errorf("Error: %q", err)
+		}
+		t.Error()
+		defer resp.Body.Close()
+
+		if err := checkResponseBody(resp); err != nil {
+			t.Errorf("Response error: %q", err)
+		}
+
+	})
+
+	t.Run("Get User - Top 50 Listened to Artists -- 3 months", func(t *testing.T) {
+		userName := "test2002"
+		// response, err := blendService.getTopArists(userName, BlendTimeDurationThreeMonth)
+		TopArtistResponse, err := apiHandler.GetUserTopArtists(
+			userName,
+			"3month",
+			1,
+			50,
+		)
+		// glog.Error(topArtist, err)
+
+		if err != nil {
+			t.Errorf("Expected no error, got %q", err)
+		}
+
+		mostListenedToArtist := TopArtistResponse.TopArtists.Artist[0].Name
+		if mostListenedToArtist == "" {
+			t.Errorf("Got empty string after processing LastFM response: %q", mostListenedToArtist)
+
+		}
+		if len(TopArtistResponse.TopArtists.Artist) == 0 {
+			t.Errorf("empty error from processing topartists")
+		}
+		// t.Error(fmt.Sprint(len(TopArtistResponse.TopArtists.Artist)))
 
 	})
 
