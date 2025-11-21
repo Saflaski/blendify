@@ -4,6 +4,8 @@ import (
 	"backend-lastfm/internal/auth"
 	"context"
 	"net/http"
+
+	"github.com/golang/glog"
 )
 
 func Cors(next http.Handler) http.Handler {
@@ -31,22 +33,25 @@ func Cors(next http.Handler) http.Handler {
 	})
 }
 
-func ValidateCookie(authService auth.AuthService) func(next http.Handler) http.Handler {
+func ValidateCookie(h auth.AuthHandler, s auth.AuthService) func(next http.Handler) http.Handler {
 	ctx := context.Background()
+	glog.Info("Pass 1")
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			cookieVal, err := r.Cookie("sid")
+			glog.Info("Pass 2")
+
+			cookieVal, err := r.Cookie(h.SessionIdCookieName)
 			if err != nil {
 				http.Error(w, "Unauthorized - Missing or invalid session cookie", http.StatusUnauthorized)
 				return
 			}
-			valid, err := authService.CheckCookieValidity(ctx, cookieVal.Value)
+			valid, err := s.CheckCookieValidity(ctx, cookieVal.Value)
 			if !valid || err != nil {
 				http.Error(w, "Unauthorized - Invalid session", http.StatusUnauthorized)
-				return
+
 			} else {
 				next.ServeHTTP(w, r)
-				return
+
 			}
 		})
 	}

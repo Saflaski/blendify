@@ -15,7 +15,7 @@ import (
 
 type AuthHandler struct {
 	frontendUrl         string
-	sessionIdCookieName string
+	SessionIdCookieName string
 	svc                 AuthService
 }
 
@@ -32,7 +32,7 @@ func (h *AuthHandler) HandleLastFMLoginFlow(w http.ResponseWriter, r *http.Reque
 
 	url := strings.Join([]string{h.frontendUrl, "home"}, "/")
 	//Check if cookie exists
-	cookie, err := r.Cookie(h.sessionIdCookieName)
+	cookie, err := r.Cookie(h.SessionIdCookieName)
 
 	if err != nil { //Either no cookie found or error retrieving cookie
 		if err == http.ErrNoCookie {
@@ -75,7 +75,7 @@ func (h *AuthHandler) startNewLoginFlow(w http.ResponseWriter, r *http.Request) 
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:  h.sessionIdCookieName,
+		Name:  h.SessionIdCookieName,
 		Value: sessionID,
 
 		Expires:  time.Now().Add(time.Minute * 100),
@@ -175,7 +175,7 @@ func (h *AuthHandler) HandleLastFMCallbackFlow(w http.ResponseWriter, r *http.Re
 	tokenReturned := r.URL.Query().Get("token")
 
 	//Retrieve SID
-	cookieSidReturned, err := r.Cookie(h.sessionIdCookieName)
+	cookieSidReturned, err := r.Cookie(h.SessionIdCookieName)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintf(w, "Cookie not found or invalid. Retry request.")
@@ -241,7 +241,7 @@ func (h *AuthHandler) HandleLastFMCallbackFlow(w http.ResponseWriter, r *http.Re
 
 func (h *AuthHandler) HandleAPIValidation(w http.ResponseWriter, r *http.Request) {
 
-	cookie, err := r.Cookie(h.sessionIdCookieName)
+	cookie, err := r.Cookie(h.SessionIdCookieName)
 	if err == nil {
 		//Validating found cookie
 		found, err := h.svc.CheckCookieValidity(r.Context(), cookie.Value)
@@ -274,9 +274,9 @@ func (h *AuthHandler) HandleAPIValidation(w http.ResponseWriter, r *http.Request
 
 func (h *AuthHandler) HandleLastFMLogOut(w http.ResponseWriter, r *http.Request) {
 
-	newCookie := h.svc.GetDeletedCookie(h.sessionIdCookieName) //Cookie that expires immediately ie a deleted cookie
+	newCookie := h.svc.GetDeletedCookie(h.SessionIdCookieName) //Cookie that expires immediately ie a deleted cookie
 
-	cookie, err := r.Cookie(h.sessionIdCookieName) //Get browser cookie
+	cookie, err := r.Cookie(h.SessionIdCookieName) //Get browser cookie
 
 	if err != nil { //Either no cookie found or error retrieving cookie
 		//Nothing to do here. Just delete the cookie

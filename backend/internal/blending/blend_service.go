@@ -48,6 +48,7 @@ func (s *BlendService) GetBlend(userA, userB string, category blendCategory, tim
 
 	switch {
 	case category == BlendCategoryArtist:
+		glog.Info("Switched to getArtistBlend")
 		return s.getArtistBlend(userA, userB, timeDuration)
 	case category == BlendCategoryTrack:
 		return 404, nil

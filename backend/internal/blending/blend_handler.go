@@ -13,8 +13,11 @@ type BlendHandler struct {
 	svc                 BlendService
 }
 
-func NewBlendHandler(service BlendService) *BlendHandler {
-	return &BlendHandler{svc: service}
+func NewBlendHandler(frontendUrl, sidName string, service BlendService) *BlendHandler {
+	return &BlendHandler{
+		frontendUrl:         frontendUrl,
+		sessionIdCookieName: sidName,
+		svc:                 service}
 }
 
 type BlendRequest struct {
@@ -50,7 +53,7 @@ func (h *BlendHandler) GetNewBlend(w http.ResponseWriter, r *http.Request) {
 
 	userA := cookie.Value
 	userB := blendReq.user
-	category := blendCategory(blendReq.category)
+	category := blendCategory(blendReq.category) //artist
 	timeDuration := blendTimeDuration(blendReq.timeDuration)
 
 	blendNumber, err := h.svc.GetBlend(userA, userB, category, timeDuration)
