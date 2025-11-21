@@ -43,14 +43,15 @@ func NewBlendService(blendStore RedisStateStore, lfmAdapter musicapi.LastFMAPIEx
 func (s *BlendService) GetBlend(userA UUID, userB string, category blendCategory, timeDuration blendTimeDuration) (int, error) {
 	//Implement logic to calculate blend percentage based on user data, category, and time duration
 
-	glog.Info("Calculating blend for users: ", userA, " + ", userB, " category: ",
-		category, " timeDuration: ", timeDuration)
-
 	//Get the username from the UUID of the given user that's sending the request
 	userNameA, err := s.repo.GetUser(userA)
 	if err != nil {
 		return 0, fmt.Errorf("could not extract username from UUID of user with ID: %s, %w", userA, err)
 	}
+
+	glog.Info("Calculating blend for users: ", userA, " + ", userB, " category: ",
+		category, " timeDuration: ", timeDuration)
+
 	switch {
 	case category == BlendCategoryArtist:
 		glog.Info("Switched to getArtistBlend")
