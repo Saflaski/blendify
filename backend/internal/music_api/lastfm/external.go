@@ -26,14 +26,6 @@ type LastFMAPIExternal struct {
 	setJson   bool
 }
 
-func (h *LastFMAPIExternal) GetUserTopTracks(userName string, period Period, i int, param4 int) (any, any) {
-	panic("unimplemented")
-}
-
-func (h *LastFMAPIExternal) GetUserTopAlbums(userName string, period Period, i int, param4 int) (any, any) {
-	panic("unimplemented")
-}
-
 func NewLastFMExternalAdapter(apiKey, lastFMURL string, setJson bool) *LastFMAPIExternal {
 	return &LastFMAPIExternal{
 		apiKey, lastFMURL, setJson,
@@ -161,6 +153,68 @@ func (h *LastFMAPIExternal) GetUserTopArtists(userName string, period Period, pa
 	}
 
 	return topArtists, nil
+}
+
+func (h *LastFMAPIExternal) GetUserTopAlbums(userName string, period Period, page int, limit int) (topAlbums UserTopAlbums, err error) {
+
+	if page == 0 {
+		page = 1
+	}
+	if limit == 0 {
+		limit = 50
+	}
+
+	extraURLParams := map[string]string{
+		"method": "user.gettopalbums",
+		"user":   userName,
+		"period": string(period),
+		"page":   strconv.Itoa(page),
+		"limit":  strconv.Itoa(limit),
+	}
+
+	resp, err := h.MakeRequest(extraURLParams)
+	if err != nil {
+		return UserTopAlbums{}, fmt.Errorf("UserTopAlbums makeRequest Error: %v", err)
+	}
+	defer resp.Body.Close()
+
+	topAlbums, err = utility.Decode[UserTopAlbums](resp)
+	if err != nil {
+		return topAlbums, fmt.Errorf("UserTopAlbums decode Error: %v", err)
+	}
+
+	return topAlbums, nil
+}
+
+func (h *LastFMAPIExternal) GetUserTopTracks(userName string, period Period, page int, limit int) (topTracks UserTopTracks, err error) {
+
+	if page == 0 {
+		page = 1
+	}
+	if limit == 0 {
+		limit = 50
+	}
+
+	extraURLParams := map[string]string{
+		"method": "user.gettoptracks",
+		"user":   userName,
+		"period": string(period),
+		"page":   strconv.Itoa(page),
+		"limit":  strconv.Itoa(limit),
+	}
+
+	resp, err := h.MakeRequest(extraURLParams)
+	if err != nil {
+		return UserTopTracks{}, fmt.Errorf("UserTopTracks makeRequest Error: %v", err)
+	}
+	defer resp.Body.Close()
+
+	topTracks, err = utility.Decode[UserTopTracks](resp)
+	if err != nil {
+		return topTracks, fmt.Errorf("UserTopTracks decode Error: %v", err)
+	}
+
+	return topTracks, nil
 }
 
 func (h *LastFMAPIExternal) MakeRequest(extraURLParams map[string]string) (*http.Response, error) {
