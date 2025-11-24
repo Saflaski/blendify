@@ -1,44 +1,79 @@
-import { Button } from "@/components/ui/button";
+import { BlendsButton } from "../components/BlendsButton";
 
-export function Blend() {
+export function Blends() {
   return (
-    <div>
-      <BlendButton
-        onClick={async () => {
-          console.log("Make New Blend clicked");
-          const UA = "UUID1";
-          const UB = "UUID2";
-          await fetch(
-            `http://localhost:3000/v1/blends/new/?UA=${UA}&UB=${UB}`,
-            {
-              method: "GET",
-            },
-          );
-        }}
-      >
-        Make New Blend
-      </BlendButton>
+    <div className="min-h-screen w-full bg-slate-100 flex items-start justify-center py-5 font-[Roboto_Mono]">
+      <div className="w-full max-w-xl bg-white border border-slate-300 px-5 py-6 flex flex-col gap-y-4 text-slate-900">
+        <header className="w-full flex flex-col gap-1">
+          <h1 className="text-xl font-semibold tracking-tight">Your blends</h1>
+          <p className="text-sm text-slate-500">
+            Paste a Blendify URL to make a blend with someone
+          </p>
+        </header>
+
+        <section className="w-full">
+          <AddNewBlendBar />
+        </section>
+
+        <div className="text-xs text-slate-500">
+          23 blends — 3 added recently
+        </div>
+
+        <section className="w-full flex flex-col gap-3">
+          <RecentOrTop />
+
+          <div className="space-y-1.5 text-sm">
+            <div className="flex items-center justify-between border border-slate-200 px-3 py-2 hover:bg-slate-50 transition">
+              <span className="truncate font-['Roboto_Mono'] text-xs">
+                https://blendify.fm/b/my-favorite-morning-mix
+              </span>
+              <span className="text-[10px] text-slate-400 ml-2 shrink-0">
+                added 2d ago
+              </span>
+            </div>
+            <div className="flex items-center justify-between border border-slate-200 px-3 py-2 hover:bg-slate-50 transition">
+              <span className="truncate font-['Roboto_Mono'] text-xs">
+                https://blendify.fm/b/focus-grooves
+              </span>
+              <span className="text-[10px] text-slate-400 ml-2 shrink-0">
+                added 5d ago
+              </span>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
 
-function BlendButton({ children, label, onClick }) {
+function RecentOrTop() {
   return (
-    <button
-      onClick={onClick}
-      className="group relative aspect-square w-18.75 select-none bg-white p-3 outline-2 outline-black transition-all flex flex-col items-center justify-center gap-1"
-    >
-      <div className="flex items-center justify-center flex-1 w-full">
-        <div className="w-6 h-3 flex items-center justify-center">
-          {children}
-        </div>
+    <div className="w-full pl-2">
+      <div className="flex border-b border-slate-300 text-xs font-['Roboto_Mono']">
+        <button className="px-3 py-2 border-b-2 border-slate-900 font-bold">
+          Recent
+        </button>
+        <button className="px-3 py-2 text-slate-500 hover:text-slate-900 transition">
+          Top
+        </button>
       </div>
+    </div>
+  );
+}
 
-      {label ? (
-        <span className="text-[9px] font-semibold tracking-wide text-neutral-800 leading-none">
-          {label}
-        </span>
-      ) : null}
-    </button>
+function AddNewBlendBar() {
+  return (
+    <div className="flex w-full gap-2">
+      <textarea
+        name="newBlend"
+        placeholder="https://blendify.fm/new/"
+        rows={1}
+        className="flex-1 resize-none overflow-hidden border border-slate-400 bg-white px-3 py-2 text-xs font-['Roboto_Mono'] focus:outline-none focus:border-slate-900"
+      ></textarea>
+
+      <button className="border border-slate-900 bg-amber-400 px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide hover:bg-amber-300 focus:outline-none focus:border-black">
+        ADD
+      </button>
+    </div>
   );
 }
