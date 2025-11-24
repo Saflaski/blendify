@@ -4,13 +4,13 @@ export function Login() {
   return (
     <div className="">
       {/* <Navbar /> */}
-      <div className="responsive-position">
-        <div className=" center-div p-2  w-full">
+      <div className=" w-full justify-center min-h-screen flex flex-row">
+        <div className=" flex flex-col p-2 w-full items-center pt-10">
           {" "}
           {/* Added flex-col and items-center for vertical centering */}
           <Title />
           {/* New section for login buttons */}
-          <div className="mt-1 flex justify-center flex-wrap gap-4">
+          <div className="mt-1 flex flex-wrap justify-center w-1/2 gap-4 ">
             {" "}
             {/* Using flex-wrap and gap for responsiveness and spacing */}
             {loginButton("lastfm")}
