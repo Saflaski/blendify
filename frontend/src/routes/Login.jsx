@@ -34,19 +34,38 @@ function loginButton(platform) {
     apple: {
       src: "/src//assets/images/apple2.svg",
       alt: "Apple Logo",
-      wrapperClass: "mx-1",
+      wrapperClass: "mx-3",
     },
     tidal: {
       src: "/src//assets/images/tidal.svg",
       alt: "Tidal Logo",
-      wrapperClass: "",
+      wrapperClass: "mx-3",
     },
   };
 
   const config = platforms[platform];
 
   return (
-    <button className="login-button-box" onClick={config.handleFunc}>
+    <button
+      className="
+        relative
+        mx-auto my-2
+        md:my-4
+        w-[18rem] h-[5rem]
+        md:w-[15em] md:h-[4em]
+        border border-black
+        bg-white
+        p-[3px]
+        overflow-hidden
+        shadow-[4px_4px_0_0_#e0ad46]
+        transition-all duration-75 ease-in-out
+        flex items-center justify-center
+        cursor-pointer
+        hover:shadow-[2px_2px_0_0_#000]
+        active:translate-x-[1px] active:translate-y-[1px]
+      "
+      onClick={config.handleFunc}
+    >
       <div className={config.wrapperClass}>
         <img
           src={config.src}
@@ -65,9 +84,11 @@ function handleLastFMClick() {
 
 function Title() {
   return (
-    <div className="login">
-      <h1 className="leading-none m-0">Blendify</h1>
-      <p className="subheading mt-10 text-gray-500 text-center break-words">
+    <div className="font-[Roboto_Mono]">
+      <h2 className="leading-none m-0 text-6xl lg:text-8xl text-black font-semibold justify-center text-center">
+        Blendify
+      </h2>
+      <p className=" font-semibold mt-4 text-gray-700 text-2xl text-center break-words">
         Blend your music tastes and more
       </p>
     </div>

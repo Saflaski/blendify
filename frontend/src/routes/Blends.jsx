@@ -2,7 +2,7 @@ import { BlendsButton } from "../components/BlendsButton";
 
 export function Blends() {
   return (
-    <div className="min-h-screen w-full bg-slate-100 flex items-start justify-center py-5 font-[Roboto_Mono]">
+    <div className="min-h-screen w-full flex items-start justify-center py-5 font-[Roboto_Mono]">
       <div className="w-full max-w-xl bg-white border border-slate-300 px-5 py-6 flex flex-col gap-y-4 text-slate-900">
         <header className="w-full flex flex-col gap-1">
           <h1 className="text-xl font-semibold tracking-tight">Your blends</h1>

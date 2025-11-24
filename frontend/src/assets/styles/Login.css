@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-.login h1 {
+/* .login h1 {
   font-family: "Magnolia Script";
   font-style: normal;
   font-weight: 600;
@@ -15,7 +15,61 @@
   text-align: center;
   word-wrap: break-word;
   line-height: 1.5;
+} */
+
+.login-button-box {
+  position: relative; /* Changed from fixed to relative for better mobile positioning */
+  margin: 24px auto; /* Centered the button horizontally */
+  width: 15em;
+  height: 4em;
+  border-width: 1px;
+  border-style: solid;
+  border-color: black;
+  box-shadow: 4px 4px 0 0 #e0ad46;
+  background-color: white;
+  padding: 3px;
+  overflow: hidden;
+  transition: all 75ms ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
+
+.login-button-box:hover {
+  box-shadow: 2px 2px 0 0 #000;
+}
+
+.login-button-box:active {
+  transform: translateX(1px) translateY(1px);
+}
+/* 
+.login-button-box {
+  position: relative;
+  margin: 20px auto 1px auto; 
+  width: 15em;
+  height: 4em;
+  border-width: 1px;
+  border-style: solid;
+  border-color: black;
+  box-shadow: 4px 4px 0 0 #e0ad46;
+  background-color: white;
+  padding: 3px;
+  overflow: hidden;
+  transition: all 75ms ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.login-button-box:hover {
+  box-shadow: 2px 2px 0 0 #000;
+}
+
+.login-button-box:active {
+  transform: translateX(1px) translateY(1px);
+} */
 
 .subheading {
   font-family: "Roboto Mono", "monospace";
