@@ -1,67 +1,115 @@
 import { Link } from "react-router-dom";
-import "/src/assets/styles/navbar.css";
-import Cookies from "js-cookie";
 import { useState, useEffect, useRef } from "react";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const dropButtonRef = useRef(null);
+  const menuWrapperRef = useRef(null);
 
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        !dropdownRef.current?.contains(event.target) &&
-        !dropButtonRef.current?.contains(event.target)
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        menuWrapperRef.current &&
+        !menuWrapperRef.current.contains(event.target)
       ) {
         setOpen(false);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
-    <div className>
-      <div className="grid-container">
-        <div className="menuOver">
-          <div className="menu-trigger" ref={dropButtonRef}>
-            <MenuButton
-              onClick={() => {
-                setOpen(!open);
-              }}
+    <nav className="w-full bg-[#E0AD46] h-12 flex items-center z-20">
+      <div className="lg:w-[full] md:w-[60%] w-[100%] mx-auto flex justify-between relative items-center px-2">
+        {/* LEFT: Menu button + dropdown */}
+        <div
+          ref={menuWrapperRef}
+          className="relative flex items-center justify-start"
+        >
+          <button
+            type="button"
+            onClick={() => setOpen((prev) => !prev)}
+            className="
+              bg-transparent
+              text-black
+              w-7 h-7
+              flex items-center justify-center
+            "
+          >
+            <img
+              src="/src/assets/images/menu.svg"
+              alt="menu"
+              className="w-full h-full"
             />
-          </div>
+          </button>
+
+          {open && (
+            <div
+              ref={dropdownRef}
+              className="
+                absolute
+                top-[100%] left-0
+                mt-5
+                z-30
+                inline-block
+                bg-white
+                px-8 py-4                
+                 outline-1 outline-[#bbb]
+                shadow-md
+              "
+            >
+              <ul className="list-none m-0 p-0 space-y-1">
+                <DropDownItem page="/" funcName={null} text="Home" />
+                <DropDownItem page="/about" funcName={null} text="About" />
+                <DropDownItem page="/privacy" funcName={null} text="Privacy" />
+                <DropDownItem
+                  page="/login"
+                  funcName={handleLogOut}
+                  text="Log Out"
+                />
+              </ul>
+            </div>
+          )}
         </div>
-        <div className=" button-blendify">
-          <Link to="/home">
-            <button>Blendify</button>
+
+        {/* CENTER: Blendify brand */}
+        <div className="flex items-center justify-center">
+          <Link to="/home" className="no-underline">
+            <button
+              type="button"
+              className="
+                bg-transparent
+                font-bold
+                text-2xl
+                flex items-center justify-center
+                min-h-[5px]
+                text-center
+                
+                transition-all duration-75 ease-in-out
+                active:translate-x-[1px] active:translate-y-[1px]
+              "
+              style={{ textShadow: "2px 2px 0 #000" }}
+            >
+              Blendify
+            </button>
           </Link>
         </div>
-        <div className="outline-2">
+
+        {/* RIGHT: Add button */}
+        <div className="flex items-center justify-end">
           <AddButton />
         </div>
       </div>
-      <div
-        className={`dropdown-menu ${open ? "active" : "inactive"}`}
-        ref={dropdownRef}
-      >
-        <ul>
-          <DropDownItem page={"/"} funcName={null} text={"Home"} />
-          <DropDownItem page={"/about"} funcName={null} text={"About"} />
-          <DropDownItem page={"/privacy"} funcName={null} text={"Privacy"} />
-          <DropDownItem
-            page={"/login"}
-            funcName={handleLogOut}
-            text={"Log Out"}
-          />
-        </ul>
-      </div>
-    </div>
+    </nav>
   );
 }
+
+// ---- helpers ----
 
 async function handleLogOut() {
   await fetch("http://localhost:3000/v1/auth/logout", {
@@ -74,11 +122,14 @@ async function handleLogOut() {
 
 function DropDownItem({ page, funcName, text }) {
   return (
-    <li className="dropDownItem">
-      <Link to={page || "/asd"}>
+    <li className="font-['Roboto_Mono','monospace'] font-medium text-base bg-white">
+      <Link to={page || "/"} className="no-underline">
         <button
-          onClick={funcName || null}
-          className={text == "Log Out" ? "text-red-500" : "text-black"}
+          type="button"
+          onClick={funcName || undefined}
+          className={`bg-inherit ${
+            text === "Log Out" ? "text-red-500" : "text-black"
+          }`}
         >
           {text || "Lorem Ipsum"}
         </button>
@@ -87,22 +138,23 @@ function DropDownItem({ page, funcName, text }) {
   );
 }
 
-function MenuButton({ onClick }) {
-  return (
-    <div>
-      <button>
-        <img src="/src/assets/images/menu.svg" onClick={onClick} />
-      </button>
-    </div>
-  );
-}
-
 function AddButton({ onClick }) {
   return (
-    <div>
-      <button>
-        <img src="/src/assets/images/plus.svg" onClick={onClick} />
-      </button>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className="
+        bg-transparent
+        text-black
+        w-7 h-7
+        flex items-center justify-center
+      "
+    >
+      <img
+        src="/src/assets/images/plus.svg"
+        alt="add"
+        className="w-full h-full"
+      />
+    </button>
   );
 }

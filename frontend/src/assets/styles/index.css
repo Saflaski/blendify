@@ -59,9 +59,9 @@ main > * {
 } */
 
 /* main { outline: 1px solid red; } */
-.route-layer {
+/* .route-layer {
   outline: 1px dashed blue;
-}
+} */
 
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;

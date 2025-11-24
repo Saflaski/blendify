@@ -88,7 +88,7 @@ function Title() {
       <h2 className="leading-none m-0 text-6xl lg:text-8xl text-black font-semibold justify-center text-center">
         Blendify
       </h2>
-      <p className=" font-semibold mt-4 text-gray-700 text-2xl text-center break-words">
+      <p className=" font-mono px-5 mt-4 text-black text-2xl text-center break-words">
         Blend your music tastes and more
       </p>
     </div>
