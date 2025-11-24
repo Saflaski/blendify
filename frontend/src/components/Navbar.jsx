@@ -58,13 +58,14 @@ export function Navbar() {
                 z-30
                 inline-block
                 bg-white
-                px-8 py-4                
+                px-10 py-4                
                  outline-1 outline-[#bbb]
                 shadow-md
               "
             >
               <ul className="list-none m-0 p-0 space-y-1">
-                <DropDownItem page="/" funcName={null} text="Home" />
+                {/* <DropDownItem page="/" funcName={null} text="Home" /> */}
+                <DropDownItem page="/blends" funcName={null} text="Blends" />
                 <DropDownItem page="/about" funcName={null} text="About" />
                 <DropDownItem page="/privacy" funcName={null} text="Privacy" />
                 <DropDownItem

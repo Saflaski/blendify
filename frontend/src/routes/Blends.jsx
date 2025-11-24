@@ -1,5 +1,5 @@
 import { BlendsButton } from "../components/BlendsButton";
-
+import { useState, useEffect } from "react";
 export function Blends() {
   return (
     <div className="min-h-screen w-full flex items-start justify-center py-5 font-[Roboto_Mono]">
@@ -7,13 +7,19 @@ export function Blends() {
         <header className="w-full flex flex-col gap-1">
           <h1 className="text-xl font-semibold tracking-tight">Your blends</h1>
           <p className="text-sm text-slate-500">
-            Paste a Blendify URL to make a blend with someone
+            Generate a Blendify link and send it to someone
           </p>
+          <section>
+            <GenerateLink />
+          </section>
+          <div className="w-1/2 border-t my-4 mx-auto justify-center"></div>
+          <p className="text-sm text-slate-500">
+            Paste a Blendify link from someone to start a blend
+          </p>
+          <section className="w-full">
+            <AddNewBlendBar />
+          </section>
         </header>
-
-        <section className="w-full">
-          <AddNewBlendBar />
-        </section>
 
         <div className="text-xs text-slate-500">
           23 blends — 3 added recently
@@ -25,7 +31,7 @@ export function Blends() {
           <div className="space-y-1.5 text-sm">
             <div className="flex items-center justify-between border border-slate-200 px-3 py-2 hover:bg-slate-50 transition">
               <span className="truncate font-['Roboto_Mono'] text-xs">
-                https://blendify.fm/b/my-favorite-morning-mix
+                Ethan + Saf // 50%
               </span>
               <span className="text-[10px] text-slate-400 ml-2 shrink-0">
                 added 2d ago
@@ -33,7 +39,7 @@ export function Blends() {
             </div>
             <div className="flex items-center justify-between border border-slate-200 px-3 py-2 hover:bg-slate-50 transition">
               <span className="truncate font-['Roboto_Mono'] text-xs">
-                https://blendify.fm/b/focus-grooves
+                Laurence + Saf // 80%
               </span>
               <span className="text-[10px] text-slate-400 ml-2 shrink-0">
                 added 5d ago
@@ -68,12 +74,81 @@ function AddNewBlendBar() {
         name="newBlend"
         placeholder="https://blendify.fm/new/"
         rows={1}
-        className="flex-1 resize-none overflow-hidden border border-slate-400 bg-white px-3 py-2 text-xs font-['Roboto_Mono'] focus:outline-none focus:border-slate-900"
+        className="flex-1 resize-none overflow-hidden border border-slate-600 bg-white px-3 py-2 text-xs font-['Roboto_Mono'] focus:outline-none focus:border-slate-900"
       ></textarea>
 
       <button className="border border-slate-900 bg-amber-400 px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide hover:bg-amber-300 focus:outline-none focus:border-black">
-        ADD
+        Add
       </button>
     </div>
   );
+}
+
+function GenerateLink() {
+  const [link, setLink] = useState("");
+
+  async function handleGenerateLink() {
+    const newLink = await generateNewLinkSomehow(); // your async fn
+    setLink(newLink);
+  }
+
+  useEffect(() => {
+    handleGenerateLink();
+  }, []);
+
+  const handleCopy = async () => {
+    if (!link) return;
+    await navigator.clipboard.writeText(link); // full URL
+  };
+
+  return (
+    <div className="flex w-full gap-2">
+      <textarea
+        name="newLink"
+        type="text"
+        value={link}
+        readOnly={true}
+        rows={1}
+        className="flex-1 text-[11px] sm:text-xs resize-none overflow-hidden text-nowrap  border opacity-90 border-slate-300 bg-slate-50 focus:outline-none focus:ring-0 focus:border-slate-300 px-3 py-2 text-xs font-['Roboto_Mono'] cursor-default"
+      ></textarea>
+      <button
+        onClick={handleCopy}
+        className="flex items-center justify-center border border-slate-900 bg-amber-400 px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide hover:bg-amber-300 focus:outline-none focus:border-black"
+      >
+        <img
+          className="size-4"
+          src="src/assets/images/copy.svg"
+          alt="Copy URL"
+        />
+      </button>
+      <button
+        onClick={handleGenerateLink}
+        className="border border-slate-900 bg-amber-400 px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide hover:bg-amber-300 focus:outline-none focus:border-black"
+      >
+        Refresh
+      </button>
+    </div>
+  );
+}
+
+async function generateNewLinkSomehow() {
+  console.log("Fetching outward blend link");
+  try {
+    const baseURL = "http://localhost:3000/v1/blends/generate";
+    const url = new URL(baseURL);
+    const response = await fetch(url, { credentials: "include" });
+    if (!response.ok) {
+      throw new Error(
+        `Backend request error on generating new outward link. Status: ${response.status}`,
+      );
+    }
+    const data = await response.json();
+    const newLink = data["link"];
+    console.log("API response data: ", data);
+    console.log("Blend Link: ", newLink);
+    return newLink;
+  } catch (err) {
+    console.error("API erorr: ", err);
+    return "http://blendify.fm/new/" + Math.floor(Math.random() * 1000);
+  }
 }
