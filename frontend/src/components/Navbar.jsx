@@ -90,7 +90,7 @@ export function Navbar() {
                 flex items-center justify-center
                 min-h-[5px]
                 text-center
-                
+                text-[#F6E8CB]
                 transition-all duration-75 ease-in-out
                 active:translate-x-[1px] active:translate-y-[1px]
               "

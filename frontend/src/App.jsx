@@ -1,13 +1,13 @@
 import "/src/assets/styles/App.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Login } from "./routes/Login";
-import { Home } from "./routes/home";
+import { Blend } from "./routes/Blend";
 import { NotFound } from "./routes/NotFound";
 import { About } from "./routes/About";
 import { Privacy } from "./routes/Privacy";
 import { Layout } from "./Layout";
 import { authLoader } from "./utils/authLoader";
-import { Blends } from "./routes/Blends";
+import { Home } from "./routes/Home";
 
 const router = createBrowserRouter([
   {
@@ -19,7 +19,7 @@ const router = createBrowserRouter([
       // { path: "/", element: <Home /> },
       { path: "/", element: <Home />, loader: authLoader },
       // { path: "/home/", element: <Home /> },
-      { path: "/blends", element: <Blends /> },
+      { path: "/blends", element: <Blend /> },
       { path: "/home", element: <Home />, loader: authLoader },
       { path: "*", element: <NotFound /> },
     ],
