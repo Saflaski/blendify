@@ -25,8 +25,11 @@ export function Home() {
     // } catch (err) {
     //   console.error("API error:", err);
     // }
-    console.log("TEST: ", url);
-    const value = { invite: url };
+
+    const parsed = new URL(url);
+    const invite = parsed.searchParams.get("invite");
+    console.log("TEST: ", invite);
+    const value = { invite: invite };
     console.log("Adding new blend from Blend Add URL Value:", { value });
     navigate("/blend", { state: value });
   }
@@ -99,7 +102,7 @@ function RecentOrTop() {
 
 function AddNewBlendBar({ AddBlend }) {
   const [value, setValue] = useState("");
-  var prefix = `http://localhost:5173/blend/?invite=`;
+  var prefix = `http://localhost:5173/blend/`;
   const isValid = (value) => {
     //Simple URL check for now. Change slice num and url for prod
     if (value.slice(0, prefix.length) == prefix) {
@@ -128,7 +131,7 @@ function AddNewBlendBar({ AddBlend }) {
       </div>
 
       <button
-        onClick={() => AddBlend(value.slice(prefix.length))}
+        onClick={() => AddBlend(value)}
         className="border border-slate-900 bg-amber-400 px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide hover:bg-amber-300 focus:outline-none focus:border-black"
       >
         Add
