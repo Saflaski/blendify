@@ -2,8 +2,35 @@ import { BlendsButton } from "../components/BlendsButton";
 import { useState, useEffect } from "react";
 import tick from "/src/assets/images/tick.svg";
 import cross from "/src/assets/images/cross.svg";
+import { useNavigate } from "react-router-dom";
 
 export function Home() {
+  const navigate = useNavigate();
+
+  function AddBlend(url) {
+    // try {
+    //   const baseURL = "http:/localhost:3000/v1/blends/add";
+    //   const params = new URLSearchParams({
+    //     value: value,
+    //   });
+    //   const url = new URL(baseURL);
+    //   url.search = params.toString();
+    //   const response = await fetch(url, { credentials: "include" });
+    //   if (!response.ok) {
+    //     throw new Error(`Backend request error. Status: ${response.status}`);
+    //   }
+    //   const data = await response.json();
+
+    //   console.log("API response data:", data);
+    // } catch (err) {
+    //   console.error("API error:", err);
+    // }
+    console.log("TEST: ", url);
+    const value = { invite: url };
+    console.log("Adding new blend from Blend Add URL Value:", { value });
+    navigate("/blend", { state: value });
+  }
+
   return (
     <div className="min-h-screen w-full flex items-start justify-center py-5 font-[Roboto_Mono]">
       <div className="w-full max-w-xl bg-white border border-slate-300 px-5 py-6 flex flex-col gap-y-4 text-slate-900">
@@ -20,7 +47,7 @@ export function Home() {
             Paste a Blendify link from someone to start a blend
           </p>
           <section className="w-full">
-            <AddNewBlendBar />
+            <AddNewBlendBar AddBlend={AddBlend} />
           </section>
         </header>
 
@@ -70,12 +97,12 @@ function RecentOrTop() {
   );
 }
 
-function AddNewBlendBar() {
+function AddNewBlendBar({ AddBlend }) {
   const [value, setValue] = useState("");
-
+  var prefix = `http://localhost:5173/blend/?invite=`;
   const isValid = (value) => {
     //Simple URL check for now. Change slice num and url for prod
-    if (value.slice(0, 29) === "https://localhost:5173/blend/") {
+    if (value.slice(0, prefix.length) == prefix) {
       return true;
     } else return false;
   };
@@ -85,7 +112,7 @@ function AddNewBlendBar() {
       <div className="flex w-full border border-slate-600 bg-white px-3 py-2 text-xs font-['Roboto_Mono'] focus:outline-none focus:border-slate-900">
         <textarea
           name="newBlend"
-          placeholder="https://blendify.fm/new/"
+          placeholder={prefix}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           rows={1}
@@ -100,7 +127,10 @@ function AddNewBlendBar() {
         )}
       </div>
 
-      <button className="border border-slate-900 bg-amber-400 px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide hover:bg-amber-300 focus:outline-none focus:border-black">
+      <button
+        onClick={() => AddBlend(value.slice(prefix.length))}
+        className="border border-slate-900 bg-amber-400 px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide hover:bg-amber-300 focus:outline-none focus:border-black"
+      >
         Add
       </button>
     </div>
@@ -157,7 +187,7 @@ function GenerateLink() {
 async function generateNewLinkSomehow() {
   console.log("Fetching outward blend link");
   try {
-    const baseURL = "http://localhost:3000/v1/blends/generate";
+    const baseURL = "http://localhost:3000/v1/blend/generatelink";
     const url = new URL(baseURL);
     const response = await fetch(url, { credentials: "include" });
     if (!response.ok) {
@@ -166,12 +196,14 @@ async function generateNewLinkSomehow() {
       );
     }
     const data = await response.json();
-    const newLink = data["link"];
+    const newLink = data["linkId"];
     console.log("API response data: ", data);
     console.log("Blend Link: ", newLink);
-    return newLink;
+    return "http://localhost:5173/blend/?invite=" + newLink;
   } catch (err) {
     console.error("API erorr: ", err);
-    return "http://blendify.fm/new/" + Math.floor(Math.random() * 1000);
+    return (
+      "http://localhost:5173/blend/?invite=" + Math.floor(Math.random() * 1000)
+    );
   }
 }

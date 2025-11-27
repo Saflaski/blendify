@@ -25,7 +25,7 @@ export function ControlPanel({ setBlendPercent }) {
   async function updateBlendFromAPI({ user, mode, timeDuration }) {
     console.log("Updating blend from API:", { user, mode, timeDuration });
     try {
-      const baseURL = "http:/localhost:3000/v1/blends/new";
+      const baseURL = "http:/localhost:3000/v1/blend/new";
       const params = new URLSearchParams({
         category: mode,
         user: user,

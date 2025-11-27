@@ -70,9 +70,11 @@ func (app *application) mount() http.Handler {
 		*blendService)
 
 	r.Route("/v1", func(r chi.Router) {
-		r.Route("/blends", func(r chi.Router) {
+		r.Route("/blend", func(r chi.Router) {
 			r.Use(internal_middleware.ValidateCookie(*authHandler, authService))
 			r.Get("/new", blendHandler.GetNewBlend)
+			r.Post("/add", blendHandler.AddBlendFromInviteLink)
+			r.Get("/generatelink", blendHandler.GenerateNewLink)
 		})
 
 		r.Route("/auth", func(r chi.Router) {

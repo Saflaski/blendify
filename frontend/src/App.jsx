@@ -19,7 +19,7 @@ const router = createBrowserRouter([
       // { path: "/", element: <Home /> },
       { path: "/", element: <Home />, loader: authLoader },
       // { path: "/home/", element: <Home /> },
-      { path: "/blends", element: <Blend /> },
+      { path: "/blend", element: <Blend /> },
       { path: "/home", element: <Home />, loader: authLoader },
       { path: "*", element: <NotFound /> },
     ],

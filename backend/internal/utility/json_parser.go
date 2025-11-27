@@ -22,3 +22,11 @@ func Decode[T any](response *http.Response) (T, error) {
 	return v, nil
 
 }
+
+func DecodeRequest[T any](r *http.Request) (T, error) {
+	var v T
+	if err := json.NewDecoder(r.Body).Decode(&v); err != nil {
+		return v, fmt.Errorf("error decoding JSON: %w", err)
+	}
+	return v, nil
+}

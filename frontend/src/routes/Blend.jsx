@@ -1,10 +1,84 @@
 // import { DropDownMenu } from "../components/blend-options/dropdownmenu";
 import { ControlPanel } from "../components/blend-options/ControlPanel";
-
+import { useLocation, useNavigate } from "react-router-dom";
 import React, { useRef, useState, useEffect } from "react";
 import { toBlob } from "html-to-image";
 
 export function Blend() {
+  // ------ If user is from invite link and not Add button -------
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [blendId, setBlendId] = useState(null);
+
+  useEffect(() => {
+    //From URL Paste
+    const params = new URLSearchParams(location.search);
+    const urlInvite = params.get("invite");
+
+    //From Add button
+    const value = location.state;
+    const navigateInvite = value?.invite;
+
+    //Log them
+    console.log("urlInvite: ", urlInvite);
+    console.log("Navigated Invite Link Data: ", navigateInvite);
+
+    // if (!invite) {
+    //   setError("Missing Invite Code");
+    //   setLoading(false);
+    //   return;
+    // }
+
+    //Get blendid as authenticated user.
+    const checkInvite = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/v1/blend/add", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ invite }),
+        });
+
+        if (res.status == 401) {
+          navigate(
+            `/login?redirectTo=${encodeURIComponent(location.pathname + location.search)}`,
+          );
+          return;
+        }
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setError(data.message || "Invite is invalid.");
+          setLoading(false);
+          return;
+        }
+
+        const data = await res.json();
+        setBlendId(data["blendId"]);
+
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        setError("Something went wrong. Please try again.");
+        setLoading(false);
+      }
+    };
+
+    // If user clicked on existing blend from homepage
+    const blendId = value?.blendId;
+    if (!blendId) {
+      checkInvite();
+    }
+    //
+  });
+
+  console.log(blendId);
+
   // ----- Copy button functionality -----
   const captureRef = useRef(null); //Div to be captured
   const [isCapturing, setIsCapturing] = useState(false); //To hide the button during screenshot
@@ -17,13 +91,6 @@ export function Blend() {
   }, []);
 
   const [displayBlendValue, SetBlendValue] = useState(0);
-  const [loading, setLoading] = useState(false);
-
-  const setBlendNumber = async (e) => {
-    setLoading(true);
-    const number = await GetBlendValueFromAPI(e);
-    setLoading(false);
-  };
 
   const handleScreenshot = async () => {
     setIsCapturing(true);

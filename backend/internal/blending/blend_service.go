@@ -2,6 +2,7 @@ package blend
 
 import (
 	musicapi "backend-lastfm/internal/music_api/lastfm"
+	"context"
 	"fmt"
 	"strconv"
 
@@ -11,6 +12,18 @@ import (
 type BlendService struct {
 	repo           *RedisStateStore
 	LastFMExternal *musicapi.LastFMAPIExternal
+}
+
+func (s BlendService) GenerateNewLinkAndAssignToUser(context context.Context, userA UUID) (any, error) {
+
+	//Generate a linkId to be returned that won't hash collide
+	//Store the association
+	return "", nil
+}
+
+func (s *BlendService) AddBlendFromInvite(context context.Context, userA UUID, blendLinkValue string) error {
+
+	return nil
 }
 
 type blendCategory string
