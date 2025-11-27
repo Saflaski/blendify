@@ -9,7 +9,7 @@ export function Home() {
 
   async function AddBlend(url) {
     try {
-      const baseURL = "http:/localhost:3000/v1/blends/add";
+      const baseURL = "http:/localhost:3000/v1/blend/add";
       const params = new URLSearchParams({
         value: value,
       });

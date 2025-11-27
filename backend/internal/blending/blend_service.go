@@ -14,10 +14,14 @@ type BlendService struct {
 	LastFMExternal *musicapi.LastFMAPIExternal
 }
 
-func (s BlendService) GenerateNewLinkAndAssignToUser(context context.Context, userA UUID) (any, error) {
+func (s *BlendService) GenerateNewLinkAndAssignToUser(context context.Context, userA UUID) (any, error) {
 
 	//Generate a linkId to be returned that won't hash collide
+	// newInviteId := uuid.New()
 	//Store the association
+
+	// s.repo.SetUserToLink(userA, newInviteId)
+
 	return "", nil
 }
 

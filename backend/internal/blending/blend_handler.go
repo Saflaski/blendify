@@ -103,7 +103,8 @@ type responseStruct struct {
 	Invite string `json:"invite"`
 }
 
-// This is where frontend has "Add" clicked and the Blend Link ID has been passed as a value
+// This is where frontend consumes an invite link and expects a blend id in response.
+// An auth association is made with user and blend id
 func (h *BlendHandler) AddBlendFromInviteLink(w http.ResponseWriter, r *http.Request) {
 
 	glog.Info("Entered AddBlendFromInviteLink")
