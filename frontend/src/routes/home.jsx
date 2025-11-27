@@ -7,24 +7,24 @@ import { useNavigate } from "react-router-dom";
 export function Home() {
   const navigate = useNavigate();
 
-  function AddBlend(url) {
-    // try {
-    //   const baseURL = "http:/localhost:3000/v1/blends/add";
-    //   const params = new URLSearchParams({
-    //     value: value,
-    //   });
-    //   const url = new URL(baseURL);
-    //   url.search = params.toString();
-    //   const response = await fetch(url, { credentials: "include" });
-    //   if (!response.ok) {
-    //     throw new Error(`Backend request error. Status: ${response.status}`);
-    //   }
-    //   const data = await response.json();
+  async function AddBlend(url) {
+    try {
+      const baseURL = "http:/localhost:3000/v1/blends/add";
+      const params = new URLSearchParams({
+        value: value,
+      });
+      const url = new URL(baseURL);
+      url.search = params.toString();
+      const response = await fetch(url, { credentials: "include" });
+      if (!response.ok) {
+        throw new Error(`Backend request error. Status: ${response.status}`);
+      }
+      const data = await response.json();
 
-    //   console.log("API response data:", data);
-    // } catch (err) {
-    //   console.error("API error:", err);
-    // }
+      console.log("API response data:", data);
+    } catch (err) {
+      console.error("API error:", err);
+    }
 
     const parsed = new URL(url);
     const invite = parsed.searchParams.get("invite");
