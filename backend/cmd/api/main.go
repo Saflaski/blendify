@@ -42,8 +42,14 @@ func main() {
 		glog.Fatal("LASTFM_API_KEY not set in env")
 	}
 
+	JWT_EXPR_IN_SECONDS, err := strconv.Atoi(os.Getenv("JWT_EXP"))
+	if err != nil {
+		glog.Fatal("JWT_EXP conversion to int failed", err)
+	}
+
 	cfg := config{
-		addr: ":3000",
+		addr:                   ":3000",
+		jwtExpirationInSeconds: JWT_EXPR_IN_SECONDS,
 		db: dbConfig{
 			addrString: DB_ADDR,
 			password:   DB_PASS,

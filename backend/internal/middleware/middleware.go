@@ -33,6 +33,18 @@ func Cors(next http.Handler) http.Handler {
 	})
 }
 
+// func CheckLastFM(h auth.AuthHandler, s auth.AuthService) func(next http.Handler) http.Handler {
+// 	return func(next http.Handler) http.Handler {
+// 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 			if platform := chi.URLParam(r, "platform"); platform != "lastfm" {
+// 				glog.Errorf("Platform %s not implemented yet", platform)
+// 				w.WriteHeader(http.StatusNotImplemented)
+// 				fmt.Fprintf(w, "Platform %s not implemented yet", platform)
+// 			}
+// 		})
+// 	}
+// }
+
 func ValidateCookie(h auth.AuthHandler, s auth.AuthService) func(next http.Handler) http.Handler {
 	ctx := context.Background()
 	glog.Info("Pass 1")
