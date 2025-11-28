@@ -14,14 +14,13 @@ import (
 )
 
 type AuthHandler struct {
-	frontendUrl            string
-	SessionIdCookieName    string
-	svc                    AuthService
-	jwtExpirationInSeconds int
+	frontendUrl         string
+	SessionIdCookieName string
+	svc                 AuthService
 }
 
-func NewAuthHandler(frontendUrl, sessionIdCookieName string, svc AuthService, jwtExpirationInSeconds int) *AuthHandler {
-	return &AuthHandler{frontendUrl, sessionIdCookieName, svc, jwtExpirationInSeconds}
+func NewAuthHandler(frontendUrl, sessionIdCookieName string, svc AuthService) *AuthHandler {
+	return &AuthHandler{frontendUrl, sessionIdCookieName, svc}
 }
 
 func (h *AuthHandler) HandleLastFMLoginFlow(w http.ResponseWriter, r *http.Request) {

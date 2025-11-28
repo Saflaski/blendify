@@ -60,7 +60,6 @@ func (app *application) mount() http.Handler {
 		"http://localhost:5173",
 		"sid",
 		authService,
-		app.config.jwtExpirationInSeconds,
 	)
 
 	blendRepo := blend.NewRedisStateStore(rdb)
@@ -72,17 +71,17 @@ func (app *application) mount() http.Handler {
 
 	r.Route("/v1", func(r chi.Router) {
 		r.Route("/blend", func(r chi.Router) {
-			r.Use(auth.ValidateWithJWT(*authHandler, authService))
+			r.Use(internal_middleware.ValidateCookie(*authHandler, authService))
 			r.Get("/new", blendHandler.GetNewBlend)
 			r.Post("/add", blendHandler.AddBlendFromInviteLink)
 			r.Get("/generatelink", blendHandler.GenerateNewLink)
 		})
 
 		r.Route("/auth", func(r chi.Router) {
-			r.Get("/login/{platform}", authHandler.HandleLastFMLoginFlow)       //This one would create the JWT
-			r.Post("/logout", authHandler.HandleLastFMLogOut)                   //Delete the JWT
-			r.Get("/validate", authHandler.HandleAPIValidation)                 //Check if this is needed anymore
-			r.Get("/callback/{platform}", authHandler.HandleLastFMCallbackFlow) //Maybe JWT?
+			r.Get("/login/{platform}", authHandler.HandleLastFMLoginFlow)
+			r.Post("/logout", authHandler.HandleLastFMLogOut)
+			r.Get("/validate", authHandler.HandleAPIValidation)
+			r.Get("/callback/{platform}", authHandler.HandleLastFMCallbackFlow)
 
 		})
 	})
@@ -115,10 +114,9 @@ func (app *application) run(h http.Handler) error {
 }
 
 type config struct {
-	addr                   string //Address
-	db                     dbConfig
-	external               externalConfig
-	jwtExpirationInSeconds int
+	addr     string //Address
+	db       dbConfig
+	external externalConfig
 }
 
 type dbConfig struct {
