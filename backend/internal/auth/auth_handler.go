@@ -17,7 +17,7 @@ type AuthHandler struct {
 	frontendUrl         string
 	SessionIdCookieName string
 	svc                 AuthService
-	// UserKey             contextKey
+	UserKey             contextKey
 }
 
 type contextKey string
@@ -25,7 +25,7 @@ type contextKey string
 const UserKey contextKey = "userid"
 
 func NewAuthHandler(frontendUrl, sessionIdCookieName string, svc AuthService) *AuthHandler {
-	return &AuthHandler{frontendUrl, sessionIdCookieName, svc}
+	return &AuthHandler{frontendUrl, sessionIdCookieName, svc, UserKey}
 }
 
 func (h *AuthHandler) HandleLastFMLoginFlow(w http.ResponseWriter, r *http.Request) {
@@ -60,7 +60,7 @@ func (h *AuthHandler) HandleLastFMLoginFlow(w http.ResponseWriter, r *http.Reque
 		}
 	} else { //There is a cookie with SID
 
-		found, err := h.svc.CheckCookieValidity(r.Context(), cookie.Value)
+		found, err := h.svc.IsSIDValid(r.Context(), cookie.Value)
 		if err != nil { //Error during validity check
 			glog.Errorf("Error checking cookie validity: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -252,7 +252,7 @@ func (h *AuthHandler) HandleAPIValidation(w http.ResponseWriter, r *http.Request
 	cookie, err := r.Cookie(h.SessionIdCookieName)
 	if err == nil {
 		//Validating found cookie
-		found, err := h.svc.CheckCookieValidity(r.Context(), cookie.Value)
+		found, err := h.svc.IsSIDValid(r.Context(), cookie.Value)
 		if err != nil {
 			glog.Errorf("Error checking cookie validity: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -290,7 +290,7 @@ func (h *AuthHandler) HandleLastFMLogOut(w http.ResponseWriter, r *http.Request)
 		//Nothing to do here. Just delete the cookie
 	} else { //There is a cookie with SID
 
-		found, err := h.svc.CheckCookieValidity(r.Context(), cookie.Value)
+		found, err := h.svc.IsSIDValid(r.Context(), cookie.Value)
 		if err != nil { //Error during validity check
 			glog.Errorf("Error checking cookie validity: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)

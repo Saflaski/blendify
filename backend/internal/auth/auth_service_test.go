@@ -71,7 +71,7 @@ func TestAuthService(t *testing.T) {
 		newUserIdStr := newUserId.String()
 
 		//Find User with given sid on /logout
-		returnedUserId, err := authService.GetUserBySessionID(ctx, newSid) //Get userid
+		returnedUserId, err := authService.GetUserByAnySessionID(ctx, newSid) //Get userid
 		if err != nil {
 			t.Errorf("could not read user: %s", err)
 		}
@@ -84,7 +84,7 @@ func TestAuthService(t *testing.T) {
 		//Delete sid with returned user
 		authService.DeleteSessionID(ctx, newSid)
 
-		returnedUserId, err = authService.GetUserBySessionID(ctx, newSid) //Get userid
+		returnedUserId, err = authService.GetUserByAnySessionID(ctx, newSid) //Get userid
 		if err != nil {
 			t.Errorf("could not read user: %s", err)
 		}
@@ -105,7 +105,7 @@ func TestAuthService(t *testing.T) {
 		newUserIdStr := newUserId.String()
 
 		//User issues logout with and we get sid from cookie
-		returnedUserId, err := authService.GetUserBySessionID(ctx, newSid) //Get userid
+		returnedUserId, err := authService.GetUserByAnySessionID(ctx, newSid) //Get userid
 		if err != nil {
 			t.Errorf("could not read user: %s", err)
 		}

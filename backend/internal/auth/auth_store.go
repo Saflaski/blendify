@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
 	"time"
 
@@ -17,7 +18,8 @@ type AuthRepository interface {
 	GetSidKey(ctx context.Context, sessionID string) (string, error)
 	DelSidKey(ctx context.Context, sessionID string) error
 	MakeNewUser(context context.Context, validationSid string, userName string, userid uuid.UUID) error
-	GetUserBySessionID(context context.Context, sid string) (string, error)
+	GetUserByAnySessionID(context context.Context, sid string) (string, error)
+	GetUserByValidSessionID(context context.Context, sid string, expiryDuration time.Duration) (string, error)
 	DeleteUser(ctx context.Context, userid string) error
 	DeleteSingularSessionID(context context.Context, sid string) error
 }
@@ -79,7 +81,7 @@ func (r *RedisStateStore) DeleteSingularSessionID(ctx context.Context, sid strin
 
 	//Get User whose owns this sid
 
-	u, err := r.GetUserBySessionID(commandContext, sid)
+	u, err := r.GetUserByAnySessionID(commandContext, sid)
 	if err != nil {
 		return err
 	}
@@ -121,7 +123,7 @@ func (r *RedisStateStore) DeleteUser(ctx context.Context, userid string) error {
 		return fmt.Errorf("error in getting sorted set range, %s", err)
 	}
 
-	//Delete all the sid->user indices
+	//Delete all the sid->user index
 	deleted := 0
 	for _, sid := range sids {
 		keySidUser := fmt.Sprintf("%s:%s", r.prefixSidToUser, sid)
@@ -164,13 +166,39 @@ func (r *RedisStateStore) GetValidSidByUser(context context.Context, userid stri
 	return vals, err
 }
 
-func (r *RedisStateStore) GetUserBySessionID(context context.Context, sid string) (string, error) {
+func (r *RedisStateStore) GetUserByAnySessionID(context context.Context, sid string) (string, error) {
+
 	keyUserSid := fmt.Sprintf("%s:%s", r.prefixSidToUser, sid)
 	val, err := r.client.Get(context, keyUserSid).Result()
 	if err == redis.Nil {
 		return "", nil //We want to return entry string if we don't find any
 	}
 	return val, err
+}
+
+func (r *RedisStateStore) GetUserByValidSessionID(context context.Context, sid string, expiryDuration time.Duration) (string, error) {
+	keyUserSid := fmt.Sprintf("%s:%s", r.prefixSidToUser, sid)
+
+	//Get User from SID
+	userid, err := r.client.Get(context, keyUserSid).Result()
+	if err == redis.Nil {
+		return "", nil //We want to return entry string if we don't find any
+	}
+
+	lastValidTime := time.Now().Add(-expiryDuration)
+
+	//Eg. If expiryDuration is 24 hours, then it will only return session ids that were made in the last 24 hours
+	sids, err := r.GetValidSidByUser(context, userid, lastValidTime)
+
+	//Check if given SID is within these sids and return
+	if err != nil {
+		return "", err
+	}
+	if slices.Contains(sids, sid) {
+		return userid, nil
+	} else {
+		return "", nil
+	}
 }
 
 func (r *RedisStateStore) queueAddNewSidUserIndexCmd(pipe redis.Pipeliner, userid string, sid string) error {

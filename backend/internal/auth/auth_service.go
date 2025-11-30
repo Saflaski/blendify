@@ -48,9 +48,10 @@ type Tx struct {
 }
 
 type authService struct {
-	repo         AuthRepository
-	lastFMAPIKey string
-	lfmapi       musicapi.LastFMAPIExternal
+	repo           AuthRepository
+	lastFMAPIKey   string
+	lfmapi         musicapi.LastFMAPIExternal
+	expiryDuration time.Duration
 }
 
 type SessionID string
@@ -70,6 +71,8 @@ type AuthService interface {
 	SetSessionKey(ctx context.Context, sessionID, userKey string) error
 	DelSidKey(ctx context.Context, sessionID string) error
 	MakeNewUser(context context.Context, validationSid string, userName string) (uuid.UUID, error)
+	GetUserByValidSessionID(context context.Context, sid string) (string, error)
+	IsSIDValid(context context.Context, sid string) (bool, error)
 }
 
 func (s *authService) MakeNewUser(context context.Context, validationSid string, userName string) (uuid.UUID, error) {
@@ -79,8 +82,17 @@ func (s *authService) MakeNewUser(context context.Context, validationSid string,
 
 }
 
-func (s *authService) GetUserBySessionID(context context.Context, sid string) (string, error) {
-	return s.repo.GetUserBySessionID(context, sid)
+func (s *authService) GetUserByAnySessionID(context context.Context, sid string) (string, error) {
+	return s.repo.GetUserByAnySessionID(context, sid)
+}
+
+func (s *authService) GetUserByValidSessionID(context context.Context, sid string) (string, error) {
+	return s.repo.GetUserByValidSessionID(context, sid, s.expiryDuration)
+}
+
+func (s *authService) IsSIDValid(context context.Context, sid string) (bool, error) {
+	u, err := s.repo.GetUserByValidSessionID(context, sid, s.expiryDuration)
+	return u != "", err
 }
 
 func (s *authService) DeleteSessionID(context context.Context, sid string) error {
@@ -95,8 +107,9 @@ func (s *authService) DeleteUser(context context.Context, userid string) error {
 
 func NewAuthService(repo AuthRepository) AuthService {
 	return &authService{
-		repo:         repo,
-		lastFMAPIKey: os.Getenv("LASTFM_API_KEY"),
+		repo:           repo,
+		lastFMAPIKey:   os.Getenv("LASTFM_API_KEY"),
+		expiryDuration: time.Duration(time.Hour * 24),
 	}
 }
 
