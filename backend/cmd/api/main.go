@@ -42,6 +42,11 @@ func main() {
 		glog.Fatal("LASTFM_API_KEY not set in env")
 	}
 
+	SESSION_EXPIRY, err := strconv.Atoi(os.Getenv("SESSION_EXP"))
+	if err != nil {
+		glog.Fatal("SESSION_EXP conversion to int failed", err)
+	}
+
 	cfg := config{
 		addr: ":3000",
 		db: dbConfig{
@@ -54,6 +59,7 @@ func main() {
 			apiKey:    DB_EXTERN_API_KEY,
 			lastFMURL: "https://ws.audioscrobbler.com/2.0/",
 		},
+		sessionExpiry: SESSION_EXPIRY,
 	}
 
 	api := application{

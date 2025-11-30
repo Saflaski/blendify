@@ -54,12 +54,17 @@ func (app *application) mount() http.Handler {
 		true,
 	)
 
+	authCfg := auth.Config{
+		ExpiryDuration:     time.Duration(app.config.sessionExpiry),
+		FrontendCookieName: "sid",
+		FrontendURL:        "http://localhost:5173",
+	}
+
 	authRepo := auth.NewRedisStateStore(rdb) // Placeholder nil, replace with actual Redis client
-	authService := auth.NewAuthService(authRepo)
+	authService := auth.NewAuthService(authRepo, authCfg)
 	authHandler := auth.NewAuthHandler(
-		"http://localhost:5173",
-		"sid",
 		authService,
+		authCfg,
 	)
 
 	blendRepo := blend.NewRedisStateStore(rdb)
@@ -114,9 +119,10 @@ func (app *application) run(h http.Handler) error {
 }
 
 type config struct {
-	addr     string //Address
-	db       dbConfig
-	external externalConfig
+	addr          string //Address
+	db            dbConfig
+	external      externalConfig
+	sessionExpiry int
 }
 
 type dbConfig struct {

@@ -48,13 +48,27 @@ type Tx struct {
 }
 
 type authService struct {
-	repo           AuthRepository
-	lastFMAPIKey   string
-	lfmapi         musicapi.LastFMAPIExternal
-	expiryDuration time.Duration
+	repo         AuthRepository
+	lastFMAPIKey string
+	lfmapi       musicapi.LastFMAPIExternal
+	config       Config
+}
+
+type Config struct {
+	ExpiryDuration     time.Duration
+	FrontendCookieName string
+	FrontendURL        string
 }
 
 type SessionID string
+
+func NewAuthService(repo AuthRepository, cfg Config) AuthService {
+	return &authService{
+		repo:         repo,
+		lastFMAPIKey: os.Getenv("LASTFM_API_KEY"),
+		config:       cfg,
+	}
+}
 
 type AuthService interface {
 	GetDeletedCookie(cookieName string) *http.Cookie
@@ -87,11 +101,11 @@ func (s *authService) GetUserByAnySessionID(context context.Context, sid string)
 }
 
 func (s *authService) GetUserByValidSessionID(context context.Context, sid string) (string, error) {
-	return s.repo.GetUserByValidSessionID(context, sid, s.expiryDuration)
+	return s.repo.GetUserByValidSessionID(context, sid, s.config.ExpiryDuration)
 }
 
 func (s *authService) IsSIDValid(context context.Context, sid string) (bool, error) {
-	u, err := s.repo.GetUserByValidSessionID(context, sid, s.expiryDuration)
+	u, err := s.repo.GetUserByValidSessionID(context, sid, s.config.ExpiryDuration)
 	return u != "", err
 }
 
@@ -103,14 +117,6 @@ func (s *authService) DeleteSessionID(context context.Context, sid string) error
 
 func (s *authService) DeleteUser(context context.Context, userid string) error {
 	return s.repo.DeleteUser(context, userid)
-}
-
-func NewAuthService(repo AuthRepository) AuthService {
-	return &authService{
-		repo:           repo,
-		lastFMAPIKey:   os.Getenv("LASTFM_API_KEY"),
-		expiryDuration: time.Duration(time.Hour * 24),
-	}
 }
 
 func (s *authService) NewSid() SessionID {

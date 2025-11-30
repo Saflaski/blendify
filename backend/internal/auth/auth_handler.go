@@ -14,18 +14,17 @@ import (
 )
 
 type AuthHandler struct {
-	frontendUrl         string
-	SessionIdCookieName string
-	svc                 AuthService
-	UserKey             contextKey
+	svc     AuthService
+	config  Config
+	UserKey contextKey
 }
 
 type contextKey string
 
 const UserKey contextKey = "userid"
 
-func NewAuthHandler(frontendUrl, sessionIdCookieName string, svc AuthService) *AuthHandler {
-	return &AuthHandler{frontendUrl, sessionIdCookieName, svc, UserKey}
+func NewAuthHandler(svc AuthService, cfg Config) *AuthHandler {
+	return &AuthHandler{svc, cfg, UserKey}
 }
 
 func (h *AuthHandler) HandleLastFMLoginFlow(w http.ResponseWriter, r *http.Request) {
@@ -38,9 +37,9 @@ func (h *AuthHandler) HandleLastFMLoginFlow(w http.ResponseWriter, r *http.Reque
 	// Shouldn't this be such that we should assume no cookie?	//TODO
 	// And even if there is a cookie, we delete it? And restart login?
 
-	url := strings.Join([]string{h.frontendUrl, "home"}, "/")
+	url := strings.Join([]string{h.config.FrontendURL, "home"}, "/")
 	//Check if cookie exists
-	cookie, err := r.Cookie(h.SessionIdCookieName)
+	cookie, err := r.Cookie(h.config.FrontendCookieName)
 
 	if err != nil { //Either no cookie found or error retrieving cookie
 		if err == http.ErrNoCookie {
@@ -83,10 +82,10 @@ func (h *AuthHandler) startNewLoginFlow(w http.ResponseWriter, r *http.Request) 
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:  h.SessionIdCookieName,
+		Name:  h.config.FrontendCookieName,
 		Value: sessionID,
 
-		Expires:  time.Now().Add(time.Minute * 120),
+		Expires:  time.Now().Add(h.config.ExpiryDuration),
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   false, //TODO Change to true for Prod
@@ -183,7 +182,7 @@ func (h *AuthHandler) HandleLastFMCallbackFlow(w http.ResponseWriter, r *http.Re
 	tokenReturned := r.URL.Query().Get("token")
 
 	//Retrieve SID
-	cookieSidReturned, err := r.Cookie(h.SessionIdCookieName)
+	cookieSidReturned, err := r.Cookie(h.config.FrontendCookieName)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintf(w, "Cookie not found or invalid. Retry request.")
@@ -242,14 +241,14 @@ func (h *AuthHandler) HandleLastFMCallbackFlow(w http.ResponseWriter, r *http.Re
 	h.svc.MakeNewUser(r.Context(), validationSid, userName)
 	//Perm redirect back to the original frontend.
 	// http.Redirect(w, r, "http://127.0.0.1:5173/home", http.StatusTemporaryRedirect)
-	url := strings.Join([]string{h.frontendUrl, "home"}, "/")
+	url := strings.Join([]string{h.config.FrontendURL, "home"}, "/")
 	http.Redirect(w, r, url, http.StatusSeeOther)
 
 }
 
 func (h *AuthHandler) HandleAPIValidation(w http.ResponseWriter, r *http.Request) {
 
-	cookie, err := r.Cookie(h.SessionIdCookieName)
+	cookie, err := r.Cookie(h.config.FrontendCookieName)
 	if err == nil {
 		//Validating found cookie
 		found, err := h.svc.IsSIDValid(r.Context(), cookie.Value)
@@ -282,9 +281,9 @@ func (h *AuthHandler) HandleAPIValidation(w http.ResponseWriter, r *http.Request
 
 func (h *AuthHandler) HandleLastFMLogOut(w http.ResponseWriter, r *http.Request) {
 
-	newCookie := h.svc.GetDeletedCookie(h.SessionIdCookieName) //Cookie that expires immediately ie a deleted cookie
+	newCookie := h.svc.GetDeletedCookie(h.config.FrontendCookieName) //Cookie that expires immediately ie a deleted cookie
 
-	cookie, err := r.Cookie(h.SessionIdCookieName) //Get browser cookie
+	cookie, err := r.Cookie(h.config.FrontendCookieName) //Get browser cookie
 
 	if err != nil { //Either no cookie found or error retrieving cookie
 		//Nothing to do here. Just delete the cookie
