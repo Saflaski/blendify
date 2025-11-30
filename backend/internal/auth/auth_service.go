@@ -92,7 +92,11 @@ type AuthService interface {
 func (s *authService) MakeNewUser(context context.Context, validationSid string, userName string) (uuid.UUID, error) {
 
 	newuuid := uuid.New()
-	return newuuid, s.repo.MakeNewUser(context, validationSid, userName, newuuid)
+	err := s.repo.MakeNewUser(context, validationSid, userName, newuuid)
+
+	//Download blend data
+
+	return newuuid, err
 
 }
 
