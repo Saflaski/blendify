@@ -17,7 +17,12 @@ type AuthHandler struct {
 	frontendUrl         string
 	SessionIdCookieName string
 	svc                 AuthService
+	// UserKey             contextKey
 }
+
+type contextKey string
+
+const UserKey contextKey = "userid"
 
 func NewAuthHandler(frontendUrl, sessionIdCookieName string, svc AuthService) *AuthHandler {
 	return &AuthHandler{frontendUrl, sessionIdCookieName, svc}
@@ -29,6 +34,9 @@ func (h *AuthHandler) HandleLastFMLoginFlow(w http.ResponseWriter, r *http.Reque
 		w.WriteHeader(http.StatusNotImplemented)
 		fmt.Fprintf(w, "Platform %s not implemented yet", platform)
 	}
+
+	// Shouldn't this be such that we should assume no cookie?	//TODO
+	// And even if there is a cookie, we delete it? And restart login?
 
 	url := strings.Join([]string{h.frontendUrl, "home"}, "/")
 	//Check if cookie exists
@@ -68,7 +76,7 @@ func (h *AuthHandler) HandleLastFMLoginFlow(w http.ResponseWriter, r *http.Reque
 
 func (h *AuthHandler) startNewLoginFlow(w http.ResponseWriter, r *http.Request) error {
 
-	sessionID, state, err := h.svc.GenerateNewStateAndSID(r.Context()) //Core logic so...Service?
+	sessionID, state, err := h.svc.GenerateNewStateAndSID(r.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Error generating security tokens")
@@ -78,10 +86,10 @@ func (h *AuthHandler) startNewLoginFlow(w http.ResponseWriter, r *http.Request) 
 		Name:  h.SessionIdCookieName,
 		Value: sessionID,
 
-		Expires:  time.Now().Add(time.Minute * 100),
+		Expires:  time.Now().Add(time.Minute * 120),
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   false,
+		Secure:   false, //TODO Change to true for Prod
 		SameSite: http.SameSiteLaxMode,
 	})
 
@@ -226,12 +234,12 @@ func (h *AuthHandler) HandleLastFMCallbackFlow(w http.ResponseWriter, r *http.Re
 	//Parsing XML response
 
 	xmlStruct := utility.ParseXMLSessionKey(body)
-	sessionKey := xmlStruct.Session.Key
-
+	// sessionKey := xmlStruct.Session.Key
+	userName := xmlStruct.Session.Name
 	//Assigning the mapping for recording users for later re-auth between frontend and backend
 
-	h.svc.SetSessionKey(r.Context(), validationSid, sessionKey)
-
+	// h.svc.SetSessionKey(r.Context(), validationSid, sessionKey)
+	h.svc.MakeNewUser(r.Context(), validationSid, userName)
 	//Perm redirect back to the original frontend.
 	// http.Redirect(w, r, "http://127.0.0.1:5173/home", http.StatusTemporaryRedirect)
 	url := strings.Join([]string{h.frontendUrl, "home"}, "/")

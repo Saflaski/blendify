@@ -26,10 +26,16 @@ type LastFMAPIExternal struct {
 	setJson   bool
 }
 
+type websessionKey string
+
 func NewLastFMExternalAdapter(apiKey, lastFMURL string, setJson bool) *LastFMAPIExternal {
 	return &LastFMAPIExternal{
 		apiKey, lastFMURL, setJson,
 	}
+}
+
+func (h *LastFMAPIExternal) GetAPISignature(wsKey websessionKey, methodName string) {
+
 }
 
 func (h *LastFMAPIExternal) GetUserInfo(userName string) (userInfo UserInfo, err error) {

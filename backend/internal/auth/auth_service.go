@@ -1,6 +1,7 @@
 package auth
 
 import (
+	musicapi "backend-lastfm/internal/music_api/lastfm"
 	"context"
 	"crypto/md5"
 	"crypto/rand"
@@ -17,6 +18,7 @@ import (
 )
 
 type ClientKey string
+
 var LASTFM_BASE_AUTH_API = "http://www.last.fm/api/auth/"
 var LASTFM_ROOT_API = "http://ws.audioscrobbler.com/2.0/"
 
@@ -45,19 +47,21 @@ type Tx struct {
 	IP             string
 }
 
-
 type authService struct {
-	repo AuthRepository
+	repo         AuthRepository
 	lastFMAPIKey string
+	lfmapi       musicapi.LastFMAPIExternal
 }
+
+type SessionID string
 
 type AuthService interface {
 	GetDeletedCookie(cookieName string) *http.Cookie
-	CheckCookieValidity(ctx context.Context, cookieValue string ) (bool, error)
+	CheckCookieValidity(ctx context.Context, cookieValue string) (bool, error)
 	GenerateNewTx(userIP string) *Tx
 	GetInitLoginURL(state string) string
 	GetNewWebSessionURL(token string) (string, url.Values)
-	
+
 	//Sets new temp state (with expiry) and maps to new permanent sessionID.
 	GenerateNewStateAndSID(ctx context.Context) (string, string, error)
 
@@ -65,13 +69,39 @@ type AuthService interface {
 
 	SetSessionKey(ctx context.Context, sessionID, userKey string) error
 	DelSidKey(ctx context.Context, sessionID string) error
+	MakeNewUser(context context.Context, validationSid string, userName string) (uuid.UUID, error)
+}
+
+func (s *authService) MakeNewUser(context context.Context, validationSid string, userName string) (uuid.UUID, error) {
+
+	newuuid := uuid.New()
+	return newuuid, s.repo.MakeNewUser(context, validationSid, userName, newuuid)
+
+}
+
+func (s *authService) GetUserBySessionID(context context.Context, sid string) (string, error) {
+	return s.repo.GetUserBySessionID(context, sid)
+}
+
+func (s *authService) DeleteSessionID(context context.Context, sid string) error {
+
+	return s.repo.DeleteSingularSessionID(context, sid)
+
+}
+
+func (s *authService) DeleteUser(context context.Context, userid string) error {
+	return s.repo.DeleteUser(context, userid)
 }
 
 func NewAuthService(repo AuthRepository) AuthService {
 	return &authService{
-		repo: repo,
+		repo:         repo,
 		lastFMAPIKey: os.Getenv("LASTFM_API_KEY"),
 	}
+}
+
+func (s *authService) NewSid() SessionID {
+	return SessionID(uuid.New().String())
 }
 
 func (s *authService) SetSessionKey(ctx context.Context, sessionID, userKey string) error {
@@ -82,7 +112,6 @@ func (s *authService) SetSessionKey(ctx context.Context, sessionID, userKey stri
 	}
 	return nil
 }
-
 
 func (s *authService) GetDeletedCookie(cookieName string) *http.Cookie {
 
@@ -104,16 +133,14 @@ func (s *authService) GetDeletedCookie(cookieName string) *http.Cookie {
 // string: Cookie value if success, error message if not
 // bool: success value of operation
 
-
-
-func (s *authService) CheckCookieValidity(ctx context.Context, sidValue string)  (bool, error) {
+func (s *authService) CheckCookieValidity(ctx context.Context, sidValue string) (bool, error) {
 
 	found, err := s.repo.GetSidKey(ctx, sidValue)
-	if err != nil {				//Err checking
-		return false , err
-	} else if found != "" {		//Found valid key
+	if err != nil { //Err checking
+		return false, err
+	} else if found != "" { //Found valid key
 		return true, nil
-	} else {					//Did not find any key associated
+	} else { //Did not find any key associated
 		return false, nil
 	}
 }
@@ -148,11 +175,10 @@ func makeNewState() (string, error) {
 	return newState, nil
 }
 
-func makeNewSID() (string) {
+func makeNewSID() string {
 	sessIDVerifier := uuid.New().String()
 	return sessIDVerifier
 }
-
 
 func (s *authService) GenerateNewStateAndSID(ctx context.Context) (string, string, error) {
 
@@ -165,7 +191,6 @@ func (s *authService) GenerateNewStateAndSID(ctx context.Context) (string, strin
 
 	sessID := makeNewSID()
 
-
 	//Save to Repository
 	err = s.repo.SetNewStateSid(ctx, newState, sessID, time.Minute*10)
 	if err != nil {
@@ -173,12 +198,10 @@ func (s *authService) GenerateNewStateAndSID(ctx context.Context) (string, strin
 		return "", "", err
 	}
 
-
 	return sessID, newState, nil
 }
 
-
-func (s *authService) GetInitLoginURL( state string) string {
+func (s *authService) GetInitLoginURL(state string) string {
 	q := url.Values{}
 	q.Set("api_key", s.lastFMAPIKey)
 	q.Set("cb", string(LASTFM_CALLBACK+"?state="+state))
@@ -206,7 +229,7 @@ func getSessionAPISignature(api_key string, token string) string {
 
 }
 
-func (s *authService) GetNewWebSessionURL( token string) (string, url.Values) {
+func (s *authService) GetNewWebSessionURL(token string) (string, url.Values) {
 
 	q := url.Values{}
 	q.Set("method", "auth.getSession")
@@ -217,7 +240,6 @@ func (s *authService) GetNewWebSessionURL( token string) (string, url.Values) {
 	// requestURL := LASTFM_ROOT_API + "?" + q.Encode()
 	return LASTFM_ROOT_API, q //Didn't realise POST would require them as different //TODO Make this cleaner
 }
-
 
 func (s *authService) GenerateNewTx(userIP string) *Tx {
 	sessIDVerifier := uuid.New().String()
