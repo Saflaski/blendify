@@ -3,8 +3,8 @@ package main
 import (
 	"backend-lastfm/internal/auth"
 	blend "backend-lastfm/internal/blending"
-	internal_middleware "backend-lastfm/internal/middleware"
 	musicapi "backend-lastfm/internal/music_api/lastfm"
+	network "backend-lastfm/internal/network"
 	"net/http"
 	"time"
 
@@ -28,7 +28,7 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.RealIP)    //also for rate limiting + analytics and tracing
 	// r.Use(middleware.Logger) //
 	r.Use(middleware.Recoverer) //For crashouts
-	r.Use(internal_middleware.Cors)
+	r.Use(network.Cors)
 
 	r.Use(middleware.Timeout(time.Second * 60))
 
