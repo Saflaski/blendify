@@ -50,7 +50,7 @@ func (r *RedisStateStore) MakeNewUser(ctx context.Context, validationSid string,
 
 	pipe := r.client.TxPipeline() //Execute redis commands with atomicity
 
-	pipe.HSet(context.Background(), key, "lfm", userName)
+	pipe.HSet(context.Background(), key, "LFM Username", userName, "Created At", time.Now().UTC())
 	r.queueAddNewSid(pipe, userid.String(), validationSid)
 
 	_, err := pipe.Exec(ctx)
