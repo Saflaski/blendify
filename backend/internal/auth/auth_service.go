@@ -82,7 +82,7 @@ type AuthService interface {
 
 	ConsumeStateAndReturnSID(ctx context.Context, state string) (string, error)
 
-	SetSessionKey(ctx context.Context, sessionID, userKey string) error
+	//SetSessionKey(ctx context.Context, sessionID, userKey string) error
 	DelSidKey(ctx context.Context, sessionID string) error
 	MakeNewUser(context context.Context, validationSid string, userName string) (uuid.UUID, error)
 	GetUserByValidSessionID(context context.Context, sid string) (string, error)
@@ -127,14 +127,14 @@ func (s *authService) NewSid() SessionID {
 	return SessionID(uuid.New().String())
 }
 
-func (s *authService) SetSessionKey(ctx context.Context, sessionID, userKey string) error {
+// func (s *authService) SetSessionKey(ctx context.Context, sessionID, userKey string) error {
 
-	err := s.repo.SetSidWebSesssionKey(ctx, sessionID, userKey, time.Hour*24*10) //Set for 10 days
-	if err != nil {
-		return fmt.Errorf("Cannot set session key in repository: %v", err)
-	}
-	return nil
-}
+// 	err := s.repo.SetSidWebSesssionKey(ctx, sessionID, userKey, time.Hour*24*10) //Set for 10 days
+// 	if err != nil {
+// 		return fmt.Errorf("Cannot set session key in repository: %v", err)
+// 	}
+// 	return nil
+// }
 
 func (s *authService) GetDeletedCookie(cookieName string) *http.Cookie {
 
@@ -215,7 +215,7 @@ func (s *authService) GenerateNewStateAndSID(ctx context.Context) (string, strin
 	sessID := makeNewSID()
 
 	//Save to Repository
-	err = s.repo.SetNewStateSid(ctx, newState, sessID, time.Minute*10)
+	err = s.repo.SetNewStateSid(ctx, newState, sessID, s.config.ExpiryDuration)
 	if err != nil {
 		glog.Warning("Cannot save state-SID to repository: %v", err)
 		return "", "", err
