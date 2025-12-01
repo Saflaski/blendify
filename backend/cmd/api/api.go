@@ -55,7 +55,7 @@ func (app *application) mount() http.Handler {
 	)
 
 	authCfg := auth.Config{
-		ExpiryDuration:     time.Duration(app.config.sessionExpiry),
+		ExpiryDuration:     time.Duration(app.config.sessionExpiry) * time.Second,
 		FrontendCookieName: "sid",
 		FrontendURL:        "http://localhost:5173",
 	}

@@ -69,12 +69,12 @@ func (s *BlendService) GetBlend(userA UUID, userB string, category blendCategory
 	glog.Info("Calculating blend for users: ", userNameA, " + ", userB, " category: ",
 		category, " timeDuration: ", timeDuration)
 
-	switch {
-	case category == BlendCategoryArtist:
+	switch category {
+	case BlendCategoryArtist:
 		return s.getArtistBlend(userNameA, userB, timeDuration)
-	case category == BlendCategoryTrack:
+	case BlendCategoryTrack:
 		return s.getTrackBlend(userNameA, userB, timeDuration)
-	case category == BlendCategoryAlbum:
+	case BlendCategoryAlbum:
 		return s.getAlbumBlend(userNameA, userB, timeDuration)
 	default:
 		return 0, fmt.Errorf("category does not match any of the required categories")

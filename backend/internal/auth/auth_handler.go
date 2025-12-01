@@ -98,69 +98,6 @@ func (h *AuthHandler) startNewLoginFlow(w http.ResponseWriter, r *http.Request) 
 	return nil
 }
 
-// // When the user hits /login by virtue of not being logged in already (eg. no token found on db)
-// // or the user is whimsical and explicitly goes to /login, this function will initiate the token
-// // acquiring flow for achieving the 3 legged Login Authentication flow with LastFM
-// func (h *AuthHandler) HandleLastFMLoginFlow(w http.ResponseWriter, r *http.Request) {
-
-// 	if platform := chi.URLParam(r, "platform") ; platform != "lastfm"{
-// 		glog.Errorf("Platform %s not implemented yet", platform)
-// 		return
-// 	}
-
-// 	//TODO Delete this after full HSR implementation
-// 	//h.svc.IsSessionValid(X)
-// 	//if yes then do that
-// 	//if no then redirect
-
-// 	//Check if cookie exists
-
-// 	//if _, ok := h.svc.IsSessionValid(Cookie, h.sessionIdCookieName); ok {
-// 	if _, ok := h.svc.CheckCookieValidity(r, h.sessionIdCookieName); ok {
-// 		//Since there is a valid cookie, user is redirected to /home/
-// 		url := strings.Join([]string{h.frontendUrl, "home"}, "/")
-// 		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
-
-// 	} else {
-
-// 		//Code bit to start a new login flow.
-// 		sessionID := *h.svc.GenerateNewTx(r.RemoteAddr)	//Core logic so...Service?
-
-// 		glog.Infof("Recorded Login Attempt\n\tFrom IP: %s\n\tAssigned SessionID: %s\n\tCreated at: %s\n",
-// 			sessionID.IP,
-// 			sessionID.SessIDVerifier,					//Still need this?
-// 			sessionID.CreatedAt)
-
-// 		http.SetCookie(w, &http.Cookie{					//Keep in H
-// 			Name:  h.sessionIdCookieName,
-// 			Value: sessionID.SessIDVerifier,
-
-// 			Expires:  time.Now().Add(time.Minute * 100),
-// 			Path:     "/",
-// 			HttpOnly: true,
-// 			Secure:   false,
-// 			SameSite: http.SameSiteLaxMode,
-// 		})
-
-// 		randomStateByte := make([]byte, 16)
-// 		_, err := rand.Read(randomStateByte)
-// 		randomState := hex.EncodeToString(randomStateByte)	//Move to S
-// 		if err != nil {
-// 			glog.Warning("Cannot create state token")
-// 			panic("")
-// 		}
-
-// 		//Saving state : SID map internally
-// 		SetStateSid(randomState, sessionID.SessIDVerifier)	//Move to S
-
-// 		//Sending login url with callback and state token
-// 		url := h.svc.GetInitLoginURL(os.Getenv("LASTFM_API_KEY"), randomState)
-// 		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
-
-// 	}
-
-// }
-
 func (h *AuthHandler) HandleLastFMCallbackFlow(w http.ResponseWriter, r *http.Request) {
 
 	if platform := chi.URLParam(r, "platform"); platform != "lastfm" {
@@ -238,10 +175,17 @@ func (h *AuthHandler) HandleLastFMCallbackFlow(w http.ResponseWriter, r *http.Re
 	//Assigning the mapping for recording users for later re-auth between frontend and backend
 
 	// h.svc.SetSessionKey(r.Context(), validationSid, sessionKey)
-	h.svc.MakeNewUser(r.Context(), validationSid, userName)
+	_, err = h.svc.MakeNewUser(r.Context(), validationSid, userName)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Could not register/login user")
+		glog.Errorf("Error during register/login: %w", err)
+		return
+	}
+
 	//Perm redirect back to the original frontend.
 	// http.Redirect(w, r, "http://127.0.0.1:5173/home", http.StatusTemporaryRedirect)
-	url := strings.Join([]string{h.config.FrontendURL, "home"}, "/")
+	url := strings.Join([]string{h.config.FrontendURL, "home"}, "/") //This should be something that frontend handles, not backend.
 	http.Redirect(w, r, url, http.StatusSeeOther)
 
 }

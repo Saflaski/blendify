@@ -22,6 +22,9 @@ type AuthRepository interface {
 	GetUserByValidSessionID(context context.Context, sid string, expiryDuration time.Duration) (string, error)
 	DeleteUser(ctx context.Context, userid string) error
 	DeleteSingularSessionID(context context.Context, sid string) error
+	GetUserIdByLFM(context context.Context, lfmName string) (string, error)
+	AddUserIdToLFMIndex(context context.Context, userid, lfmName string) error
+	AddNewSidToExistingUser(ctx context.Context, userid uuid.UUID, validationSid string) error
 }
 
 type RedisStateStore struct {
@@ -30,6 +33,7 @@ type RedisStateStore struct {
 	prefixUser        string
 	prefixSidToUser   string
 	prefixSidList     string
+	prefixLFMToUser   string
 	sidExpirationTime int64
 }
 
@@ -40,6 +44,7 @@ func NewRedisStateStore(client *redis.Client) *RedisStateStore {
 		prefixUser:        "user",
 		prefixSidToUser:   "user_sids",
 		prefixSidList:     "sidlist",
+		prefixLFMToUser:   "lfm_users",
 		sidExpirationTime: time.Duration(time.Hour * 24).Nanoseconds(),
 	}
 }
@@ -52,9 +57,17 @@ func (r *RedisStateStore) MakeNewUser(ctx context.Context, validationSid string,
 
 	pipe.HSet(context.Background(), key, "LFM Username", userName, "Created At", time.Now().UTC())
 	r.queueAddNewSid(pipe, userid.String(), validationSid)
+	r.queueAddLFMUserIndex(pipe, userid.String(), userName)
 
 	_, err := pipe.Exec(ctx)
 
+	return err
+}
+
+func (r *RedisStateStore) AddNewSidToExistingUser(ctx context.Context, userid uuid.UUID, validationSid string) error {
+	pipe := r.client.TxPipeline()
+	r.queueAddNewSid(pipe, userid.String(), validationSid)
+	_, err := pipe.Exec(ctx)
 	return err
 }
 
@@ -215,6 +228,22 @@ func (r *RedisStateStore) queueAddNewSidListWithScoreCmd(pipe redis.Pipeliner, u
 		Member: sid,
 	}).Err()
 
+}
+
+func (r *RedisStateStore) AddUserIdToLFMIndex(context context.Context, userid, lfmName string) error {
+	key := fmt.Sprintf("%s:%s", r.prefixLFMToUser, lfmName)
+	return r.client.Set(context, key, userid, 0).Err()
+}
+
+func (r *RedisStateStore) queueAddLFMUserIndex(pipe redis.Pipeliner, userid, lfmName string) error {
+	key := fmt.Sprintf("%s:%s", r.prefixLFMToUser, lfmName)
+	return pipe.Set(context.Background(), key, userid, 0).Err()
+}
+
+func (r *RedisStateStore) GetUserIdByLFM(context context.Context, lfmName string) (string, error) {
+	key := fmt.Sprintf("%s:%s", r.prefixLFMToUser, lfmName)
+	result, err := r.client.Get(context, key).Result()
+	return result, err
 }
 
 func (s *RedisStateStore) SetNewStateSid(ctx context.Context, stateToken, sessionID string, ttl time.Duration) error {

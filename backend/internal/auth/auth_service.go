@@ -15,6 +15,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/google/uuid"
 	_ "github.com/joho/godotenv/autoload"
+	"github.com/redis/go-redis/v9"
 )
 
 type ClientKey string
@@ -91,17 +92,74 @@ type AuthService interface {
 
 func (s *authService) MakeNewUser(context context.Context, validationSid string, userName string) (uuid.UUID, error) {
 
-	newuuid := uuid.New()
-	err := s.repo.MakeNewUser(context, validationSid, userName, newuuid)
+	res, err := s.CheckIfExistingUserFromLFM(context, userName)
+	if err != nil {
+		return res, err //res will be empty value
+	}
 
-	//Download blend data
+	if res == uuid.Nil { //We did not find an existing username
+		glog.Info("Generating full new user")
+		newuuid := uuid.New()
+		err = s.repo.MakeNewUser(context, validationSid, userName, newuuid)
 
-	return newuuid, err
+		//Download blend data
 
+		return newuuid, err
+	} else {
+		//Assign new SID to user
+		glog.Info("Found existing user, just assigning sid to existing user then")
+		err := s.repo.AddNewSidToExistingUser(context, res, validationSid)
+		if err != nil {
+			return res, fmt.Errorf(" could not add new sid to existing user: %s with err: %w", res.String(), err)
+		}
+		return res, nil
+
+	}
+
+}
+
+// This will return err if and only if there is an error with checking the userName
+// If it does not find an existing user, it will return an empty UUID value
+func (s *authService) CheckIfExistingUserFromLFM(context context.Context, userName string) (uuid.UUID, error) {
+
+	res, err := s.repo.GetUserIdByLFM(context, userName)
+	if err != redis.Nil && err != nil {
+		glog.Error("actual full error")
+		return uuid.Nil, err
+	} else if err == redis.Nil {
+		glog.Error("Did not find user")
+		return uuid.Nil, nil
+	} else {
+		uuidAsBytes, err := uuid.Parse(res)
+		if err != nil {
+			glog.Errorf("Found actual user but could not parse, %w", err)
+			return uuid.Nil, err
+		}
+		glog.Error("Found actual user and returning")
+		return uuidAsBytes, err
+	}
 }
 
 func (s *authService) GetUserByAnySessionID(context context.Context, sid string) (string, error) {
 	return s.repo.GetUserByAnySessionID(context, sid)
+}
+
+func (s *authService) GetUserByLFMUsername(context context.Context, lfmName string) (string, error) {
+	return s.repo.GetUserIdByLFM(context, lfmName)
+	// if err != nil {
+	// 	glog.Errorf("error during getting userid by lfmName sec index, %w", err)
+	// }
+	// if err == redis.Nil {
+	// 	return "", nil
+	// }
+	// return res, err
+}
+
+func (s *authService) AddUserIdToLFMIndex(context context.Context, userid, lfmName string) {
+	err := s.repo.AddUserIdToLFMIndex(context, userid, lfmName)
+	if err != nil {
+		glog.Errorf("Could not add user to LFM-User index in repo, %w", err)
+	}
 }
 
 func (s *authService) GetUserByValidSessionID(context context.Context, sid string) (string, error) {
