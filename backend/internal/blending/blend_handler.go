@@ -57,7 +57,7 @@ func (h *BlendHandler) GenerateNewLink(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *BlendHandler) GetNewBlend(w http.ResponseWriter, r *http.Request) { //TODO: Change the name to soemthing else including children functions in S and R
+func (h *BlendHandler) GetBlendPercentage(w http.ResponseWriter, r *http.Request) { //TODO: Change the name to soemthing else including children functions in S and R
 	response := r.URL.Query()
 
 	blendReq := BlendRequest{
