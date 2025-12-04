@@ -41,7 +41,7 @@ func (h *BlendHandler) GenerateNewLink(w http.ResponseWriter, r *http.Request) {
 		glog.Error("Error during post-validation cookie extraction, %w", err)
 	}
 
-	userA := UUID(cookie.Value)
+	userA := userid(cookie.Value)
 
 	newURL, err := h.svc.GenerateNewLinkAndAssignToUser(r.Context(), userA)
 	if err != nil {
@@ -52,7 +52,7 @@ func (h *BlendHandler) GenerateNewLink(w http.ResponseWriter, r *http.Request) {
 	_ = newURL
 
 	w.Header().Set("Content-Type", "application/json")
-	response := map[string]string{"linkId": "4234"} //Should be newURL
+	response := map[string]string{"linkId": "4234"} // TODO Should be newURL
 	json.NewEncoder(w).Encode(response)
 
 }
@@ -115,7 +115,7 @@ func (h *BlendHandler) AddBlendFromInviteLink(w http.ResponseWriter, r *http.Req
 		fmt.Fprint(w, "Could not decode Invite Link for new blend")
 	}
 
-	blendLinkValue := blendResponse.Invite
+	blendLinkValue := blendLinkValue(blendResponse.Invite)
 
 	cookie, err := r.Cookie(h.sessionIdCookieName)
 	if err != nil {
@@ -124,10 +124,12 @@ func (h *BlendHandler) AddBlendFromInviteLink(w http.ResponseWriter, r *http.Req
 		fmt.Fprintf(w, "Error during post-validation cookie extraction. Contact Admin")
 		glog.Error("Error during post-validation cookie extraction, %w", err)
 	}
-	userA := UUID(cookie.Value)
+	userA := userid(cookie.Value)
 
 	//Validate link?
 
+	blendId, err := h.svc.NewBlend(r.Context(), userA, blendLinkValue)
+	_ = blendId
 	glog.Infof("Blend Link Value: %s, User: %s", blendLinkValue, userA)
 
 	w.WriteHeader(http.StatusOK)

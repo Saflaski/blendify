@@ -30,3 +30,17 @@ func DecodeRequest[T any](r *http.Request) (T, error) {
 	}
 	return v, nil
 }
+
+func MapToJSON(m map[string]int) ([]byte, error) {
+	data, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+func JSONToMap(data []byte) (map[string]int, error) {
+	var out map[string]int
+	err := json.Unmarshal(data, &out)
+	return out, err
+}

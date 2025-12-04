@@ -2,10 +2,12 @@ package blend
 
 import (
 	musicapi "backend-lastfm/internal/music_api/lastfm"
+	"context"
 	"os"
 	"strconv"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 )
@@ -85,4 +87,41 @@ func TestGetBlend(t *testing.T) {
 		}
 	})
 
+}
+
+func TestDownloadAndCache(t *testing.T) {
+	godotenv.Load("../../.env")
+	if err := godotenv.Load("../../.env"); err != nil {
+		t.Fatal("godotenv.Load failed")
+	}
+
+	DB_ADDR := os.Getenv("DB_ADDR")
+	DB_PASS := os.Getenv("DB_PASS")
+	// DB_NUM, _ := strconv.Atoi(os.Getenv("DB_NUM"))
+	DB_PROTOCOL, _ := strconv.Atoi(os.Getenv("DB_PROTOCOL"))
+	LASTFM_API_KEY := os.Getenv("LASTFM_API_KEY")
+
+	if len(DB_ADDR) == 0 || len(LASTFM_API_KEY) == 0 {
+		t.Errorf("key Environment Value is empty")
+	}
+
+	redisStore := NewRedisStateStore(redis.NewClient(&redis.Options{
+		Addr:     DB_ADDR,
+		Password: DB_PASS,
+		DB:       1,
+		Protocol: DB_PROTOCOL,
+	}))
+
+	lfm_adapter := musicapi.NewLastFMExternalAdapter(
+		LASTFM_API_KEY,
+		"https://ws.audioscrobbler.com/2.0/",
+		true,
+	)
+	blendService := NewBlendService(*redisStore, *lfm_adapter)
+	_ = blendService
+	_ = redisStore
+
+	t.Run("Hydrate and cache user", func(t *testing.T) {
+		blendService.GetNewDataForUser(context.Background(), userid(uuid.New().String()))
+	})
 }
