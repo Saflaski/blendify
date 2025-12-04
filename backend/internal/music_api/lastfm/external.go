@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -224,7 +223,18 @@ func (h *LastFMAPIExternal) GetUserTopTracks(userName string, period Period, pag
 }
 
 func (h *LastFMAPIExternal) MakeRequest(extraURLParams map[string]string) (*http.Response, error) {
-	q := url.Values{}
+	// q := url.Values{}
+	// for paramName, paramValue := range extraURLParams {
+	// 	q.Set(paramName, paramValue)
+	// }
+	// q.Set("api_key", string(h.apiKey))
+
+	u, err := url.Parse(h.lastFMURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid base URL: %w", err)
+	}
+
+	q := u.Query()
 	for paramName, paramValue := range extraURLParams {
 		q.Set(paramName, paramValue)
 	}
@@ -234,15 +244,22 @@ func (h *LastFMAPIExternal) MakeRequest(extraURLParams map[string]string) (*http
 		q.Set("format", "json") //JSON RESPONSE
 	}
 
-	resp, err := http.Post(
-		string(h.lastFMURL),
-		"application/x-www-form-urlencoded",
-		strings.NewReader(q.Encode()),
-	)
+	u.RawQuery = q.Encode()
 
+	resp, err := http.Get(u.String())
 	if err != nil {
-		return nil, fmt.Errorf("makeRequest Post Error: %w", err)
+		return nil, fmt.Errorf(" during makeRequest, GET Error: %w", err)
 	}
+
+	// resp, err := http.Post(
+	// 	string(h.lastFMURL),
+	// 	"application/x-www-form-urlencoded",
+	// 	strings.NewReader(q.Encode()),
+	// )
+
+	// if err != nil {
+	// 	return nil, fmt.Errorf("makeRequest Post Error: %w", err)
+	// }
 	return resp, err
 
 }
