@@ -6,20 +6,83 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
 
 const LFM_EXPIRY = time.Duration(time.Hour * 24 * 3) //Three days //TODO: Change this to env var
+const INVITE_EXPIRY = time.Duration(time.Hour * 24)
 
 type RedisStateStore struct {
 	client      *redis.Client
 	userPrefix  string
 	musicPrefix string
+	blendPrefix string
 }
 
-func (r *RedisStateStore) GetUsersFromBlend(id blendId) ([]userid, error) {
-	panic("unimplemented")
+func (r *RedisStateStore) AddUsersToBlend(context context.Context, id blendId, userids []userid) error {
+	key := fmt.Sprintf("%s:%s:%s", r.blendPrefix, id, "users")
+
+	members := make([]interface{}, len(userids))
+	for i, u := range userids {
+		members[i] = string(u)
+	}
+
+	return r.client.SAdd(context, key, members...).Err()
+}
+
+func (r *RedisStateStore) GetUsersFromBlend(context context.Context, id blendId) ([]userid, error) {
+	key := fmt.Sprintf("%s:%s:%s", r.blendPrefix, id, "users")
+	res, err := r.client.SMembers(context, key).Result()
+	if err != nil {
+		return nil, fmt.Errorf(" could not get LRange of users for users from blend id %s: and err %w", id, err)
+	}
+	users := make([]userid, len(res))
+	for i, v := range res {
+		users[i] = userid(v)
+	}
+	return users, nil
+}
+
+func (r *RedisStateStore) IsUserInBlend(context context.Context, user userid, id blendId) (bool, error) {
+	key := fmt.Sprintf("%s:%s:%s", r.blendPrefix, id, "users")
+	res, err := r.client.SIsMember(context, key, string(user)).Result()
+	if err != nil {
+		return false, fmt.Errorf(" error during checking if member was in set, as got value: %b: %w", res, err)
+	}
+
+	return res, nil
+}
+
+func NewRedisStateStore(client *redis.Client) *RedisStateStore {
+	return &RedisStateStore{
+		client:      client,
+		userPrefix:  "user", //TODO is this the right way to connect to redis?
+		musicPrefix: "music_data",
+		blendPrefix: "blend_data",
+	}
+
+}
+
+func (r *RedisStateStore) IsExistingBlendFromLink(context context.Context, linkValue blendLinkValue) (blendId, error) {
+	key := fmt.Sprintf("%s:%s:%s:%s", r.blendPrefix, "invite", linkValue, "id")
+	res, err := r.client.Get(context, key).Result()
+	if err != nil && err != redis.Nil {
+		return "", fmt.Errorf(" could not fetch blend's id from link in redis: %w", err)
+	} else if err == redis.Nil {
+		return "", nil
+	} else {
+		return blendId(res), nil
+	}
+}
+
+func (r *RedisStateStore) GetLinkCreator(context context.Context, linkValue blendLinkValue) (userid, error) {
+	key := fmt.Sprintf("%s:%s:%s:%s", r.blendPrefix, "invite", linkValue, "creator")
+	res, err := r.client.Get(context, key).Result()
+	if err != nil {
+		return "", fmt.Errorf(" could not fetch blend's user from link in redis: %w", err)
+	} else {
+		return userid(res), nil
+	}
 }
 
 type Key struct {
@@ -101,19 +164,14 @@ type UserListenHistory struct {
 	// Define fields for user listen history
 }
 
-func NewRedisStateStore(client *redis.Client) *RedisStateStore {
-	return &RedisStateStore{
-		client:      client,
-		userPrefix:  "user", //TODO is this the right way to connect to redis?
-		musicPrefix: "music_data",
+func (r *RedisStateStore) SetUserToLink(context context.Context, userA userid, linkValue blendLinkValue) error {
+	key := fmt.Sprintf("%s:%s:%s:%s", r.blendPrefix, "invite", linkValue, "creator")
+	err := r.client.Set(context, key, string(userA), INVITE_EXPIRY).Err()
+	if err != nil {
+		return fmt.Errorf(" could not set blend's user from link into redis: %w", err)
+	} else {
+		return nil
 	}
-}
-func (r *RedisStateStore) SetUserToLink(ctx context.Context, userA UUID, newInviteId uuid.UUID) {
-	//userIDString := string(userA)
-	//Ideally we set via user id and not straight user
-	//user:USERID:
-	// queryString := r.prefix + ""
-	// r.client.HSet(ctx)
 
 }
 

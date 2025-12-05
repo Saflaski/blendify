@@ -7,30 +7,45 @@ import { useNavigate } from "react-router-dom";
 export function Home() {
   const navigate = useNavigate();
 
-  async function AddBlend(url) {
-    try {
-      const baseURL = "http:/localhost:3000/v1/blend/add";
-      const params = new URLSearchParams({
-        value: value,
-      });
-      const url = new URL(baseURL);
-      url.search = params.toString();
-      const response = await fetch(url, { credentials: "include" });
-      if (!response.ok) {
-        throw new Error(`Backend request error. Status: ${response.status}`);
-      }
-      const data = await response.json();
+  async function AddBlend(givenURL) {
+    let url;
+    let value;
+    const parsedGivenURL = new URL(givenURL);
+    const invite = parsedGivenURL.searchParams.get("invite");
 
+    try {
+      const baseURL = "http://localhost:3000/v1/blend/add";
+      const params = new URLSearchParams({ value: invite });
+
+      url = new URL(baseURL);
+      // url.search = params.toString();
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          value: invite,
+        }),
+      });
+      if (!response.ok)
+        throw new Error(`Backend request error: ${response.status}`);
+
+      const data = await response.json();
       console.log("API response data:", data);
+      value = data["linkId"];
     } catch (err) {
       console.error("API error:", err);
+      return;
     }
 
-    const parsed = new URL(url);
-    const invite = parsed.searchParams.get("invite");
-    console.log("TEST: ", invite);
-    const value = { invite: invite };
-    console.log("Adding new blend from Blend Add URL Value:", { value });
+    // const parsed = new URL(givenURL);
+    // const invite = parsed.searchParams.get("invite");
+
+    console.log("Adding new blend from Blend Add URL Value:", value);
     navigate("/blend", { state: value });
   }
 

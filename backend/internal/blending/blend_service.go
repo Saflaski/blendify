@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/golang/glog"
+	"github.com/google/uuid"
 )
 
 type BlendService struct {
@@ -15,16 +16,80 @@ type BlendService struct {
 	LastFMExternal *musicapi.LastFMAPIExternal
 }
 
-func (s BlendService) NewBlend(context context.Context, userA userid, link blendLinkValue) (blendId, error) {
+func (s *BlendService) AddOrMakeBlendFromLink(context context.Context, userA userid, link blendLinkValue) (blendId, error) {
 
 	//First check if this is an existing invite link
 	//Then if it is a new link, create a new blendId object
-	//If it is an existing link, check if we need to refresh it
-	//Return a new blendId
-	return "blendId", nil
+	//MakeNewBlend([]users{userA, userB})
+
+	id, err := s.repo.IsExistingBlendFromLink(context, link)
+	if err != nil {
+		return "", fmt.Errorf(" error during checking if blendlink existed: %w", err)
+
+	}
+	glog.Infof("Found blend from link: %s", link)
+	if id == "" { //No link found
+		userB, err := s.repo.GetLinkCreator(context, link) //Fetch user who created link
+		if err != nil {
+			return "", fmt.Errorf(" error during getting user (creator) from link : %w", err)
+		}
+		glog.Infof("Blend created by: %s", userB)
+
+		//Safety net to make sure userA != userB
+		if userB == userA {
+			glog.Info("Same user nvm")
+			return "0", nil //0 is code for consuming user being the same user as creating user
+		}
+
+		// This fetched user + the user who resulted in this function being called are
+		// now the first two users of this new blend
+
+		// We only create the blend id for now as generating a whole new blend might time out
+		// and if we tried to make it async, then there will be a race condition between
+		// frontend loading blend page + backend trying to hydrate the blend
+		id, err = s.GenerateNewBlendId(context, []userid{userA, userB}) //Should this make the whole blend or?
+		if err != nil {
+			return "", fmt.Errorf(" error during making a blend with users %s and %s: %w", userA, userB, err)
+		}
+		glog.Infof("Generating new blend: %s", id)
+		return id, nil
+	} else {
+		//Check if user is already in this blend
+		ok, err := s.repo.IsUserInBlend(context, userA, id)
+		if err != nil {
+			return "", fmt.Errorf(" could not check if user is in blend: %w", err)
+		}
+		if !ok {
+			err := s.repo.AddUsersToBlend(context, id, []userid{userA})
+			if err != nil {
+				return "", fmt.Errorf(" could not add user to blend: %w", err)
+			}
+			glog.Infof("User does not exist in blend. Adding %s", userA)
+			return id, nil
+		} else {
+			glog.Infof("User already exists in blend")
+			//Nothing to see here, just return the existing blend id
+			return id, nil
+		}
+	}
+
 }
 
-func (s *BlendService) IsExistingLink(context context.Context, link blendLinkValue) (blendId, error) {
+func (s *BlendService) GenerateNewBlendId(context context.Context, userids []userid) (blendId, error) {
+	id := blendId(uuid.New().String())
+	err := s.repo.AddUsersToBlend(context, id, userids)
+	if err != nil {
+		return "", fmt.Errorf(" error during inserting new blend frame: %w", err)
+	}
+
+	return id, err
+}
+
+func (s *BlendService) AddUserToBlend(context context.Context, userA userid) error {
+	panic("unimplemented")
+}
+
+func (s *BlendService) IsExistingBlendFromLink(context context.Context, link blendLinkValue) (blendId, error) {
 	//if link exists, return blendId
 	//else nil
 	return "RANDOMID1001", nil
@@ -48,7 +113,7 @@ func (s *BlendService) PopulateBlend(context context.Context, id blendId) (blend
 	//2: User adding a new link
 	//3: UserA
 
-	userids, err := s.repo.GetUsersFromBlend(id)
+	userids, err := s.repo.GetUsersFromBlend(context, id)
 	if err != nil {
 		return "", fmt.Errorf(" error getting users from blend id: %s, err: %w", id, err)
 	}
@@ -196,15 +261,16 @@ func (s *BlendService) downloadLFMData(context context.Context, user string, tim
 
 // func (s *BlendService) downloadData(context context.Context, userid userid, duration blendTimeDuration)
 
-func (s *BlendService) GenerateNewLinkAndAssignToUser(context context.Context, userA userid) (any, error) {
+func (s *BlendService) GenerateNewLinkAndAssignToUser(context context.Context, userA userid) (blendLinkValue, error) {
 
 	//Generate a linkId to be returned that won't hash collide
-	// newInviteId := uuid.New()
-	//Store the association
+	newInviteValue := blendLinkValue(uuid.New().String())
+	err := s.repo.SetUserToLink(context, userA, newInviteValue)
+	if err != nil {
+		return "", fmt.Errorf(" could not set user to link: %w", err)
+	}
 
-	// s.repo.SetUserToLink(userA, newInviteId)
-
-	return "", nil
+	return newInviteValue, nil
 }
 
 func (s *BlendService) AddBlendFromInvite(context context.Context, userA userid, blendLinkValue string) error {

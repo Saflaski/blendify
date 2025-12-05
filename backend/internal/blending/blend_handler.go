@@ -49,10 +49,9 @@ func (h *BlendHandler) GenerateNewLink(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Error during generating new link. Contact Admin")
 		glog.Error("Error during generating new link, %w", err)
 	}
-	_ = newURL
 
 	w.Header().Set("Content-Type", "application/json")
-	response := map[string]string{"linkId": "4234"} // TODO Should be newURL
+	response := map[string]string{"linkId": string(newURL)}
 	json.NewEncoder(w).Encode(response)
 
 }
@@ -100,7 +99,7 @@ func (h *BlendHandler) GetBlendPercentage(w http.ResponseWriter, r *http.Request
 }
 
 type responseStruct struct {
-	Invite string `json:"invite"`
+	Value string `json:"value"`
 }
 
 // This is where frontend consumes an invite link and expects a blend id in response.
@@ -115,7 +114,11 @@ func (h *BlendHandler) AddBlendFromInviteLink(w http.ResponseWriter, r *http.Req
 		fmt.Fprint(w, "Could not decode Invite Link for new blend")
 	}
 
-	blendLinkValue := blendLinkValue(blendResponse.Invite)
+	blendLinkValue := blendLinkValue(blendResponse.Value)
+	if blendResponse.Value == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "Did not add blendlink value")
+	}
 
 	cookie, err := r.Cookie(h.sessionIdCookieName)
 	if err != nil {
@@ -128,14 +131,28 @@ func (h *BlendHandler) AddBlendFromInviteLink(w http.ResponseWriter, r *http.Req
 
 	//Validate link?
 
-	blendId, err := h.svc.NewBlend(r.Context(), userA, blendLinkValue)
-	_ = blendId
+	blendId, err := h.svc.AddOrMakeBlendFromLink(r.Context(), userA, blendLinkValue)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, " Could not add/make blend from link: %s", err)
+		glog.Errorf(" Could not add make/blend from link : %s from user :%s", blendLinkValue, userA)
+	}
+
+	if blendId == "0" { //Code for user trying to make blend with themselves
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, " Cannot make blend with yourself: %s", err)
+		glog.Errorf(" User tried to make blend with themselves : %s :%s", blendLinkValue, userA)
+
+	}
+
+	// _ = blendId
 	glog.Infof("Blend Link Value: %s, User: %s", blendLinkValue, userA)
 
 	w.WriteHeader(http.StatusOK)
 	resp := map[string]string{
-		"blendId": "12301928410924",
+		"blendId": string(blendId),
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
 }
