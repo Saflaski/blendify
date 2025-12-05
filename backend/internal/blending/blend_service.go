@@ -15,41 +15,6 @@ type BlendService struct {
 	LastFMExternal *musicapi.LastFMAPIExternal
 }
 
-type blendCategory string
-type blendTimeDuration string
-
-var durationMap = map[blendTimeDuration]musicapi.Period{
-	BlendTimeDurationOneMonth:   musicapi.ONE_MONTH,
-	BlendTimeDurationThreeMonth: musicapi.THREE_MONTHS,
-	BlendTimeDurationYear:       musicapi.YEAR,
-}
-
-const (
-	BlendCategoryArtist blendCategory = "artist"
-	BlendCategoryTrack  blendCategory = "track"
-	BlendCategoryAlbum  blendCategory = "album"
-)
-
-const (
-	BlendTimeDurationOneMonth   blendTimeDuration = "1month"
-	BlendTimeDurationThreeMonth blendTimeDuration = "3month"
-	// BlendTimeDurationSixMonth   blendTimeDuration = "6month"
-	BlendTimeDurationYear blendTimeDuration = "12month"
-	// BlendTimeDurationAllTime    blendTimeDuration = "alltime"
-)
-
-var durationRange = []blendTimeDuration{
-	BlendTimeDurationOneMonth,
-	BlendTimeDurationThreeMonth,
-	BlendTimeDurationYear,
-}
-
-var categoryRange = []blendCategory{
-	BlendCategoryAlbum,
-	BlendCategoryArtist,
-	BlendCategoryTrack,
-}
-
 func (s BlendService) NewBlend(context context.Context, userA userid, link blendLinkValue) (blendId, error) {
 
 	//First check if this is an existing invite link
@@ -270,29 +235,6 @@ func (s *BlendService) getArtistBlend(userA, userB string, timeDuration blendTim
 	return blendNumber, nil
 }
 
-func (s *BlendService) getTopArtistsNew(userName string, timeDuration blendTimeDuration) (artistChart, error) {
-	artistToPlaybacks := make(map[string]int)
-	topArtist, err := s.LastFMExternal.GetUserTopArtists(
-		userName,
-		durationMap[timeDuration],
-		1,
-		50,
-	)
-
-	if err != nil {
-		return artistToPlaybacks, fmt.Errorf("could not extract TopArtists object from lastfm adapter, %w", err)
-	}
-	for _, v := range topArtist.TopArtists.Artist {
-		playcount, err := strconv.Atoi(v.Playcount)
-		if err != nil {
-			return artistToPlaybacks, fmt.Errorf("got unparseable string during string -> int conversation: %w", err)
-		}
-		artistToPlaybacks[v.Name] = playcount
-	}
-
-	return artistChart(artistToPlaybacks), nil
-}
-
 func (s *BlendService) getTopArtists(userName string, timeDuration blendTimeDuration) (map[string]int, error) {
 	artistToPlaybacks := make(map[string]int)
 	topArtist, err := s.LastFMExternal.GetUserTopArtists(
@@ -358,29 +300,6 @@ func (s *BlendService) getTopAlbums(userName string, timeDuration blendTimeDurat
 	return albumToPlays, nil
 }
 
-func (s *BlendService) getTopAlbumsNew(userName string, timeDuration blendTimeDuration) (albumChart, error) {
-	albumToPlays := make(map[string]int)
-	topAlbums, err := s.LastFMExternal.GetUserTopAlbums(
-		userName,
-		durationMap[timeDuration],
-		1,
-		50,
-	)
-
-	if err != nil {
-		return albumToPlays, fmt.Errorf("could not extract TopAlbums object from lastfm adapter, %w", err)
-	}
-	for _, v := range topAlbums.TopAlbums.Album {
-		playcount, err := strconv.Atoi(v.Playcount)
-		if err != nil {
-			return albumToPlays, fmt.Errorf("got unparseable string during string -> int conversation: %w", err)
-		}
-		albumToPlays[v.Name] = playcount
-	}
-
-	return albumChart(albumToPlays), nil
-}
-
 // ========== Track Blend ==========
 
 func (s *BlendService) getTrackBlend(userA, userB string, timeDuration blendTimeDuration) (int, error) {
@@ -423,27 +342,4 @@ func (s *BlendService) getTopTracks(userName string, timeDuration blendTimeDurat
 	}
 
 	return trackToPlays, nil
-}
-
-func (s *BlendService) getTopTracksNew(userName string, timeDuration blendTimeDuration) (trackChart, error) {
-	trackToPlays := make(map[string]int)
-	topTracks, err := s.LastFMExternal.GetUserTopTracks(
-		userName,
-		durationMap[timeDuration],
-		1,
-		50,
-	)
-
-	if err != nil {
-		return trackToPlays, fmt.Errorf("could not extract TopTracks object from lastfm adapter, %w", err)
-	}
-	for _, v := range topTracks.TopTracks.Track {
-		playcount, err := strconv.Atoi(v.Playcount)
-		if err != nil {
-			return trackToPlays, fmt.Errorf("got unparseable string during string -> int conversation: %w", err)
-		}
-		trackToPlays[v.Name] = playcount
-	}
-
-	return trackChart(trackToPlays), nil
 }
