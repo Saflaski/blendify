@@ -41,3 +41,8 @@ var categoryRange = []blendCategory{
 	BlendCategoryArtist,
 	BlendCategoryTrack,
 }
+
+type Blend struct {
+	id    string
+	users []userid
+}

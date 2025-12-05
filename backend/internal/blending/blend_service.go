@@ -48,19 +48,48 @@ func (s *BlendService) PopulateBlend(context context.Context, id blendId) (blend
 	//2: User adding a new link
 	//3: UserA
 
-	//Measuring expired: TTL? Won't maintain consistency across blends then?
-	//Just make it be based directly off of the user data TTL OR
-	//Make it be floor(userA.Expiry, userB.Expiry..userN.Expiry)
+	userids, err := s.repo.GetUsersFromBlend(id)
+	if err != nil {
+		return "", fmt.Errorf(" error getting users from blend id: %s, err: %w", id, err)
+	}
 
-	//TODO revisit this after writing the underlying functions
+	//Check which userids have expired user data and populate them
+	for _, user := range userids {
+		ok, err := s.repo.UserHasAnyMusicData(context, user)
+		if err != nil {
+			return "", fmt.Errorf(" error during checking if user: %s has any music data: %w", id, err)
+		}
+		if !ok {
+			err := s.GetNewDataForUser(context, user)
+			if err != nil {
+				return "", fmt.Errorf(" in PopulateBlend, could not get new data for user: %s with err: %w", user, err)
+			}
+		}
+	}
+
+	Blend, err := s.MakeNewBlend(context, userids) //Make a blend struct from all the userids
+	if err != nil {
+		return "", fmt.Errorf(" error during making new blend from userids: %w", err)
+	}
+	if err := s.CacheBlend(context, &Blend); err != nil {
+		return "", fmt.Errorf(" error during caching blend: %s with err: %w", Blend.id, err)
+	}
 
 	return "", nil
 }
 
+func (s *BlendService) CacheBlend(context context.Context, blend *Blend) error {
+	return nil
+}
+
+func (s *BlendService) MakeNewBlend(context context.Context, userids []userid) (Blend, error) {
+	return Blend{}, nil
+}
+
 func (s *BlendService) PopulateUserData(context context.Context, user userid) error {
 
-	//This function needs to be looked at again in the future for addition of partial
-	//cache entry checking and partial cache hydration
+	//This function needs to be looked at again in the future for addition of granular
+	//cache entry checking and granular cache hydration
 	//Particularly, a secondary check if UserHasAnyMusicData -> true which is a
 	//a different check function such as GetEachExpiredCacheEntryByUser which
 	//needs to be used and then those keys need to be filled
@@ -141,11 +170,6 @@ func (s *BlendService) GetNewDataForUser(ctx context.Context, user userid) error
 }
 
 func (s *BlendService) cacheLFMData(ctx context.Context, resp response) error {
-	fmt.Println(resp.category)
-	fmt.Println(resp.duration)
-	fmt.Println(resp.chart)
-	fmt.Println("___________________________________________")
-
 	err := s.repo.CacheUserMusicData(ctx, resp)
 	if err != nil {
 		return err

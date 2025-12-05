@@ -18,6 +18,10 @@ type RedisStateStore struct {
 	musicPrefix string
 }
 
+func (r *RedisStateStore) GetUsersFromBlend(id blendId) ([]userid, error) {
+	panic("unimplemented")
+}
+
 type Key struct {
 	cat blendCategory
 	dur blendTimeDuration
