@@ -58,25 +58,28 @@ func (s *BlendService) PopulateBlend(context context.Context, id blendId) (blend
 }
 
 func (s *BlendService) PopulateUserData(context context.Context, user userid) error {
-	ok, err := s.HasUserDataExpired(context, user)
+
+	//This function needs to be looked at again in the future for addition of partial
+	//cache entry checking and partial cache hydration
+	//Particularly, a secondary check if UserHasAnyMusicData -> true which is a
+	//a different check function such as GetEachExpiredCacheEntryByUser which
+	//needs to be used and then those keys need to be filled
+
+	ok, err := s.repo.UserHasAnyMusicData(context, user)
 	if err != nil {
-		return err
+		return fmt.Errorf(" error during checking if user has any music data: %w", err)
 	}
 
-	if ok {
-		//Call the getXData functions
+	if !ok {
+		err := s.GetNewDataForUser(context, user)
+		if err != nil {
+			return fmt.Errorf(" error during getting full data for user: %w", err)
+		}
 		return nil
+	} else {
+		return nil //Do nothing for now.
 	}
-	return nil
 
-}
-
-func (s *BlendService) HasUserDataExpired(context context.Context, user userid) (bool, error) {
-	//Design:
-	//Score system or TTL for checking expiry?
-	//If score system then we need to check for score > Now - ExpiryDuration
-	//If TTL, then simpy if it exists or not. TTL may not be supported for the data we want.
-	return true, nil
 }
 
 type response struct {
