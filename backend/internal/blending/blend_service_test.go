@@ -1,6 +1,7 @@
 package blend
 
 import (
+	"backend-lastfm/internal/auth"
 	musicapi "backend-lastfm/internal/music_api/lastfm"
 	"context"
 	"os"
@@ -43,7 +44,7 @@ func TestGetBlend(t *testing.T) {
 		"https://ws.audioscrobbler.com/2.0/",
 		true,
 	)
-	blendService := NewBlendService(*redisStore, *lfm_adapter)
+	blendService := NewBlendService(*redisStore, *lfm_adapter, auth.AuthStateStore{})
 	_ = blendService
 	_ = redisStore
 	//Mock Data
@@ -117,7 +118,7 @@ func TestDownloadAndCache(t *testing.T) {
 		"https://ws.audioscrobbler.com/2.0/",
 		true,
 	)
-	blendService := NewBlendService(*redisStore, *lfm_adapter)
+	blendService := NewBlendService(*redisStore, *lfm_adapter, auth.AuthStateStore{})
 	_ = blendService
 	_ = redisStore
 

@@ -1,6 +1,8 @@
 package blend
 
-import musicapi "backend-lastfm/internal/music_api/lastfm"
+import (
+	musicapi "backend-lastfm/internal/music_api/lastfm"
+)
 
 type blendId string
 type blendLinkValue string
@@ -45,4 +47,39 @@ var categoryRange = []blendCategory{
 type Blend struct {
 	id    string
 	users []userid
+}
+
+type BlendResponse struct {
+	ID               string             `json:"id"`
+	Users            []userid           `json:"Users"`
+	BlendPercentages []IndividualBlends `json:"blendpercentages"`
+}
+
+type IndividualBlends struct {
+	Type string `json:"type"`
+}
+
+type IndividualUserData struct {
+	Type string `json:"type"`
+}
+
+type DuoBlend struct {
+	Users       []string   `json:"usernames"`
+	ArtistBlend TypeBlend  `json:"artist"`
+	AlbumBlend  TypeBlend  `json:"album"`
+	TrackBlend  TypeBlend  `json:"track"`
+	TopArtists  []TopEntry `json:"topartists"`
+	TopAlbums   []TopEntry `json:"topalbums"`
+	TopTracks   []TopEntry `json:"toptracks"`
+}
+
+type TypeBlend struct {
+	ThreeMonth int `json:"3month"`
+	SixMonth   int `json:"6month"`
+	OneYear    int `json:"1year"`
+}
+
+type TopEntry struct {
+	Name         string `json:"name"`
+	Distribution []int  `json:"distribution"`
 }

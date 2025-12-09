@@ -23,6 +23,10 @@ func Decode[T any](response *http.Response) (T, error) {
 
 }
 
+func StructToJSONBytes(v interface{}) ([]byte, error) {
+	return json.Marshal(v)
+}
+
 func DecodeRequest[T any](r *http.Request) (T, error) {
 	var v T
 	if err := json.NewDecoder(r.Body).Decode(&v); err != nil {

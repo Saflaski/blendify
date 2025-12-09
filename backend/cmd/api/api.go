@@ -68,17 +68,20 @@ func (app *application) mount() http.Handler {
 	)
 
 	blendRepo := blend.NewRedisStateStore(rdb)
-	blendService := blend.NewBlendService(*blendRepo, *LastFMExternal)
+	blendService := blend.NewBlendService(*blendRepo, *LastFMExternal, *authRepo)
 	blendHandler := blend.NewBlendHandler(
 		"http://localhost:5173",
 		"sid",
-		*blendService)
+		*blendService,
+		string(auth.UserKey),
+	)
 
 	r.Route("/v1", func(r chi.Router) {
 		r.Route("/blend", func(r chi.Router) {
 			r.Use(auth.ValidateCookie(*authHandler, authService))
 			r.Get("/new", blendHandler.GetBlendPercentage)
 			r.Post("/add", blendHandler.AddBlendFromInviteLink)
+			r.Get("/data", blendHandler.GetBlendPageData)
 			r.Get("/generatelink", blendHandler.GenerateNewLink)
 		})
 

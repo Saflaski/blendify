@@ -88,6 +88,7 @@ type AuthService interface {
 	MakeNewUser(context context.Context, validationSid string, userName string) (uuid.UUID, error)
 	GetUserByValidSessionID(context context.Context, sid string) (string, error)
 	IsSIDValid(context context.Context, sid string) (bool, error)
+	GetUserByLFMUsername(context context.Context, lfmName string) (string, error)
 }
 
 func (s *authService) MakeNewUser(context context.Context, validationSid string, userName string) (uuid.UUID, error) {

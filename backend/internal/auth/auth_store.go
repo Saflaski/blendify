@@ -27,7 +27,7 @@ type AuthRepository interface {
 	AddNewSidToExistingUser(ctx context.Context, userid uuid.UUID, validationSid string) error
 }
 
-type RedisStateStore struct {
+type AuthStateStore struct {
 	client            *redis.Client
 	prefixAuth        string
 	prefixUser        string
@@ -37,8 +37,8 @@ type RedisStateStore struct {
 	sidExpirationTime int64
 }
 
-func NewRedisStateStore(client *redis.Client) *RedisStateStore {
-	return &RedisStateStore{
+func NewRedisStateStore(client *redis.Client) *AuthStateStore {
+	return &AuthStateStore{
 		client:            client,
 		prefixAuth:        "login_state:", //TODO is this the right way to connect to redis?
 		prefixUser:        "user",
@@ -49,7 +49,7 @@ func NewRedisStateStore(client *redis.Client) *RedisStateStore {
 	}
 }
 
-func (r *RedisStateStore) MakeNewUser(ctx context.Context, validationSid string, userName string, userid uuid.UUID) error {
+func (r *AuthStateStore) MakeNewUser(ctx context.Context, validationSid string, userName string, userid uuid.UUID) error {
 
 	key := fmt.Sprintf("%s:%s", r.prefixUser, userid.String())
 
@@ -64,7 +64,7 @@ func (r *RedisStateStore) MakeNewUser(ctx context.Context, validationSid string,
 	return err
 }
 
-func (r *RedisStateStore) AddNewSidToExistingUser(ctx context.Context, userid uuid.UUID, validationSid string) error {
+func (r *AuthStateStore) AddNewSidToExistingUser(ctx context.Context, userid uuid.UUID, validationSid string) error {
 	pipe := r.client.TxPipeline()
 	r.queueAddNewSid(pipe, userid.String(), validationSid)
 	_, err := pipe.Exec(ctx)
@@ -72,7 +72,7 @@ func (r *RedisStateStore) AddNewSidToExistingUser(ctx context.Context, userid uu
 }
 
 // Adds newsid atomically.
-func (r *RedisStateStore) queueAddNewSid(pipe redis.Pipeliner, userid string, sid string) error {
+func (r *AuthStateStore) queueAddNewSid(pipe redis.Pipeliner, userid string, sid string) error {
 
 	// pipe := r.client.TxPipeline()
 
@@ -89,7 +89,7 @@ func (r *RedisStateStore) queueAddNewSid(pipe redis.Pipeliner, userid string, si
 	return nil
 }
 
-func (r *RedisStateStore) DeleteSingularSessionID(ctx context.Context, sid string) error {
+func (r *AuthStateStore) DeleteSingularSessionID(ctx context.Context, sid string) error {
 	commandContext := context.Background()
 
 	//Get User whose owns this sid
@@ -117,7 +117,7 @@ func (r *RedisStateStore) DeleteSingularSessionID(ctx context.Context, sid strin
 
 }
 
-func (r *RedisStateStore) DeleteUser(ctx context.Context, userid string) error {
+func (r *AuthStateStore) DeleteUser(ctx context.Context, userid string) error {
 
 	//Deletes 3 things
 	// the sidlist
@@ -168,7 +168,7 @@ func (r *RedisStateStore) DeleteUser(ctx context.Context, userid string) error {
 	return err
 }
 
-func (r *RedisStateStore) GetValidSidByUser(context context.Context, userid string, lastValidTime time.Time) ([]string, error) {
+func (r *AuthStateStore) GetValidSidByUser(context context.Context, userid string, lastValidTime time.Time) ([]string, error) {
 	key := fmt.Sprintf("%s:%s", r.prefixSidList, userid)
 
 	vals, err := r.client.ZRevRangeByScore(context, key, &redis.ZRangeBy{
@@ -179,7 +179,7 @@ func (r *RedisStateStore) GetValidSidByUser(context context.Context, userid stri
 	return vals, err
 }
 
-func (r *RedisStateStore) GetUserByAnySessionID(context context.Context, sid string) (string, error) {
+func (r *AuthStateStore) GetUserByAnySessionID(context context.Context, sid string) (string, error) {
 
 	keyUserSid := fmt.Sprintf("%s:%s", r.prefixSidToUser, sid)
 	val, err := r.client.Get(context, keyUserSid).Result()
@@ -189,7 +189,7 @@ func (r *RedisStateStore) GetUserByAnySessionID(context context.Context, sid str
 	return val, err
 }
 
-func (r *RedisStateStore) GetUserByValidSessionID(context context.Context, sid string, expiryDuration time.Duration) (string, error) {
+func (r *AuthStateStore) GetUserByValidSessionID(context context.Context, sid string, expiryDuration time.Duration) (string, error) {
 	keyUserSid := fmt.Sprintf("%s:%s", r.prefixSidToUser, sid)
 
 	//Get User from SID
@@ -214,13 +214,13 @@ func (r *RedisStateStore) GetUserByValidSessionID(context context.Context, sid s
 	}
 }
 
-func (r *RedisStateStore) queueAddNewSidUserIndexCmd(pipe redis.Pipeliner, userid string, sid string) error {
+func (r *AuthStateStore) queueAddNewSidUserIndexCmd(pipe redis.Pipeliner, userid string, sid string) error {
 	keyUserSid := fmt.Sprintf("%s:%s", r.prefixSidToUser, sid) // user_sids:SID1 = USER1001	//This can have a EXPR
 	return pipe.Set(context.Background(), keyUserSid, userid, time.Duration(r.sidExpirationTime)).Err()
 
 }
 
-func (r *RedisStateStore) queueAddNewSidListWithScoreCmd(pipe redis.Pipeliner, userid string, sid string) error {
+func (r *AuthStateStore) queueAddNewSidListWithScoreCmd(pipe redis.Pipeliner, userid string, sid string) error {
 	key := fmt.Sprintf("%s:%s", r.prefixSidList, userid)
 
 	return pipe.ZAdd(context.Background(), key, redis.Z{
@@ -230,23 +230,29 @@ func (r *RedisStateStore) queueAddNewSidListWithScoreCmd(pipe redis.Pipeliner, u
 
 }
 
-func (r *RedisStateStore) AddUserIdToLFMIndex(context context.Context, userid, lfmName string) error {
+func (r *AuthStateStore) AddUserIdToLFMIndex(context context.Context, userid, lfmName string) error {
 	key := fmt.Sprintf("%s:%s", r.prefixLFMToUser, lfmName)
 	return r.client.Set(context, key, userid, 0).Err()
 }
 
-func (r *RedisStateStore) queueAddLFMUserIndex(pipe redis.Pipeliner, userid, lfmName string) error {
+func (r *AuthStateStore) queueAddLFMUserIndex(pipe redis.Pipeliner, userid, lfmName string) error {
 	key := fmt.Sprintf("%s:%s", r.prefixLFMToUser, lfmName)
 	return pipe.Set(context.Background(), key, userid, 0).Err()
 }
 
-func (r *RedisStateStore) GetUserIdByLFM(context context.Context, lfmName string) (string, error) {
+func (r *AuthStateStore) GetUserIdByLFM(context context.Context, lfmName string) (string, error) {
 	key := fmt.Sprintf("%s:%s", r.prefixLFMToUser, lfmName)
 	result, err := r.client.Get(context, key).Result()
 	return result, err
 }
 
-func (s *RedisStateStore) SetNewStateSid(ctx context.Context, stateToken, sessionID string, ttl time.Duration) error {
+func (r *AuthStateStore) GetLFMByUserId(context context.Context, id string) (string, error) {
+	key := fmt.Sprintf("%s:%s:%s", r.prefixUser, id)
+	result, err := r.client.HGet(context, key, "LFM Username").Result()
+	return result, err
+}
+
+func (s *AuthStateStore) SetNewStateSid(ctx context.Context, stateToken, sessionID string, ttl time.Duration) error {
 	key := s.prefixAuth + stateToken
 	err := s.client.Set(ctx, key, sessionID, ttl).Err()
 	if err != nil {
@@ -255,7 +261,7 @@ func (s *RedisStateStore) SetNewStateSid(ctx context.Context, stateToken, sessio
 	return nil
 }
 
-func (s *RedisStateStore) GetSidKey(ctx context.Context, sessionID string) (string, error) {
+func (s *AuthStateStore) GetSidKey(ctx context.Context, sessionID string) (string, error) {
 	key := s.prefixAuth + "sid_key:" + sessionID
 	value, err := s.client.Get(ctx, key).Result()
 	if err != nil {
@@ -268,7 +274,7 @@ func (s *RedisStateStore) GetSidKey(ctx context.Context, sessionID string) (stri
 	return value, nil
 }
 
-func (s *RedisStateStore) ConsumeStateSID(ctx context.Context, stateToken string) (string, error) {
+func (s *AuthStateStore) ConsumeStateSID(ctx context.Context, stateToken string) (string, error) {
 	key := s.prefixAuth + stateToken
 	value, err := s.client.Get(ctx, key).Result()
 	if err != nil {
@@ -283,7 +289,7 @@ func (s *RedisStateStore) ConsumeStateSID(ctx context.Context, stateToken string
 	return value, nil
 }
 
-func (s *RedisStateStore) SetSidWebSesssionKey(ctx context.Context, sessionID, webSessionKey string, ttl time.Duration) error {
+func (s *AuthStateStore) SetSidWebSesssionKey(ctx context.Context, sessionID, webSessionKey string, ttl time.Duration) error {
 	key := s.prefixAuth + "sid_key:" + sessionID
 	err := s.client.Set(ctx, key, webSessionKey, ttl).Err()
 	if err != nil {
@@ -292,7 +298,7 @@ func (s *RedisStateStore) SetSidWebSesssionKey(ctx context.Context, sessionID, w
 	return nil
 }
 
-func (s *RedisStateStore) DelSidKey(ctx context.Context, sessionID string) error {
+func (s *AuthStateStore) DelSidKey(ctx context.Context, sessionID string) error {
 	key := s.prefixAuth + "sid_key:" + sessionID
 	err := s.client.Del(ctx, key).Err()
 	if err != nil {

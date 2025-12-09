@@ -12,16 +12,21 @@ import (
 type BlendHandler struct {
 	frontendUrl         string
 	sessionIdCookieName string
+	userKey             contextKey
 	svc                 BlendService
 }
 
+type contextKey string
+
 type UUID string
 
-func NewBlendHandler(frontendUrl, sidName string, service BlendService) *BlendHandler {
+func NewBlendHandler(frontendUrl, sidName string, service BlendService, userKey string) *BlendHandler {
 	return &BlendHandler{
 		frontendUrl:         frontendUrl,
 		sessionIdCookieName: sidName,
-		svc:                 service}
+		svc:                 service,
+		userKey:             contextKey(userKey),
+	}
 }
 
 type BlendRequest struct {
@@ -53,6 +58,57 @@ func (h *BlendHandler) GenerateNewLink(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	response := map[string]string{"linkId": string(newURL)}
 	json.NewEncoder(w).Encode(response)
+
+}
+
+func (h *BlendHandler) GetUserIDFromRequest(r *http.Request) (userid, error) {
+	t, ok := r.Context().Value(string(h.userKey)).(string)
+	if !ok {
+		return "", fmt.Errorf("Could not parse userkey from context")
+	}
+
+	return userid(t), nil
+}
+
+func (h *BlendHandler) GetBlendPageData(w http.ResponseWriter, r *http.Request) {
+
+	response := r.URL.Query()
+
+	blendId := blendId(response.Get("blendId"))
+	id, err := h.GetUserIDFromRequest(r)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "Could not interpret userid from request. Either try deleting all cookies and trying again or contact admin")
+		glog.Errorf("Could not parse userid from context, %s", id)
+		return
+	}
+
+	ok, err := h.svc.AuthoriseBlend(r.Context(), blendId, id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Could not interpret find userid. Either try deleting all cookies and trying again or contact admin")
+		glog.Errorf("Could not find userid in repo, %s -> %s", id, blendId)
+		return
+	}
+	defer r.Body.Close()
+
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, " User does not exist in this blend. Please try accepting invite again.")
+		glog.Infof("User unauth access %s -> %s", id, blendId)
+		return
+	}
+
+	blendData, err := h.svc.GetDuoBlendData(r.Context(), blendId)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "could not get blend data ")
+		glog.Errorf(" could not get blend data %s for user %s with error: %w", blendId, id, err)
+
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(blendData)
 
 }
 
@@ -142,6 +198,10 @@ func (h *BlendHandler) AddBlendFromInviteLink(w http.ResponseWriter, r *http.Req
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, " Cannot make blend with yourself: %s", err)
 		glog.Errorf(" User tried to make blend with themselves : %s :%s", blendLinkValue, userA)
+	} else if blendId == "-1" {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, " Cannot add more than 2 users to blend: %s", err)
+		glog.Errorf(" Not enough space on blend : %s :%s", blendLinkValue, userA)
 
 	}
 
