@@ -20,7 +20,7 @@ type RedisStateStore struct {
 }
 
 func (r *RedisStateStore) GetFromCacheTopX(context context.Context, userName string, timeDuration blendTimeDuration, category blendCategory) (map[string]int, error) {
-	key := fmt.Sprintf("%s:%s:%s:%s", r.musicPrefix, categoryPrefix[category], durationPrefix[timeDuration])
+	key := fmt.Sprintf("%s:%s:%s:%s", r.musicPrefix, userName, categoryPrefix[category], durationPrefix[timeDuration])
 
 	Result, err := r.client.Get(context, key).Result()
 	if err != nil {

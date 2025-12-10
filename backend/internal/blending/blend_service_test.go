@@ -127,9 +127,17 @@ func TestDownloadAndCache(t *testing.T) {
 	})
 
 	t.Run("Try to get from cache or download", func(t *testing.T) {
+		// err = blendService.PopulateUsersByBlend(t.Context(), blendId)
+		// if err != nil {
+		// 	return DuoBlend{}, fmt.Errorf(" Could not populate user data: %w", err)
+		// }
+		userA := userid("3c7a687b-e8df-4f13-ad94-6bee68d67aa1")
+		userB := userid("dc2e4fcf-0d07-4871-b287-9b3488599c3d")
+		blendService.GetNewDataForUser(t.Context(), userA)
+		blendService.GetNewDataForUser(t.Context(), userB)
 		blend, err := blendService.GenerateBlendOfTwo(t.Context(),
-			userid("dc2e4fcf-0d07-4871-b287-9b3488599c3d"),
-			userid("3c7a687b-e8df-4f13-ad94-6bee68d67aa1"),
+			userB,
+			userA,
 		)
 		if err != nil {
 			t.Errorf("%s", err)

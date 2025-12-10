@@ -344,7 +344,7 @@ type response struct {
 
 func (s *BlendService) GetNewDataForUser(ctx context.Context, user userid) error {
 
-	platformUsername, err := s.repo.GetUser(UUID(user))
+	platformUsername, err := s.repo.GetLFMByUserId(ctx, string(user))
 	if err != nil {
 		return fmt.Errorf("could not find user by userid when getting new data: %w", err)
 	}

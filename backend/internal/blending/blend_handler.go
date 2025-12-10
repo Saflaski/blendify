@@ -104,7 +104,7 @@ func (h *BlendHandler) GetBlendPageData(w http.ResponseWriter, r *http.Request) 
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "could not get blend data ")
 		glog.Errorf(" could not get blend data %s for user %s with error: %w", blendId, id, err)
-
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(blendData)
