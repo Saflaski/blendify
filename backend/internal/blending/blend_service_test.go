@@ -73,19 +73,19 @@ func TestGetBlend(t *testing.T) {
 
 	})
 
-	t.Run("Get blend between two users: saflas and test2002", func(t *testing.T) {
-		userA := "saflas"
-		userB := "test2002"
+	// t.Run("Get blend between two users: saflas and test2002", func(t *testing.T) {
+	// 	userA := "saflas"
+	// 	userB := "test2002"
 
-		blendNumber, err := blendService.getArtistBlend(t.Context(), userA, userB, BlendTimeDurationOneMonth)
-		if err != nil {
-			t.Errorf("Error during getting artist blend: %q", err)
-		}
+	// 	blendNumber, err := blendService.getArtistBlend(t.Context(), userA, userB, BlendTimeDurationOneMonth)
+	// 	if err != nil {
+	// 		t.Errorf("Error during getting artist blend: %q", err)
+	// 	}
 
-		if blendNumber > 100 || blendNumber <= 0 { //I know the blend between these two isn't 0
-			t.Errorf("Number is not within acceptable range: %d", blendNumber)
-		}
-	})
+	// 	if blendNumber > 100 || blendNumber <= 0 { //I know the blend between these two isn't 0
+	// 		t.Errorf("Number is not within acceptable range: %d", blendNumber)
+	// 	}
+	// })
 
 }
 

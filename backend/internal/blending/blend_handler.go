@@ -111,47 +111,47 @@ func (h *BlendHandler) GetBlendPageData(w http.ResponseWriter, r *http.Request) 
 
 }
 
-func (h *BlendHandler) GetBlendPercentage(w http.ResponseWriter, r *http.Request) { //TODO: Change the name to soemthing else including children functions in S and R
-	response := r.URL.Query()
+// func (h *BlendHandler) GetBlendPercentage(w http.ResponseWriter, r *http.Request) { //TODO: Change the name to soemthing else including children functions in S and R
+// 	response := r.URL.Query()
 
-	blendReq := BlendRequest{
-		category:     response.Get("category"),
-		timeDuration: response.Get("timeDuration"),
-		user:         response.Get("user"),
-	}
-	defer r.Body.Close()
+// 	blendReq := BlendRequest{
+// 		category:     response.Get("category"),
+// 		timeDuration: response.Get("timeDuration"),
+// 		user:         response.Get("user"),
+// 	}
+// 	defer r.Body.Close()
 
-	if blendReq.category == "" || blendReq.timeDuration == "" || blendReq.user == "" {
-		http.Error(w, "Missing required query parameters", http.StatusBadRequest)
-		return
-	}
+// 	if blendReq.category == "" || blendReq.timeDuration == "" || blendReq.user == "" {
+// 		http.Error(w, "Missing required query parameters", http.StatusBadRequest)
+// 		return
+// 	}
 
-	//Need to extract userA aka user client who is sending the blend request
-	//As cookie has already been validated during auth, we don't need to cookie check
-	cookie, err := r.Cookie(h.sessionIdCookieName)
-	if err != nil {
-		//Something must have gone wrong during runtime for this error to happen
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Error during post-validation cookie extraction. Contact Admin")
-		glog.Error("Error during post-validation cookie extraction, %w", err)
-	}
+// 	//Need to extract userA aka user client who is sending the blend request
+// 	//As cookie has already been validated during auth, we don't need to cookie check
+// 	cookie, err := r.Cookie(h.sessionIdCookieName)
+// 	if err != nil {
+// 		//Something must have gone wrong during runtime for this error to happen
+// 		w.WriteHeader(http.StatusInternalServerError)
+// 		fmt.Fprintf(w, "Error during post-validation cookie extraction. Contact Admin")
+// 		glog.Error("Error during post-validation cookie extraction, %w", err)
+// 	}
 
-	userA := UUID(cookie.Value)
-	userB := blendReq.user
-	category := blendCategory(blendReq.category) //artist
-	timeDuration := blendTimeDuration(blendReq.timeDuration)
+// 	userA := UUID(cookie.Value)
+// 	userB := blendReq.user
+// 	category := blendCategory(blendReq.category) //artist
+// 	timeDuration := blendTimeDuration(blendReq.timeDuration)
 
-	blendNumber, err := h.svc.GetBlend(r.Context(), userA, userB, category, timeDuration)
-	if err != nil {
-		http.Error(w, "Error calculating blend", http.StatusInternalServerError)
-		return
-	}
-	responseString := fmt.Sprintf(`{"blend_percentage": %d}`, blendNumber)
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprint(w, responseString)
+// 	blendNumber, err := h.svc.GetBlend(r.Context(), userA, userB, category, timeDuration)
+// 	if err != nil {
+// 		http.Error(w, "Error calculating blend", http.StatusInternalServerError)
+// 		return
+// 	}
+// 	responseString := fmt.Sprintf(`{"blend_percentage": %d}`, blendNumber)
+// 	w.WriteHeader(http.StatusOK)
+// 	w.Header().Set("Content-Type", "application/json")
+// 	fmt.Fprint(w, responseString)
 
-}
+// }
 
 type responseStruct struct {
 	Value string `json:"value"`
