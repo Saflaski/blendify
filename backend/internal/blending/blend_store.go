@@ -19,6 +19,12 @@ type RedisStateStore struct {
 	blendPrefix string
 }
 
+func (r *RedisStateStore) GetLFMByUserId(ctx context.Context, userID string) (string, error) {
+	key := fmt.Sprintf("%s:%s", r.userPrefix, userID)
+	result, err := r.client.HGet(ctx, key, "LFM Username").Result()
+	return result, err
+}
+
 func (r *RedisStateStore) AddUsersToBlend(context context.Context, id blendId, userids []userid) error {
 	key := fmt.Sprintf("%s:%s:%s", r.blendPrefix, id, "users")
 
@@ -47,7 +53,7 @@ func (r *RedisStateStore) IsUserInBlend(context context.Context, user userid, id
 	key := fmt.Sprintf("%s:%s:%s", r.blendPrefix, id, "users")
 	res, err := r.client.SIsMember(context, key, string(user)).Result()
 	if err != nil {
-		return false, fmt.Errorf(" error during checking if member was in set, as got value: %b: %w", res, err)
+		return false, fmt.Errorf(" error during checking if member was in set, as got value: %t: %w", res, err)
 	}
 
 	return res, nil

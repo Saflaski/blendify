@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strconv"
 	"testing"
@@ -37,7 +38,7 @@ func TestAuthService(t *testing.T) {
 	redisStore := NewRedisStateStore(redis.NewClient(&redis.Options{
 		Addr:     DB_ADDR,
 		Password: DB_PASS,
-		DB:       1,
+		DB:       0,
 		Protocol: DB_PROTOCOL,
 	}))
 	_ = DB_NUM
@@ -122,6 +123,14 @@ func TestAuthService(t *testing.T) {
 
 		// t.Log("Success deleted user successfully\n")
 
+	})
+
+	t.Run("get lfm by userid", func(t *testing.T) {
+		str, err := authService.repo.GetLFMByUserId(t.Context(), "dc2e4fcf-0d07-4871-b287-9b3488599c3d")
+		if err != nil {
+			t.Error(err)
+		}
+		fmt.Println(str)
 	})
 
 }

@@ -75,7 +75,7 @@ type DuoBlend struct {
 
 type TypeBlend struct {
 	ThreeMonth int `json:"3month"`
-	SixMonth   int `json:"6month"`
+	OneMonth   int `json:"1month"`
 	OneYear    int `json:"1year"`
 }
 

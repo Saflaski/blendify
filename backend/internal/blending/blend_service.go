@@ -1,7 +1,6 @@
 package blend
 
 import (
-	"backend-lastfm/internal/auth"
 	musicapi "backend-lastfm/internal/music_api/lastfm"
 	"context"
 	"fmt"
@@ -15,7 +14,7 @@ import (
 type BlendService struct {
 	repo           *RedisStateStore
 	LastFMExternal *musicapi.LastFMAPIExternal
-	authRepo       *auth.AuthStateStore
+	// authRepo       *auth.AuthStateStore
 }
 
 const BLEND_USER_LIMIT = 2
@@ -57,7 +56,7 @@ func (s *BlendService) GetDuoBlendData(context context.Context, blendId blendId)
 }
 
 func (s *BlendService) getLFM(ctx context.Context, userID string) (string, error) {
-	username, err := s.authRepo.GetLFMByUserId(ctx, userID)
+	username, err := s.repo.GetLFMByUserId(ctx, userID)
 	if err != nil {
 		glog.Errorf("Could not extract platform username from userid: %s", userID)
 		return "", err
@@ -105,12 +104,12 @@ func (s *BlendService) buildArtistBlend(usernameA, usernameB string) (TypeBlend,
 		err error
 	)
 
-	if b.ThreeMonth, err = s.getArtistBlend(usernameA, usernameB, BlendTimeDurationOneMonth); err != nil {
+	if b.OneMonth, err = s.getArtistBlend(usernameA, usernameB, BlendTimeDurationOneMonth); err != nil {
 		glog.Errorf("Could not get 1-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf("Could not get 1-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 	}
 
-	if b.SixMonth, err = s.getArtistBlend(usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
+	if b.ThreeMonth, err = s.getArtistBlend(usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
 		glog.Errorf("Could not get 3-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf("Could not get 3-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 	}
@@ -129,12 +128,12 @@ func (s *BlendService) buildAlbumBlend(usernameA, usernameB string) (TypeBlend, 
 		err error
 	)
 
-	if b.ThreeMonth, err = s.getAlbumBlend(usernameA, usernameB, BlendTimeDurationOneMonth); err != nil {
+	if b.OneMonth, err = s.getAlbumBlend(usernameA, usernameB, BlendTimeDurationOneMonth); err != nil {
 		glog.Errorf("Could not get 1-month album blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf("Could not get 1-month album blend for %s, %s: %v", usernameA, usernameB, err)
 	}
 
-	if b.SixMonth, err = s.getAlbumBlend(usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
+	if b.ThreeMonth, err = s.getAlbumBlend(usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
 		glog.Errorf("Could not get 3-month album blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf("Could not get 3-month album blend for %s, %s: %v", usernameA, usernameB, err)
 	}
@@ -153,13 +152,13 @@ func (s *BlendService) buildTrackBlend(usernameA, usernameB string) (TypeBlend, 
 		err error
 	)
 
-	if b.ThreeMonth, err = s.getTrackBlend(usernameA, usernameB, BlendTimeDurationOneMonth); err != nil {
+	if b.OneMonth, err = s.getTrackBlend(usernameA, usernameB, BlendTimeDurationOneMonth); err != nil {
 		glog.Errorf("Could not get 1-month track blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf("Could not get 1-month track blend for %s, %s: %v", usernameA, usernameB, err)
 
 	}
 
-	if b.SixMonth, err = s.getTrackBlend(usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
+	if b.ThreeMonth, err = s.getTrackBlend(usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
 		glog.Errorf("Could not get 3-month track blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf("Could not get 3-month track blend for %s, %s: %v", usernameA, usernameB, err)
 	}
@@ -437,8 +436,8 @@ func (s *BlendService) AddBlendFromInvite(context context.Context, userA userid,
 	return nil
 }
 
-func NewBlendService(blendStore RedisStateStore, lfmAdapter musicapi.LastFMAPIExternal, authStore auth.AuthStateStore) *BlendService {
-	return &BlendService{&blendStore, &lfmAdapter, &authStore}
+func NewBlendService(blendStore RedisStateStore, lfmAdapter musicapi.LastFMAPIExternal) *BlendService {
+	return &BlendService{&blendStore, &lfmAdapter}
 }
 
 // TODO: Delete this function or change UUID to userid type

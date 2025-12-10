@@ -68,7 +68,7 @@ func (app *application) mount() http.Handler {
 	)
 
 	blendRepo := blend.NewRedisStateStore(rdb)
-	blendService := blend.NewBlendService(*blendRepo, *LastFMExternal, *authRepo)
+	blendService := blend.NewBlendService(*blendRepo, *LastFMExternal)
 	blendHandler := blend.NewBlendHandler(
 		"http://localhost:5173",
 		"sid",

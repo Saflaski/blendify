@@ -1,14 +1,12 @@
 package blend
 
 import (
-	"backend-lastfm/internal/auth"
 	musicapi "backend-lastfm/internal/music_api/lastfm"
 	"context"
 	"os"
 	"strconv"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 )
@@ -44,7 +42,7 @@ func TestGetBlend(t *testing.T) {
 		"https://ws.audioscrobbler.com/2.0/",
 		true,
 	)
-	blendService := NewBlendService(*redisStore, *lfm_adapter, auth.AuthStateStore{})
+	blendService := NewBlendService(*redisStore, *lfm_adapter)
 	_ = blendService
 	_ = redisStore
 	//Mock Data
@@ -109,7 +107,7 @@ func TestDownloadAndCache(t *testing.T) {
 	redisStore := NewRedisStateStore(redis.NewClient(&redis.Options{
 		Addr:     DB_ADDR,
 		Password: DB_PASS,
-		DB:       1,
+		DB:       0,
 		Protocol: DB_PROTOCOL,
 	}))
 
@@ -118,11 +116,41 @@ func TestDownloadAndCache(t *testing.T) {
 		"https://ws.audioscrobbler.com/2.0/",
 		true,
 	)
-	blendService := NewBlendService(*redisStore, *lfm_adapter, auth.AuthStateStore{})
+
+	blendService := NewBlendService(*redisStore, *lfm_adapter)
 	_ = blendService
 	_ = redisStore
 
 	t.Run("Hydrate and cache user", func(t *testing.T) {
-		blendService.GetNewDataForUser(context.Background(), userid(uuid.New().String()))
+		blendService.GetNewDataForUser(context.Background(), userid("dc2e4fcf-0d07-4871-b287-9b3488599c3d"))
+	})
+
+	t.Run("Try to get from cache or download", func(t *testing.T) {
+		blend, err := blendService.GenerateBlendOfTwo(t.Context(),
+			userid("dc2e4fcf-0d07-4871-b287-9b3488599c3d"),
+			userid("3c7a687b-e8df-4f13-ad94-6bee68d67aa1"),
+		)
+		if err != nil {
+			t.Errorf("%s", err)
+
+		}
+		t.Log(blend.AlbumBlend.OneYear)
+		t.Log(blend.AlbumBlend.ThreeMonth)
+		t.Log(blend.AlbumBlend.OneMonth)
+		t.Log(blend.ArtistBlend.OneYear)
+		t.Log(blend.ArtistBlend.ThreeMonth)
+		t.Log(blend.ArtistBlend.OneMonth)
+		t.Log(blend.TrackBlend.OneYear)
+		t.Log(blend.TrackBlend.ThreeMonth)
+		t.Log(blend.TrackBlend.OneMonth)
+
+	})
+
+	t.Run("Get LFM by user", func(t *testing.T) {
+		user, err := blendService.repo.GetLFMByUserId(t.Context(), "dc2e4fcf-0d07-4871-b287-9b3488599c3d")
+		t.Log(user)
+		if err != nil {
+			t.Error(err)
+		}
 	})
 }

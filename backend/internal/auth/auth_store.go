@@ -25,6 +25,7 @@ type AuthRepository interface {
 	GetUserIdByLFM(context context.Context, lfmName string) (string, error)
 	AddUserIdToLFMIndex(context context.Context, userid, lfmName string) error
 	AddNewSidToExistingUser(ctx context.Context, userid uuid.UUID, validationSid string) error
+	GetLFMByUserId(context context.Context, id string) (string, error)
 }
 
 type AuthStateStore struct {
@@ -247,7 +248,7 @@ func (r *AuthStateStore) GetUserIdByLFM(context context.Context, lfmName string)
 }
 
 func (r *AuthStateStore) GetLFMByUserId(context context.Context, id string) (string, error) {
-	key := fmt.Sprintf("%s:%s:%s", r.prefixUser, id)
+	key := fmt.Sprintf("%s:%s", r.prefixUser, id)
 	result, err := r.client.HGet(context, key, "LFM Username").Result()
 	return result, err
 }
