@@ -19,6 +19,23 @@ type RedisStateStore struct {
 	blendPrefix string
 }
 
+func (r *RedisStateStore) GetFromCacheTopX(context context.Context, userName string, timeDuration blendTimeDuration, category blendCategory) (map[string]int, error) {
+	key := fmt.Sprintf("%s:%s:%s:%s", r.musicPrefix, categoryPrefix[category], durationPrefix[timeDuration])
+
+	Result, err := r.client.Get(context, key).Result()
+	if err != nil {
+		return nil, fmt.Errorf(" during extracting cache from db, could not get json map from db:%w", err)
+	}
+
+	respMap, err := utility.JSONToMap([]byte(Result))
+	if err != nil {
+		return nil, fmt.Errorf(" during extracting cache db, error in decoding from json: %w", err)
+	}
+
+	return respMap, nil
+
+}
+
 func (r *RedisStateStore) GetLFMByUserId(ctx context.Context, userID string) (string, error) {
 	key := fmt.Sprintf("%s:%s", r.userPrefix, userID)
 	result, err := r.client.HGet(ctx, key, "LFM Username").Result()

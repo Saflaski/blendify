@@ -141,7 +141,7 @@ func (h *BlendHandler) GetBlendPercentage(w http.ResponseWriter, r *http.Request
 	category := blendCategory(blendReq.category) //artist
 	timeDuration := blendTimeDuration(blendReq.timeDuration)
 
-	blendNumber, err := h.svc.GetBlend(userA, userB, category, timeDuration)
+	blendNumber, err := h.svc.GetBlend(r.Context(), userA, userB, category, timeDuration)
 	if err != nil {
 		http.Error(w, "Error calculating blend", http.StatusInternalServerError)
 		return

@@ -51,6 +51,7 @@ func TestGetBlend(t *testing.T) {
 		userName := "test2002"
 		// response, err := blendService.getTopArists(userName, BlendTimeDurationThreeMonth)
 		TopArtistResponse, err := lfm_adapter.GetUserTopArtists(
+			t.Context(),
 			userName,
 			durationMap[BlendTimeDurationThreeMonth],
 			1,
@@ -76,7 +77,7 @@ func TestGetBlend(t *testing.T) {
 		userA := "saflas"
 		userB := "test2002"
 
-		blendNumber, err := blendService.getArtistBlend(userA, userB, BlendTimeDurationOneMonth)
+		blendNumber, err := blendService.getArtistBlend(t.Context(), userA, userB, BlendTimeDurationOneMonth)
 		if err != nil {
 			t.Errorf("Error during getting artist blend: %q", err)
 		}

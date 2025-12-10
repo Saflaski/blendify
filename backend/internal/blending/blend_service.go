@@ -76,15 +76,15 @@ func (s *BlendService) GenerateBlendOfTwo(context context.Context, userA userid,
 		return DuoBlend{}, fmt.Errorf(" could not get username %s", userB)
 	}
 
-	artistBlend, err := s.buildArtistBlend(usernameA, usernameB)
+	artistBlend, err := s.buildArtistBlend(context, usernameA, usernameB)
 	if err != nil {
 		return DuoBlend{}, fmt.Errorf(" failed to get artist blend: %w", err)
 	}
-	albumBlend, err := s.buildAlbumBlend(usernameA, usernameB)
+	albumBlend, err := s.buildAlbumBlend(context, usernameA, usernameB)
 	if err != nil {
 		return DuoBlend{}, fmt.Errorf(" failed to get album blend: %w", err)
 	}
-	trackBlend, err := s.buildTrackBlend(usernameA, usernameB)
+	trackBlend, err := s.buildTrackBlend(context, usernameA, usernameB)
 	if err != nil {
 		return DuoBlend{}, fmt.Errorf(" failed to get track blend: %w", err)
 	}
@@ -98,23 +98,23 @@ func (s *BlendService) GenerateBlendOfTwo(context context.Context, userA userid,
 	return duoBlend, nil
 }
 
-func (s *BlendService) buildArtistBlend(usernameA, usernameB string) (TypeBlend, error) {
+func (s *BlendService) buildArtistBlend(context context.Context, usernameA, usernameB string) (TypeBlend, error) {
 	var (
 		b   TypeBlend
 		err error
 	)
 
-	if b.OneMonth, err = s.getArtistBlend(usernameA, usernameB, BlendTimeDurationOneMonth); err != nil {
+	if b.OneMonth, err = s.getArtistBlend(context, usernameA, usernameB, BlendTimeDurationOneMonth); err != nil {
 		glog.Errorf("Could not get 1-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf("Could not get 1-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 	}
 
-	if b.ThreeMonth, err = s.getArtistBlend(usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
+	if b.ThreeMonth, err = s.getArtistBlend(context, usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
 		glog.Errorf("Could not get 3-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf("Could not get 3-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 	}
 
-	if b.OneYear, err = s.getArtistBlend(usernameA, usernameB, BlendTimeDurationYear); err != nil {
+	if b.OneYear, err = s.getArtistBlend(context, usernameA, usernameB, BlendTimeDurationYear); err != nil {
 		glog.Errorf("Could not get 12-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf("Could not get 12-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 	}
@@ -122,23 +122,23 @@ func (s *BlendService) buildArtistBlend(usernameA, usernameB string) (TypeBlend,
 	return b, nil
 }
 
-func (s *BlendService) buildAlbumBlend(usernameA, usernameB string) (TypeBlend, error) {
+func (s *BlendService) buildAlbumBlend(context context.Context, usernameA, usernameB string) (TypeBlend, error) {
 	var (
 		b   TypeBlend
 		err error
 	)
 
-	if b.OneMonth, err = s.getAlbumBlend(usernameA, usernameB, BlendTimeDurationOneMonth); err != nil {
+	if b.OneMonth, err = s.getAlbumBlend(context, usernameA, usernameB, BlendTimeDurationOneMonth); err != nil {
 		glog.Errorf("Could not get 1-month album blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf("Could not get 1-month album blend for %s, %s: %v", usernameA, usernameB, err)
 	}
 
-	if b.ThreeMonth, err = s.getAlbumBlend(usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
+	if b.ThreeMonth, err = s.getAlbumBlend(context, usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
 		glog.Errorf("Could not get 3-month album blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf("Could not get 3-month album blend for %s, %s: %v", usernameA, usernameB, err)
 	}
 
-	if b.OneYear, err = s.getAlbumBlend(usernameA, usernameB, BlendTimeDurationYear); err != nil {
+	if b.OneYear, err = s.getAlbumBlend(context, usernameA, usernameB, BlendTimeDurationYear); err != nil {
 		glog.Errorf("Could not get 12-month album blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf("Could not get 12-month album blend for %s, %s: %v", usernameA, usernameB, err)
 	}
@@ -146,24 +146,24 @@ func (s *BlendService) buildAlbumBlend(usernameA, usernameB string) (TypeBlend, 
 	return b, nil
 }
 
-func (s *BlendService) buildTrackBlend(usernameA, usernameB string) (TypeBlend, error) {
+func (s *BlendService) buildTrackBlend(context context.Context, usernameA, usernameB string) (TypeBlend, error) {
 	var (
 		b   TypeBlend
 		err error
 	)
 
-	if b.OneMonth, err = s.getTrackBlend(usernameA, usernameB, BlendTimeDurationOneMonth); err != nil {
+	if b.OneMonth, err = s.getTrackBlend(context, usernameA, usernameB, BlendTimeDurationOneMonth); err != nil {
 		glog.Errorf("Could not get 1-month track blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf("Could not get 1-month track blend for %s, %s: %v", usernameA, usernameB, err)
 
 	}
 
-	if b.ThreeMonth, err = s.getTrackBlend(usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
+	if b.ThreeMonth, err = s.getTrackBlend(context, usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
 		glog.Errorf("Could not get 3-month track blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf("Could not get 3-month track blend for %s, %s: %v", usernameA, usernameB, err)
 	}
 
-	if b.OneYear, err = s.getTrackBlend(usernameA, usernameB, BlendTimeDurationYear); err != nil {
+	if b.OneYear, err = s.getTrackBlend(context, usernameA, usernameB, BlendTimeDurationYear); err != nil {
 		glog.Errorf("Could not get 12-month track blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf("Could not get 12-month track blend for %s, %s: %v", usernameA, usernameB, err)
 	}
@@ -302,6 +302,7 @@ func (s *BlendService) PopulateUsersByBlend(context context.Context, id blendId)
 }
 
 func (s *BlendService) CacheBlend(context context.Context, blend *Blend) error {
+	panic("unimplemented")
 	return nil
 }
 
@@ -405,13 +406,13 @@ func (s *BlendService) downloadLFMData(context context.Context, user string, tim
 	_ = context //TODO: Change the request methods to accept and use a context
 	switch category {
 	case BlendCategoryArtist:
-		return s.downloadTopArtists(user, timePeriod)
+		return s.downloadTopArtists(context, user, timePeriod)
 
 	case BlendCategoryTrack:
-		return s.downloadTopTracks(user, timePeriod)
+		return s.downloadTopTracks(context, user, timePeriod)
 
 	case BlendCategoryAlbum:
-		return s.downloadTopAlbums(user, timePeriod)
+		return s.downloadTopAlbums(context, user, timePeriod)
 	default:
 		return nil, fmt.Errorf("invalid category")
 	}
@@ -441,7 +442,7 @@ func NewBlendService(blendStore RedisStateStore, lfmAdapter musicapi.LastFMAPIEx
 }
 
 // TODO: Delete this function or change UUID to userid type
-func (s *BlendService) GetBlend(userA UUID, userB string, category blendCategory, timeDuration blendTimeDuration) (int, error) {
+func (s *BlendService) GetBlend(context context.Context, userA UUID, userB string, category blendCategory, timeDuration blendTimeDuration) (int, error) {
 	//Implement logic to calculate blend percentage based on user data, category, and time duration
 
 	//Get the username from the UUID of the given user that's sending the request
@@ -455,11 +456,11 @@ func (s *BlendService) GetBlend(userA UUID, userB string, category blendCategory
 
 	switch category {
 	case BlendCategoryArtist:
-		return s.getArtistBlend(userNameA, userB, timeDuration)
+		return s.getArtistBlend(context, userNameA, userB, timeDuration)
 	case BlendCategoryTrack:
-		return s.getTrackBlend(userNameA, userB, timeDuration)
+		return s.getTrackBlend(context, userNameA, userB, timeDuration)
 	case BlendCategoryAlbum:
-		return s.getAlbumBlend(userNameA, userB, timeDuration)
+		return s.getAlbumBlend(context, userNameA, userB, timeDuration)
 	default:
 		return 0, fmt.Errorf("category does not match any of the required categories")
 	}
@@ -467,13 +468,13 @@ func (s *BlendService) GetBlend(userA UUID, userB string, category blendCategory
 }
 
 // ========== Artist Blend ==========
-func (s *BlendService) getArtistBlend(userA, userB string, timeDuration blendTimeDuration) (int, error) {
+func (s *BlendService) getArtistBlend(context context.Context, userA, userB string, timeDuration blendTimeDuration) (int, error) {
 
-	listenHistoryA, err := s.downloadTopArtists(userA, timeDuration)
+	listenHistoryA, err := s.downloadTopArtists(context, userA, timeDuration)
 	if err != nil {
 		return 0, fmt.Errorf("could not retrieve top artists for %s as it returned error: %w", userA, err)
 	}
-	listenHistoryB, err := s.downloadTopArtists(userB, timeDuration)
+	listenHistoryB, err := s.downloadTopArtists(context, userB, timeDuration)
 	if err != nil {
 		return 0, fmt.Errorf("could not retrieve top artists for %s as it returned error: %w", userB, err)
 	}
@@ -486,9 +487,58 @@ func (s *BlendService) getArtistBlend(userA, userB string, timeDuration blendTim
 	return blendNumber, nil
 }
 
-func (s *BlendService) downloadTopArtists(userName string, timeDuration blendTimeDuration) (map[string]int, error) {
+func (s *BlendService) getTopArists(context context.Context, userName string, timeDuration blendTimeDuration) (map[string]int, error) {
+	//Check cache first
+	dbResp, err := s.repo.GetFromCacheTopX(context, userName, timeDuration, BlendCategoryArtist)
+	if err != nil {
+		glog.Errorf(" Cache error during getting topartist for %s with duration %s that needs to be checked: %w", userName, timeDuration, err)
+	}
+
+	if dbResp != nil {
+		return dbResp, nil
+	} else {
+		return s.downloadTopArtists(context, userName, timeDuration)
+
+	}
+
+}
+
+func (s *BlendService) getTopX(context context.Context, userid userid, timeDuration blendTimeDuration, category blendCategory) (map[string]int, error) {
+	dbResp, err := s.repo.GetFromCacheTopX(context, string(userid), timeDuration, BlendCategoryArtist)
+	if err != nil {
+		glog.Errorf(" Cache error during getting topartist for %s with duration %s that needs to be checked: %w", userid, timeDuration, err)
+	}
+
+	if dbResp != nil { //Cache hit
+		return dbResp, nil
+	} else { //Cache miss
+		platformUsername, err := s.getLFM(context, string(userid))
+		if err != nil {
+			return nil, fmt.Errorf(" could get platform username from given userid:%s with err: %w", userid, err)
+		}
+		return s.downloadTopArtists(context, platformUsername, timeDuration)
+
+	}
+}
+
+func (s *BlendService) downloadTopX(context context.Context, userName string, timeDuration blendTimeDuration, category blendCategory) (map[string]int, error) {
+	switch category {
+	case BlendCategoryAlbum:
+		return s.downloadTopAlbums(context, userName, timeDuration)
+	case BlendCategoryArtist:
+		return s.downloadTopArtists(context, userName, timeDuration)
+	case BlendCategoryTrack:
+		return s.downloadTopTracks(context, userName, timeDuration)
+	default:
+		return nil, nil
+	}
+}
+
+func (s *BlendService) downloadTopArtists(context context.Context, userName string, timeDuration blendTimeDuration) (map[string]int, error) {
+
 	artistToPlaybacks := make(map[string]int)
 	topArtist, err := s.LastFMExternal.GetUserTopArtists(
+		context,
 		userName,
 		durationMap[timeDuration],
 		1,
@@ -510,13 +560,13 @@ func (s *BlendService) downloadTopArtists(userName string, timeDuration blendTim
 }
 
 // ========== Album Blend ==========
-func (s *BlendService) getAlbumBlend(userA, userB string, timeDuration blendTimeDuration) (int, error) {
+func (s *BlendService) getAlbumBlend(context context.Context, userA, userB string, timeDuration blendTimeDuration) (int, error) {
 
-	listenHistoryA, err := s.downloadTopAlbums(userA, timeDuration)
+	listenHistoryA, err := s.downloadTopAlbums(context, userA, timeDuration)
 	if err != nil {
 		return 0, fmt.Errorf("could not retrieve top albums for %s as it returned error: %w", userA, err)
 	}
-	listenHistoryB, err := s.downloadTopAlbums(userB, timeDuration)
+	listenHistoryB, err := s.downloadTopAlbums(context, userB, timeDuration)
 	if err != nil {
 		return 0, fmt.Errorf("could not retrieve top albums for %s as it returned error: %w", userB, err)
 	}
@@ -528,9 +578,10 @@ func (s *BlendService) getAlbumBlend(userA, userB string, timeDuration blendTime
 	return blendNumber, nil
 }
 
-func (s *BlendService) downloadTopAlbums(userName string, timeDuration blendTimeDuration) (map[string]int, error) {
+func (s *BlendService) downloadTopAlbums(context context.Context, userName string, timeDuration blendTimeDuration) (map[string]int, error) {
 	albumToPlays := make(map[string]int)
 	topAlbums, err := s.LastFMExternal.GetUserTopAlbums(
+		context,
 		userName,
 		durationMap[timeDuration],
 		1,
@@ -553,13 +604,13 @@ func (s *BlendService) downloadTopAlbums(userName string, timeDuration blendTime
 
 // ========== Track Blend ==========
 
-func (s *BlendService) getTrackBlend(userA, userB string, timeDuration blendTimeDuration) (int, error) {
+func (s *BlendService) getTrackBlend(context context.Context, userA, userB string, timeDuration blendTimeDuration) (int, error) {
 
-	listenHistoryA, err := s.downloadTopTracks(userA, timeDuration)
+	listenHistoryA, err := s.downloadTopTracks(context, userA, timeDuration)
 	if err != nil {
 		return 0, fmt.Errorf("could not retrieve top artists for %s as it returned error: %w", userA, err)
 	}
-	listenHistoryB, err := s.downloadTopTracks(userB, timeDuration)
+	listenHistoryB, err := s.downloadTopTracks(context, userB, timeDuration)
 	if err != nil {
 		return 0, fmt.Errorf("could not retrieve top artists for %s as it returned error: %w", userB, err)
 	}
@@ -572,9 +623,10 @@ func (s *BlendService) getTrackBlend(userA, userB string, timeDuration blendTime
 	return blendNumber, nil
 }
 
-func (s *BlendService) downloadTopTracks(userName string, timeDuration blendTimeDuration) (map[string]int, error) {
+func (s *BlendService) downloadTopTracks(context context.Context, userName string, timeDuration blendTimeDuration) (map[string]int, error) {
 	trackToPlays := make(map[string]int)
 	topTracks, err := s.LastFMExternal.GetUserTopTracks(
+		context,
 		userName,
 		durationMap[timeDuration],
 		1,

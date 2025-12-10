@@ -33,7 +33,7 @@ func TestEndpoints(t *testing.T) {
 			"to":     "1751803200",
 		}
 
-		resp, err := checkResponseOK(apiHandler.MakeRequest(extraURLParams))
+		resp, err := checkResponseOK(apiHandler.MakeRequest(t.Context(), extraURLParams))
 
 		if err != nil {
 			t.Errorf("Error: %q", err)
@@ -55,7 +55,7 @@ func TestEndpoints(t *testing.T) {
 			"to":     "1750593600",
 		}
 
-		resp, err := checkResponseOK(apiHandler.MakeRequest(extraURLParams))
+		resp, err := checkResponseOK(apiHandler.MakeRequest(t.Context(), extraURLParams))
 
 		if err != nil {
 			t.Errorf("Error: %q", err)
@@ -77,7 +77,7 @@ func TestEndpoints(t *testing.T) {
 			"to":     "1750593600",
 		}
 
-		resp, err := checkResponseOK(apiHandler.MakeRequest(extraURLParams))
+		resp, err := checkResponseOK(apiHandler.MakeRequest(t.Context(), extraURLParams))
 
 		if err != nil {
 			t.Errorf("Error: %q", err)
@@ -99,7 +99,7 @@ func TestEndpoints(t *testing.T) {
 			"to":     "1750593600",
 		}
 
-		resp, err := checkResponseOK(apiHandler.MakeRequest(extraURLParams))
+		resp, err := checkResponseOK(apiHandler.MakeRequest(t.Context(), extraURLParams))
 
 		if err != nil {
 			t.Errorf("Error: %q", err)
@@ -121,7 +121,7 @@ func TestEndpoints(t *testing.T) {
 			"limit":  "50",
 		}
 
-		resp, err := checkResponseOK(apiHandler.MakeRequest(extraURLParams))
+		resp, err := checkResponseOK(apiHandler.MakeRequest(t.Context(), extraURLParams))
 
 		if err != nil {
 			t.Errorf("Error: %q", err)
@@ -139,6 +139,7 @@ func TestEndpoints(t *testing.T) {
 		userName := "test2002"
 		// response, err := blendService.getTopArists(userName, BlendTimeDurationThreeMonth)
 		TopArtistResponse, err := apiHandler.GetUserTopArtists(
+			t.Context(),
 			userName,
 			"3month",
 			1,

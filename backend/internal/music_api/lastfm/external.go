@@ -2,6 +2,7 @@ package musicapi
 
 import (
 	"backend-lastfm/internal/utility"
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -37,7 +38,7 @@ func (h *LastFMAPIExternal) GetAPISignature(wsKey websessionKey, methodName stri
 
 }
 
-func (h *LastFMAPIExternal) GetUserInfo(userName string) (userInfo UserInfo, err error) {
+func (h *LastFMAPIExternal) GetUserInfo(ctx context.Context, userName string) (userInfo UserInfo, err error) {
 
 	extraURLParams := map[string]string{
 		"method": "user.getinfo",
@@ -45,7 +46,7 @@ func (h *LastFMAPIExternal) GetUserInfo(userName string) (userInfo UserInfo, err
 	if userName != "" {
 		extraURLParams["user"] = userName
 	}
-	resp, err := h.MakeRequest(extraURLParams)
+	resp, err := h.MakeRequest(ctx, extraURLParams)
 	if err != nil {
 		return userInfo, fmt.Errorf("GetUserInfo makeRequest Error: %v", err)
 
@@ -60,7 +61,7 @@ func (h *LastFMAPIExternal) GetUserInfo(userName string) (userInfo UserInfo, err
 	return userInfo, nil
 }
 
-func (h *LastFMAPIExternal) GetUserWeeklyArtists(userName string, from time.Time, to time.Time) (weeklyArtists UserWeeklyTrackList, err error) {
+func (h *LastFMAPIExternal) GetUserWeeklyArtists(ctx context.Context, userName string, from time.Time, to time.Time) (weeklyArtists UserWeeklyTrackList, err error) {
 
 	extraURLParams := map[string]string{
 		"method": "user.getweeklyartistchart",
@@ -69,7 +70,7 @@ func (h *LastFMAPIExternal) GetUserWeeklyArtists(userName string, from time.Time
 		"to":     strconv.FormatInt(to.Unix(), 10),
 	}
 
-	resp, err := h.MakeRequest(extraURLParams)
+	resp, err := h.MakeRequest(ctx, extraURLParams)
 	if err != nil {
 		return UserWeeklyTrackList{}, fmt.Errorf("GetUserWeeklyArtists makeRequest Error: %v", err)
 	}
@@ -83,7 +84,7 @@ func (h *LastFMAPIExternal) GetUserWeeklyArtists(userName string, from time.Time
 	return weeklyArtists, nil
 }
 
-func (h *LastFMAPIExternal) GetUserWeeklyAlbums(userName string, from time.Time, to time.Time) (weeklyAlbums UserWeeklyAlbumList, err error) {
+func (h *LastFMAPIExternal) GetUserWeeklyAlbums(context context.Context, userName string, from time.Time, to time.Time) (weeklyAlbums UserWeeklyAlbumList, err error) {
 
 	extraURLParams := map[string]string{
 		"method": "user.getweeklyalbumchart",
@@ -92,7 +93,7 @@ func (h *LastFMAPIExternal) GetUserWeeklyAlbums(userName string, from time.Time,
 		"to":     strconv.FormatInt(to.Unix(), 10),
 	}
 
-	resp, err := h.MakeRequest(extraURLParams)
+	resp, err := h.MakeRequest(context, extraURLParams)
 	if err != nil {
 		return UserWeeklyAlbumList{}, fmt.Errorf("GetUserWeeklyArtists makeRequest Error: %v", err)
 	}
@@ -106,7 +107,7 @@ func (h *LastFMAPIExternal) GetUserWeeklyAlbums(userName string, from time.Time,
 	return weeklyAlbums, nil
 }
 
-func (h *LastFMAPIExternal) GetUserWeeklyTracks(userName string, from time.Time, to time.Time) (weeklyTracks UserWeeklyTrackList, err error) {
+func (h *LastFMAPIExternal) GetUserWeeklyTracks(context context.Context, userName string, from time.Time, to time.Time) (weeklyTracks UserWeeklyTrackList, err error) {
 
 	extraURLParams := map[string]string{
 		"method": "user.getweeklytrackchart",
@@ -115,7 +116,7 @@ func (h *LastFMAPIExternal) GetUserWeeklyTracks(userName string, from time.Time,
 		"to":     strconv.FormatInt(to.Unix(), 10),
 	}
 
-	resp, err := h.MakeRequest(extraURLParams)
+	resp, err := h.MakeRequest(context, extraURLParams)
 	if err != nil {
 		return UserWeeklyTrackList{}, fmt.Errorf("GetUserWeeklyArtists makeRequest Error: %v", err)
 	}
@@ -129,7 +130,7 @@ func (h *LastFMAPIExternal) GetUserWeeklyTracks(userName string, from time.Time,
 	return weeklyTracks, nil
 }
 
-func (h *LastFMAPIExternal) GetUserTopArtists(userName string, period Period, page int, limit int) (topArtists UserTopArtists, err error) {
+func (h *LastFMAPIExternal) GetUserTopArtists(context context.Context, userName string, period Period, page int, limit int) (topArtists UserTopArtists, err error) {
 
 	if page == 0 {
 		page = 1
@@ -146,7 +147,7 @@ func (h *LastFMAPIExternal) GetUserTopArtists(userName string, period Period, pa
 		"limit":  strconv.Itoa(limit),
 	}
 
-	resp, err := h.MakeRequest(extraURLParams)
+	resp, err := h.MakeRequest(context, extraURLParams)
 	if err != nil {
 		return UserTopArtists{}, fmt.Errorf("GetUserTopArtists makeRequest Error: %v", err)
 	}
@@ -160,7 +161,7 @@ func (h *LastFMAPIExternal) GetUserTopArtists(userName string, period Period, pa
 	return topArtists, nil
 }
 
-func (h *LastFMAPIExternal) GetUserTopAlbums(userName string, period Period, page int, limit int) (topAlbums UserTopAlbums, err error) {
+func (h *LastFMAPIExternal) GetUserTopAlbums(context context.Context, userName string, period Period, page int, limit int) (topAlbums UserTopAlbums, err error) {
 
 	if page == 0 {
 		page = 1
@@ -177,7 +178,7 @@ func (h *LastFMAPIExternal) GetUserTopAlbums(userName string, period Period, pag
 		"limit":  strconv.Itoa(limit),
 	}
 
-	resp, err := h.MakeRequest(extraURLParams)
+	resp, err := h.MakeRequest(context, extraURLParams)
 	if err != nil {
 		return UserTopAlbums{}, fmt.Errorf("UserTopAlbums makeRequest Error: %v", err)
 	}
@@ -191,7 +192,7 @@ func (h *LastFMAPIExternal) GetUserTopAlbums(userName string, period Period, pag
 	return topAlbums, nil
 }
 
-func (h *LastFMAPIExternal) GetUserTopTracks(userName string, period Period, page int, limit int) (topTracks UserTopTracks, err error) {
+func (h *LastFMAPIExternal) GetUserTopTracks(context context.Context, userName string, period Period, page int, limit int) (topTracks UserTopTracks, err error) {
 
 	if page == 0 {
 		page = 1
@@ -208,7 +209,7 @@ func (h *LastFMAPIExternal) GetUserTopTracks(userName string, period Period, pag
 		"limit":  strconv.Itoa(limit),
 	}
 
-	resp, err := h.MakeRequest(extraURLParams)
+	resp, err := h.MakeRequest(context, extraURLParams)
 	if err != nil {
 		return UserTopTracks{}, fmt.Errorf("UserTopTracks makeRequest Error: %v", err)
 	}
@@ -222,7 +223,7 @@ func (h *LastFMAPIExternal) GetUserTopTracks(userName string, period Period, pag
 	return topTracks, nil
 }
 
-func (h *LastFMAPIExternal) MakeRequest(extraURLParams map[string]string) (*http.Response, error) {
+func (h *LastFMAPIExternal) MakeRequest(ctx context.Context, extraURLParams map[string]string) (*http.Response, error) {
 	// q := url.Values{}
 	// for paramName, paramValue := range extraURLParams {
 	// 	q.Set(paramName, paramValue)
@@ -246,10 +247,20 @@ func (h *LastFMAPIExternal) MakeRequest(extraURLParams map[string]string) (*http
 
 	u.RawQuery = q.Encode()
 
-	resp, err := http.Get(u.String())
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf(" during makeRequest, could not make new request with Error: %w", err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf(" during makeRequest, GET Error: %w", err)
 	}
+
+	// resp, err := http.Get(u.String())
+	// if err != nil {
+	// 	return nil, fmt.Errorf(" during makeRequest, GET Error: %w", err)
+	// }
 
 	// resp, err := http.Post(
 	// 	string(h.lastFMURL),
