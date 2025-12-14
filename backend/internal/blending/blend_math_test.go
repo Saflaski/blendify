@@ -45,6 +45,21 @@ func TestLWCS(t *testing.T) {
 			t.Errorf("Number is not within acceptable range: %d", blendNum)
 		}
 	})
+
+	t.Run("Get overall blend", func(t *testing.T) {
+		artist, err := combineNumbersWithWeights(70, 55, 63, 5, 4, 5)
+		if err != nil {
+			t.Log(artist)
+			t.Errorf(": %s", err)
+		}
+		album, _ := combineNumbersWithWeights(70, 55, 63, 5, 6, 4)
+		track, _ := combineNumbersWithWeights(70, 55, 63, 5, 4, 5)
+		blendNum, err := combineNumbersWithWeights(artist, album, track, 10, 10, 10)
+		if err != nil {
+			t.Log(blendNum)
+			t.Errorf(": %s", err)
+		}
+	})
 }
 
 func roundTo(n float64, decimals uint) float64 {

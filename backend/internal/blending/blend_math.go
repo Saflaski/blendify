@@ -1,6 +1,7 @@
 package blend
 
 import (
+	"fmt"
 	"maps"
 	"math"
 	"slices"
@@ -68,4 +69,48 @@ func Map[T, V any](ts []T, fn func(T) V) []V {
 		result[i] = fn(t)
 	}
 	return result
+}
+
+// func calcOverModality(typeBlend TypeBlend, durationWeights ...int) int {
+// 	return (typeBlend.OneMonth*durationWeights[0] + typeBlend.ThreeMonth*durationWeights[1] + typeBlend.OneYear*durationWeights[2]) / len(durationWeights)
+// }
+
+// Takes in equal number of input numbers and weights as slice of ints
+// Weights need to be between 0 and 10
+func combineNumbersWithWeights(inputsAndWeights ...int) (int, error) {
+	if len(inputsAndWeights)%2 != 0 {
+		return 0, fmt.Errorf(" need equal number of inputs and weights")
+	}
+
+	numInputs := len(inputsAndWeights) / 2
+	runningSum := 0.0
+	fmt.Println("Num inputs ", numInputs)
+	fmt.Println("---------------------")
+	max := inputsAndWeights[numInputs]
+	for _, v := range inputsAndWeights[numInputs:] {
+		if v > max {
+			max = v
+		}
+	}
+	for i := 0; i <= numInputs-1; i++ {
+		weight := inputsAndWeights[i+numInputs]
+
+		if weight < 0 || weight > 10 {
+			return 0, fmt.Errorf(" abnormal weight values, need to be between 0 and 10:%d", weight)
+		}
+		weightFloat := (float64(weight) / float64(max))
+		runningSum += float64(inputsAndWeights[i]) * weightFloat
+		fmt.Println("i:", i)
+		fmt.Println("input:", inputsAndWeights[i])
+		fmt.Println("weight:", weightFloat)
+		fmt.Println("runningSum:", runningSum)
+		fmt.Println("---------------------")
+		// runningSum = runningSum
+	}
+	finalSum := int(runningSum / float64(numInputs))
+	if finalSum > 100.0 || finalSum < 0.0 {
+		return 0, fmt.Errorf(" abnormal sum of modalities:%d", finalSum)
+	}
+	fmt.Println("Final sum: ", finalSum)
+	return finalSum, nil
 }

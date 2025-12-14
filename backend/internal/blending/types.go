@@ -64,13 +64,14 @@ type IndividualUserData struct {
 }
 
 type DuoBlend struct {
-	Users       []string   `json:"usernames"`
-	ArtistBlend TypeBlend  `json:"artist"`
-	AlbumBlend  TypeBlend  `json:"album"`
-	TrackBlend  TypeBlend  `json:"track"`
-	TopArtists  []TopEntry `json:"topartists"`
-	TopAlbums   []TopEntry `json:"topalbums"`
-	TopTracks   []TopEntry `json:"toptracks"`
+	Users           []string   `json:"usernames"`
+	OverallBlendNum int        `json:"overall"`
+	ArtistBlend     TypeBlend  `json:"artist"`
+	AlbumBlend      TypeBlend  `json:"album"`
+	TrackBlend      TypeBlend  `json:"track"`
+	TopArtists      []TopEntry `json:"topartists"`
+	TopAlbums       []TopEntry `json:"topalbums"`
+	TopTracks       []TopEntry `json:"toptracks"`
 }
 
 type TypeBlend struct {

@@ -64,7 +64,7 @@ func (h *BlendHandler) GenerateNewLink(w http.ResponseWriter, r *http.Request) {
 func (h *BlendHandler) GetUserIDFromRequest(r *http.Request) (userid, error) {
 	t, ok := r.Context().Value(string(h.userKey)).(string)
 	if !ok {
-		return "", fmt.Errorf("Could not parse userkey from context")
+		return "", fmt.Errorf(" could not parse userkey from context")
 	}
 
 	return userid(t), nil

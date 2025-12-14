@@ -88,14 +88,61 @@ func (s *BlendService) GenerateBlendOfTwo(context context.Context, userA userid,
 	if err != nil {
 		return DuoBlend{}, fmt.Errorf(" failed to get track blend: %w", err)
 	}
+
+	overallBlendNum, err := s.buildOverallBlend(artistBlend, albumBlend, trackBlend)
+	if err != nil {
+		return DuoBlend{}, fmt.Errorf("could not get overall blend with %s and %s: %w", userA, userB, err)
+	}
 	duoBlend := DuoBlend{Users: []string{usernameA, usernameB},
-		ArtistBlend: artistBlend,
-		AlbumBlend:  albumBlend,
-		TrackBlend:  trackBlend,
+		OverallBlendNum: overallBlendNum,
+		ArtistBlend:     artistBlend,
+		AlbumBlend:      albumBlend,
+		TrackBlend:      trackBlend,
 		//TODO More to be added
 	}
 
 	return duoBlend, nil
+}
+
+func (s *BlendService) buildOverallBlend(artistBlend, albumBlend, trackBlend TypeBlend) (int, error) {
+	// We need granular aggregation of the blends hence taking them individually rather than looping
+
+	// artistOverall := calcOverModality(artistBlend, 10, 3, 8) //These numbers are kept like this for more granularity later
+	// albumOverall := calcOverModality(albumBlend, 10, 3, 8)
+	// trackOverall := calcOverModality(trackBlend, 10, 3, 8)
+
+	artistOverall, err := combineNumbersWithWeights(
+		artistBlend.OneMonth,
+		artistBlend.ThreeMonth,
+		artistBlend.OneYear,
+		10, 3, 8)
+
+	if err != nil {
+		return 0, fmt.Errorf(" could not calc over artist: %w", err)
+	}
+	albumOverall, err := combineNumbersWithWeights(
+		albumBlend.OneMonth,
+		albumBlend.ThreeMonth,
+		albumBlend.OneYear,
+		10, 3, 8)
+	if err != nil {
+		return 0, fmt.Errorf(" could not calc over artist: %w", err)
+	}
+
+	trackOverall, err := combineNumbersWithWeights(
+		trackBlend.OneMonth,
+		trackBlend.ThreeMonth,
+		trackBlend.OneYear,
+		10, 3, 8)
+	if err != nil {
+		return 0, fmt.Errorf(" could not calc over tracks: %w", err)
+	}
+
+	overallBlend, err := combineNumbersWithWeights(artistOverall, albumOverall, trackOverall, 10, 3, 8)
+	if err != nil {
+		return 0, fmt.Errorf("could not combine overall blend: %w", err)
+	}
+	return overallBlend, nil
 }
 
 func (s *BlendService) buildArtistBlend(context context.Context, usernameA, usernameB userid) (TypeBlend, error) {
@@ -106,17 +153,17 @@ func (s *BlendService) buildArtistBlend(context context.Context, usernameA, user
 
 	if b.OneMonth, err = s.getArtistBlend(context, usernameA, usernameB, BlendTimeDurationOneMonth); err != nil {
 		glog.Errorf("Could not get 1-month artist blend for %s, %s: %v", usernameA, usernameB, err)
-		return TypeBlend{}, fmt.Errorf("Could not get 1-month artist blend for %s, %s: %v", usernameA, usernameB, err)
+		return TypeBlend{}, fmt.Errorf(" could not get 1-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 	}
 
 	if b.ThreeMonth, err = s.getArtistBlend(context, usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
 		glog.Errorf("Could not get 3-month artist blend for %s, %s: %v", usernameA, usernameB, err)
-		return TypeBlend{}, fmt.Errorf("Could not get 3-month artist blend for %s, %s: %v", usernameA, usernameB, err)
+		return TypeBlend{}, fmt.Errorf(" could not get 3-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 	}
 
 	if b.OneYear, err = s.getArtistBlend(context, usernameA, usernameB, BlendTimeDurationYear); err != nil {
 		glog.Errorf("Could not get 12-month artist blend for %s, %s: %v", usernameA, usernameB, err)
-		return TypeBlend{}, fmt.Errorf("Could not get 12-month artist blend for %s, %s: %v", usernameA, usernameB, err)
+		return TypeBlend{}, fmt.Errorf(" could not get 12-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 	}
 
 	return b, nil
@@ -130,17 +177,17 @@ func (s *BlendService) buildAlbumBlend(context context.Context, usernameA, usern
 
 	if b.OneMonth, err = s.getAlbumBlend(context, usernameA, usernameB, BlendTimeDurationOneMonth); err != nil {
 		glog.Errorf("Could not get 1-month album blend for %s, %s: %v", usernameA, usernameB, err)
-		return TypeBlend{}, fmt.Errorf("Could not get 1-month album blend for %s, %s: %v", usernameA, usernameB, err)
+		return TypeBlend{}, fmt.Errorf(" could not get 1-month album blend for %s, %s: %v", usernameA, usernameB, err)
 	}
 
 	if b.ThreeMonth, err = s.getAlbumBlend(context, usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
 		glog.Errorf("Could not get 3-month album blend for %s, %s: %v", usernameA, usernameB, err)
-		return TypeBlend{}, fmt.Errorf("Could not get 3-month album blend for %s, %s: %v", usernameA, usernameB, err)
+		return TypeBlend{}, fmt.Errorf(" could not get 3-month album blend for %s, %s: %v", usernameA, usernameB, err)
 	}
 
 	if b.OneYear, err = s.getAlbumBlend(context, usernameA, usernameB, BlendTimeDurationYear); err != nil {
 		glog.Errorf("Could not get 12-month album blend for %s, %s: %v", usernameA, usernameB, err)
-		return TypeBlend{}, fmt.Errorf("Could not get 12-month album blend for %s, %s: %v", usernameA, usernameB, err)
+		return TypeBlend{}, fmt.Errorf(" could not get 12-month album blend for %s, %s: %v", usernameA, usernameB, err)
 	}
 
 	return b, nil
@@ -154,18 +201,18 @@ func (s *BlendService) buildTrackBlend(context context.Context, usernameA, usern
 
 	if b.OneMonth, err = s.getTrackBlend(context, usernameA, usernameB, BlendTimeDurationOneMonth); err != nil {
 		glog.Errorf("Could not get 1-month track blend for %s, %s: %v", usernameA, usernameB, err)
-		return TypeBlend{}, fmt.Errorf("Could not get 1-month track blend for %s, %s: %v", usernameA, usernameB, err)
+		return TypeBlend{}, fmt.Errorf(" could not get 1-month track blend for %s, %s: %v", usernameA, usernameB, err)
 
 	}
 
 	if b.ThreeMonth, err = s.getTrackBlend(context, usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
 		glog.Errorf("Could not get 3-month track blend for %s, %s: %v", usernameA, usernameB, err)
-		return TypeBlend{}, fmt.Errorf("Could not get 3-month track blend for %s, %s: %v", usernameA, usernameB, err)
+		return TypeBlend{}, fmt.Errorf(" could not get 3-month track blend for %s, %s: %v", usernameA, usernameB, err)
 	}
 
 	if b.OneYear, err = s.getTrackBlend(context, usernameA, usernameB, BlendTimeDurationYear); err != nil {
 		glog.Errorf("Could not get 12-month track blend for %s, %s: %v", usernameA, usernameB, err)
-		return TypeBlend{}, fmt.Errorf("Could not get 12-month track blend for %s, %s: %v", usernameA, usernameB, err)
+		return TypeBlend{}, fmt.Errorf(" could not get 12-month track blend for %s, %s: %v", usernameA, usernameB, err)
 	}
 
 	return b, nil
@@ -211,7 +258,7 @@ func (s *BlendService) AddOrMakeBlendFromLink(context context.Context, userA use
 			return "", fmt.Errorf(" error getting users from blend id: %s, err: %w", id, err)
 		}
 		if len(userids)+1 > BLEND_USER_LIMIT {
-			glog.Info("Same user nvm")
+			glog.Info("Tried to add too many users to blend")
 			return "-1", nil
 		}
 
