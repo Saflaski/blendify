@@ -6,26 +6,37 @@ import { toBlob } from "html-to-image";
 
 export function Blend() {
   // ------ If user is from invite link and not Add button -------
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
   const [blendId, setBlendId] = useState(null);
-
+  type LocationState = {
+    invite?: string;
+  };
   useEffect(() => {
     //From URL Paste
     const params = new URLSearchParams(location.search);
     const urlInvite = params.get("invite");
 
     //From Add button
+
     const value = location.state;
-    const navigateInvite = value?.invite;
+    // const navigateInvite = value?.invite;
+    const navigateInvite = (location.state as LocationState | null)?.invite;
 
     //Log them
     console.log("urlInvite: ", urlInvite);
     console.log("Navigated Invite Link Data: ", navigateInvite);
 
+    const invite = urlInvite ?? navigateInvite;
+    if (!invite) {
+      console.error(
+        "Could not find an invite from either URL or navigation state",
+      );
+      return;
+    }
     // if (!invite) {
     //   setError("Missing Invite Code");
     //   setLoading(false);
@@ -41,7 +52,7 @@ export function Blend() {
             "Content-Type": "application/json",
           },
           credentials: "include",
-          body: JSON.stringify({ invite }),
+          body: JSON.stringify({ value }),
         });
 
         if (res.status == 401) {
@@ -77,6 +88,8 @@ export function Blend() {
     //
   });
 
+  useEffect(() => {}, []);
+
   console.log(blendId);
 
   // ----- Copy button functionality -----
@@ -84,10 +97,14 @@ export function Blend() {
   const [isCapturing, setIsCapturing] = useState(false); //To hide the button during screenshot
 
   const [copied, setCopied] = useState(false); //For tooltip
-  const hideTimer = useRef(null); //Tooltip hide timer
+  const hideTimer = useRef<number | null>(null); //Tooltip hide timer
 
   useEffect(() => {
-    return () => clearTimeout(hideTimer.current); // cleanup on unmount
+    return () => {
+      if (hideTimer.current !== null) {
+        clearTimeout(hideTimer.current);
+      }
+    }; // cleanup on unmount
   }, []);
 
   const [displayBlendValue, SetBlendValue] = useState(0);
@@ -116,7 +133,10 @@ export function Blend() {
       ]);
 
       setCopied(true);
-      clearTimeout(hideTimer.current);
+      if (hideTimer.current !== null) {
+        clearTimeout(hideTimer.current);
+      }
+      // clearTimeout(hideTimer.current);
       hideTimer.current = setTimeout(() => setCopied(false), 1400);
     } catch (err) {
       console.error("Clipboard fail", err);

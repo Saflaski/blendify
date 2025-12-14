@@ -3,21 +3,22 @@ import { useState, useEffect } from "react";
 import tick from "/src/assets/images/tick.svg";
 import cross from "/src/assets/images/cross.svg";
 import { useNavigate } from "react-router-dom";
+import React from "react";
 
 export function Home() {
   const navigate = useNavigate();
-
-  async function AddBlend(givenURL) {
-    let url;
-    let value;
+  let value: any;
+  async function AddBlend(givenURL: URL) {
+    let url: URL | RequestInfo;
+    // let value: any;
     const parsedGivenURL = new URL(givenURL);
     const invite = parsedGivenURL.searchParams.get("invite");
 
     try {
-      const baseURL = "http://localhost:3000/v1/blend/add";
-      const params = new URLSearchParams({ value: invite });
+      // const baseURL = "http://localhost:3000/v1/blend/add";
+      // const params = new URLSearchParams({ value: invite ?? "" });
 
-      url = new URL(baseURL);
+      url = new URL("http://localhost:3000/v1/blend/add");
       // url.search = params.toString();
 
       const response = await fetch(url, {
@@ -176,7 +177,6 @@ function GenerateLink() {
     <div className="flex w-full gap-2">
       <textarea
         name="newLink"
-        type="text"
         value={link}
         readOnly={true}
         rows={1}
