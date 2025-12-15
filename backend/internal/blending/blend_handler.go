@@ -65,6 +65,9 @@ func (h *BlendHandler) GenerateNewLink(w http.ResponseWriter, r *http.Request) {
 
 func (h *BlendHandler) GetUserIdFromContext(ctx context.Context) (userid, error) {
 	// t := r.Context().Value(auth.UserKey).(string)
+
+	//As we use auth.UserKey of type contextKey which is owned by auth package, we have to import it
+	// Apparently this is idiomatic so we use it. "The package that adds to context owns it"
 	t, err := auth.GetUserIDFromContext(ctx)
 	return userid(t), err
 }
@@ -184,14 +187,20 @@ func (h *BlendHandler) AddBlendFromInviteLink(w http.ResponseWriter, r *http.Req
 		fmt.Fprintf(w, "Did not add blendlink value")
 	}
 
-	cookie, err := r.Cookie(h.sessionIdCookieName)
+	// cookie, err := r.Cookie(h.sessionIdCookieName)
+	// if err != nil {
+	// 	//Something must have gone wrong during runtime for this error to happen
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// 	fmt.Fprintf(w, "Error during post-validation cookie extraction. Contact Admin")
+	// 	glog.Error("Error during post-validation cookie extraction, %w", err)
+	// }
+	userA, err := h.GetUserIdFromContext(r.Context())
 	if err != nil {
-		//Something must have gone wrong during runtime for this error to happen
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Error during post-validation cookie extraction. Contact Admin")
-		glog.Error("Error during post-validation cookie extraction, %w", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, "Could not interpret userid from request. Either try deleting all cookies and trying again or contact admin")
+		glog.Errorf("Could not parse userid from context")
+		return
 	}
-	userA := userid(cookie.Value)
 
 	//Validate link?
 
