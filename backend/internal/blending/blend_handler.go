@@ -40,15 +40,20 @@ type BlendRequest struct {
 func (h *BlendHandler) GenerateNewLink(w http.ResponseWriter, r *http.Request) {
 	//Extract cookie?
 	glog.Info("Entered GenerateNewLink")
-	cookie, err := r.Cookie(h.sessionIdCookieName)
-	if err != nil {
-		//Something must have gone wrong during runtime for this error to happen
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Error during post-validation cookie extraction. Contact Admin")
-		glog.Error("Error during post-validation cookie extraction, %w", err)
-	}
+	// cookie, err := r.Cookie(h.sessionIdCookieName)
+	// if err != nil {
+	// 	//Something must have gone wrong during runtime for this error to happen
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// 	fmt.Fprintf(w, "Error during post-validation cookie extraction. Contact Admin")
+	// 	glog.Error("Error during post-validation cookie extraction, %w", err)
+	// }
 
-	userA := userid(cookie.Value)
+	userA, err := h.GetUserIdFromContext(r.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, " could not validate session id during generating new link. Contact Admin")
+		glog.Error("Error during generating new link, %w", err)
+	}
 
 	newURL, err := h.svc.GenerateNewLinkAndAssignToUser(r.Context(), userA)
 	if err != nil {
