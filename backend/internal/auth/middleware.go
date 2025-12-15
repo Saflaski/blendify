@@ -8,11 +8,11 @@ import (
 )
 
 func ValidateCookie(h AuthHandler, s AuthService) func(next http.Handler) http.Handler {
+	glog.Info("Validating cookie")
 	ctx := context.Background()
-	glog.Info("Pass 1")
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			glog.Info("Pass 2")
+			glog.Info("Validating cookie")
 
 			cookieVal, err := r.Cookie(h.config.FrontendCookieName)
 			if err != nil {
@@ -33,6 +33,7 @@ func ValidateCookie(h AuthHandler, s AuthService) func(next http.Handler) http.H
 				// 	return
 				// }
 				ctx := context.WithValue(r.Context(), h.UserKey, userid)
+				glog.Infof("Validated req from userid: %s", userid)
 				next.ServeHTTP(w, r.WithContext(ctx))
 
 			}

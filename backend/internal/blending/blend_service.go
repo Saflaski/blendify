@@ -240,6 +240,7 @@ func (s *BlendService) AddOrMakeBlendFromLink(context context.Context, userA use
 	}
 	glog.Infof("Found blend from link: %s", link)
 	if id == "" { //No link found
+		//TODO : THIS IS MAKING PROBLEMS
 		userB, err := s.repo.GetLinkCreator(context, link) //Fetch user who created link
 		if err != nil {
 			return "", fmt.Errorf(" error during getting user (creator) from link : %w", err)

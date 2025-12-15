@@ -80,6 +80,7 @@ func (app *application) mount() http.Handler {
 		r.Route("/blend", func(r chi.Router) {
 			r.Use(auth.ValidateCookie(*authHandler, authService))
 			// r.Get("/new", blendHandler.GetBlendPercentage)
+			r.Get("/health", blendHandler.GetBlendHealth)
 			r.Post("/add", blendHandler.AddBlendFromInviteLink)
 			r.Get("/data", blendHandler.GetBlendPageData)
 			r.Get("/generatelink", blendHandler.GenerateNewLink)

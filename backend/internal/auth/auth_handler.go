@@ -2,6 +2,7 @@ package auth
 
 import (
 	"backend-lastfm/internal/utility"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -25,6 +26,14 @@ const UserKey contextKey = "userid"
 
 func NewAuthHandler(svc AuthService, cfg Config) *AuthHandler {
 	return &AuthHandler{svc, cfg, UserKey}
+}
+
+func GetUserIDFromContext(ctx context.Context) (string, error) {
+	user, ok := ctx.Value(UserKey).(string)
+	if !ok {
+		return "", fmt.Errorf(" did not find userid in context")
+	}
+	return user, nil
 }
 
 func (h *AuthHandler) HandleLastFMLoginFlow(w http.ResponseWriter, r *http.Request) {

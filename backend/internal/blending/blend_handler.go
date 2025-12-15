@@ -1,7 +1,9 @@
 package blend
 
 import (
+	"backend-lastfm/internal/auth"
 	"backend-lastfm/internal/utility"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -61,13 +63,20 @@ func (h *BlendHandler) GenerateNewLink(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *BlendHandler) GetUserIDFromRequest(r *http.Request) (userid, error) {
-	t, ok := r.Context().Value(string(h.userKey)).(string)
-	if !ok {
-		return "", fmt.Errorf(" could not parse userkey from context")
-	}
+func (h *BlendHandler) GetUserIdFromContext(ctx context.Context) (userid, error) {
+	// t := r.Context().Value(auth.UserKey).(string)
+	t, err := auth.GetUserIDFromContext(ctx)
+	return userid(t), err
+}
 
-	return userid(t), nil
+func (h *BlendHandler) GetBlendHealth(w http.ResponseWriter, r *http.Request) {
+	id, err := h.GetUserIdFromContext(r.Context())
+	if err != nil {
+		glog.Errorf("Could not find id during blend health check: %s, %w", id, err)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	response := map[string]string{"id": string(id)}
+	json.NewEncoder(w).Encode(response)
 }
 
 func (h *BlendHandler) GetBlendPageData(w http.ResponseWriter, r *http.Request) {
@@ -75,7 +84,7 @@ func (h *BlendHandler) GetBlendPageData(w http.ResponseWriter, r *http.Request) 
 	response := r.URL.Query()
 
 	blendId := blendId(response.Get("blendId"))
-	id, err := h.GetUserIDFromRequest(r)
+	id, err := h.GetUserIdFromContext(r.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "Could not interpret userid from request. Either try deleting all cookies and trying again or contact admin")
@@ -160,7 +169,7 @@ type responseStruct struct {
 // This is where frontend consumes an invite link and expects a blend id in response.
 // An auth association is made with user and blend id
 func (h *BlendHandler) AddBlendFromInviteLink(w http.ResponseWriter, r *http.Request) {
-
+	// /add
 	glog.Info("Entered AddBlendFromInviteLink")
 
 	blendResponse, err := utility.DecodeRequest[responseStruct](r)
@@ -190,7 +199,7 @@ func (h *BlendHandler) AddBlendFromInviteLink(w http.ResponseWriter, r *http.Req
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, " Could not add/make blend from link: %s", err)
-		glog.Errorf(" Could not add make/blend from link : %s from user :%s", blendLinkValue, userA)
+		glog.Errorf(" Could not add make/blend from link : %s from user :%s and error: %s", blendLinkValue, userA, err)
 	}
 
 	if blendId == "0" { //Code for user trying to make blend with themselves
