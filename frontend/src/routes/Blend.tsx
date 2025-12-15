@@ -4,6 +4,21 @@ import { useLocation, useNavigate } from "react-router-dom";
 import React, { useRef, useState, useEffect } from "react";
 import { toBlob } from "html-to-image";
 
+type BlendApiResponse = {
+  usernames: string[];
+  overallBlendNum: number;
+  ArtistBlend: TypeBlend;
+  AlbumBlend: TypeBlend;
+  TrackBlend: TypeBlend;
+};
+type MetricKey = keyof BlendApiResponse;
+
+type TypeBlend = {
+  OneMonth: number;
+  ThreeMonth: number;
+  OneYear: number;
+};
+
 export function Blend() {
   // ------ If user is from invite link and not Add button -------
   const [error, setError] = useState<string | null>(null);
@@ -11,7 +26,7 @@ export function Blend() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [blendId, setBlendId] = useState(null);
+  const [blendId, setBlendId] = useState<string | null>(null);
   type LocationState = {
     invite?: string;
   };
@@ -30,18 +45,13 @@ export function Blend() {
     console.log("urlInvite: ", urlInvite);
     console.log("Navigated Invite Link Data: ", navigateInvite);
 
-    const invite = urlInvite ?? navigateInvite;
-    if (!invite) {
-      console.error(
-        "Could not find an invite from either URL or navigation state",
-      );
-      return;
-    }
     // if (!invite) {
     //   setError("Missing Invite Code");
     //   setLoading(false);
     //   return;
     // }
+
+    const invite = navigateInvite ?? urlInvite;
 
     //Get blendid as authenticated user.
     const checkInvite = async () => {
@@ -52,7 +62,7 @@ export function Blend() {
             "Content-Type": "application/json",
           },
           credentials: "include",
-          body: JSON.stringify({ value }),
+          body: JSON.stringify({ value: invite }),
         });
 
         if (res.status == 401) {
@@ -65,14 +75,14 @@ export function Blend() {
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           setError(data.message || "Invite is invalid.");
-          setLoading(false);
+          // setLoading(false);
           return;
         }
 
         const data = await res.json();
         setBlendId(data["blendId"]);
 
-        setLoading(false);
+        // setLoading(false);
       } catch (err) {
         console.error(err);
         setError("Something went wrong. Please try again.");
@@ -85,10 +95,53 @@ export function Blend() {
     if (!blendId) {
       checkInvite();
     }
-    //
-  });
 
-  useEffect(() => {}, []);
+    //
+  }, []);
+
+  useEffect(() => {
+    const getBlend = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/v1/blend/data", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ blendId }),
+        });
+
+        if (res.status == 401) {
+          navigate(
+            `/login?redirectTo=${encodeURIComponent(location.pathname + location.search)}`,
+          );
+          return;
+        }
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setError(data.message || "Blend ID is invalid.");
+          setLoading(false);
+          return;
+        }
+
+        const data = await res.json();
+        // setBlendData(data["blendId"]);
+      } catch (err) {
+        console.error(err);
+        setError("Something went wrong. Please try again.");
+        setLoading(false);
+      }
+
+      setLoading(false);
+    };
+
+    if (blendId !== null) {
+      setError("Could not get blendid.");
+    } else {
+      getBlend();
+    }
+  }, []);
 
   console.log(blendId);
 

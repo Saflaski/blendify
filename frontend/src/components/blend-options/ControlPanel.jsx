@@ -49,12 +49,12 @@ export function ControlPanel({ setBlendPercent }) {
 
     return;
   }
-  const user = "test2002";
+  // const user = "test2002";
   const [curMode, setCurMode] = useState("artist");
   const [curDuration, setCurDuration] = useState("3month");
   React.useEffect(() => {
     updateBlendFromAPI({
-      user: user,
+      // user: user,
       mode: curMode,
       timeDuration: curDuration,
     });
