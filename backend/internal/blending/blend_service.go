@@ -18,16 +18,13 @@ type BlendService struct {
 }
 
 func (s *BlendService) GetUserBlends(context context.Context, user userid) (Blends, error) {
-
 	blendIds, err := s.repo.GetBlendsByUser(context, user)
 	if err != nil {
 		return Blends{}, fmt.Errorf(" could notn find blends from userid %s : %w", user, err)
 	}
-
 	blendAccumulator := make([]Blend, len(blendIds))
 	for i, v := range blendIds {
 		blendAccumulator[i].BlendId = string(v)
-
 		blendUsers, err := s.repo.GetUsersFromBlend(context, v)
 		if err != nil {
 			return Blends{}, fmt.Errorf(" could not find blendusers from blendid %s : %w", v, err)
@@ -38,10 +35,19 @@ func (s *BlendService) GetUserBlends(context context.Context, user userid) (Blen
 			if err != nil {
 				return Blends{}, fmt.Errorf(" could not extract platformid from userid %s : %w", v_2, err)
 			}
-
 			blendPlatformUsernames[j] = platformid(platformUser)
+
 		}
 		blendAccumulator[i].Users = blendPlatformUsernames
+
+		//REMOVE this part when LIMIT>2
+		if BLEND_USER_LIMIT == 2 {
+			res, err := s.GenerateBlendOfTwo(context, blendUsers[0], blendUsers[1])
+			if err != nil {
+				return Blends{}, fmt.Errorf(" could not generate blendnumber from blendid %s : %w", v, err)
+			}
+			blendAccumulator[i].Value = res.OverallBlendNum
+		}
 	}
 	allBlends := Blends{Blends: blendAccumulator}
 	return allBlends, nil
@@ -544,7 +550,7 @@ func (s *BlendService) getArtistBlend(context context.Context, userA, userB user
 func (s *BlendService) getTopX(context context.Context, userid userid, timeDuration blendTimeDuration, category blendCategory) (map[string]int, error) {
 	dbResp, err := s.repo.GetFromCacheTopX(context, string(userid), timeDuration, category)
 	if err != nil {
-		glog.Errorf(" Cache error during getting topartist for %s with duration %s and category %s that needs to be checked: %w", userid, timeDuration, category, err)
+		glog.Errorf(" Cache error during getting topX for user %s with duration %s and category %s that needs to be checked: %w", userid, timeDuration, category, err)
 	}
 
 	if dbResp != nil { //Cache hit
