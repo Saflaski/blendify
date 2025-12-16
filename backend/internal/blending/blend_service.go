@@ -115,7 +115,7 @@ func (s *BlendService) buildOverallBlend(artistBlend, albumBlend, trackBlend Typ
 		artistBlend.OneMonth,
 		artistBlend.ThreeMonth,
 		artistBlend.OneYear,
-		10, 3, 8)
+		10, 10, 10)
 
 	if err != nil {
 		return 0, fmt.Errorf(" could not calc over artist: %w", err)
@@ -124,7 +124,7 @@ func (s *BlendService) buildOverallBlend(artistBlend, albumBlend, trackBlend Typ
 		albumBlend.OneMonth,
 		albumBlend.ThreeMonth,
 		albumBlend.OneYear,
-		10, 3, 8)
+		10, 10, 10)
 	if err != nil {
 		return 0, fmt.Errorf(" could not calc over artist: %w", err)
 	}
@@ -133,12 +133,12 @@ func (s *BlendService) buildOverallBlend(artistBlend, albumBlend, trackBlend Typ
 		trackBlend.OneMonth,
 		trackBlend.ThreeMonth,
 		trackBlend.OneYear,
-		10, 3, 8)
+		10, 10, 10)
 	if err != nil {
 		return 0, fmt.Errorf(" could not calc over tracks: %w", err)
 	}
 
-	overallBlend, err := combineNumbersWithWeights(artistOverall, albumOverall, trackOverall, 10, 3, 8)
+	overallBlend, err := combineNumbersWithWeights(artistOverall, albumOverall, trackOverall, 10, 10, 10)
 	if err != nil {
 		return 0, fmt.Errorf("could not combine overall blend: %w", err)
 	}
@@ -326,24 +326,9 @@ func (s *BlendService) PopulateUsersByBlend(context context.Context, id blendId)
 
 	//Check which userids have expired user data and populate them
 	for _, user := range userids {
-		ok, err := s.repo.UserHasAnyMusicData(context, user)
-		if err != nil {
-			return fmt.Errorf(" error during checking if user: %s has any music data: %w", id, err)
+		if err := s.PopulateUserData(context, user); err != nil {
+			return fmt.Errorf(" error during populating user data for %s : %w", user, err)
 		}
-		if !ok {
-			err := s.GetNewDataForUser(context, user)
-			if err != nil {
-				return fmt.Errorf(" in PopulateBlend, could not get new data for user: %s with err: %w", user, err)
-			}
-		}
-	}
-
-	Blend, err := s.MakeNewBlend(context, userids) //Make a blend struct from all the userids
-	if err != nil {
-		return fmt.Errorf(" error during making new blend from userids: %w", err)
-	}
-	if err := s.CacheBlend(context, &Blend); err != nil {
-		return fmt.Errorf(" error during caching blend: %s with err: %w", Blend.id, err)
 	}
 
 	return nil
@@ -353,7 +338,8 @@ func (s *BlendService) CacheBlend(context context.Context, blend *Blend) error {
 	panic("unimplemented")
 }
 
-func (s *BlendService) MakeNewBlend(context context.Context, userids []userid) (Blend, error) {
+func (s *BlendService) MakeDuoBlend(context context.Context, userids []userid) (Blend, error) {
+
 	return Blend{}, nil
 }
 

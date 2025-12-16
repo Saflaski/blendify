@@ -84,8 +84,8 @@ func combineNumbersWithWeights(inputsAndWeights ...int) (int, error) {
 
 	numInputs := len(inputsAndWeights) / 2
 	runningSum := 0.0
-	fmt.Println("Num inputs ", numInputs)
-	fmt.Println("---------------------")
+	// fmt.Println("Num inputs ", numInputs)
+	// fmt.Println("---------------------")
 	max := inputsAndWeights[numInputs]
 	for _, v := range inputsAndWeights[numInputs:] {
 		if v > max {
@@ -100,17 +100,17 @@ func combineNumbersWithWeights(inputsAndWeights ...int) (int, error) {
 		}
 		weightFloat := (float64(weight) / float64(max))
 		runningSum += float64(inputsAndWeights[i]) * weightFloat
-		fmt.Println("i:", i)
-		fmt.Println("input:", inputsAndWeights[i])
-		fmt.Println("weight:", weightFloat)
-		fmt.Println("runningSum:", runningSum)
-		fmt.Println("---------------------")
+		// fmt.Println("i:", i)
+		// fmt.Println("input:", inputsAndWeights[i])
+		// fmt.Println("weight:", weightFloat)
+		// fmt.Println("runningSum:", runningSum)
+		// fmt.Println("---------------------")
 		// runningSum = runningSum
 	}
 	finalSum := int(runningSum / float64(numInputs))
 	if finalSum > 100.0 || finalSum < 0.0 {
 		return 0, fmt.Errorf(" abnormal sum of modalities:%d", finalSum)
 	}
-	fmt.Println("Final sum: ", finalSum)
+	// fmt.Println("Final sum: ", finalSum)
 	return finalSum, nil
 }

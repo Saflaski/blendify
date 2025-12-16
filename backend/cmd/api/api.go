@@ -55,12 +55,13 @@ func (app *application) mount() http.Handler {
 	)
 
 	authCfg := auth.Config{
-		ExpiryDuration:     time.Duration(app.config.sessionExpiry) * time.Second,
+		ExpiryDuration: time.Duration(app.config.sessionExpiry) * time.Second,
+		// ExpiryDuration:     time.Duration(app.config.sessionExpiry) * time.Second,
 		FrontendCookieName: "sid",
 		FrontendURL:        "http://localhost:5173",
 	}
 
-	authRepo := auth.NewRedisStateStore(rdb) // Placeholder nil, replace with actual Redis client
+	authRepo := auth.NewRedisStateStore(rdb, authCfg.ExpiryDuration) // Placeholder nil, replace with actual Redis client
 	authService := auth.NewAuthService(authRepo, authCfg)
 	authHandler := auth.NewAuthHandler(
 		authService,
@@ -118,6 +119,7 @@ func (app *application) run(h http.Handler) error {
 	glog.Infof("ReadTimeout: %f", srv.ReadTimeout.Seconds())
 	glog.Infof("WriteTimeout: %f", srv.WriteTimeout.Seconds())
 	glog.Infof("IdleTimeout: %f", srv.IdleTimeout.Seconds())
+	glog.Infof("Session Valid Time: %s", (time.Duration(app.config.sessionExpiry) * time.Second).String())
 
 	return srv.ListenAndServe()
 }

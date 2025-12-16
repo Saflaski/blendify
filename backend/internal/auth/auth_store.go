@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang/glog"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
@@ -35,10 +36,10 @@ type AuthStateStore struct {
 	prefixSidToUser   string
 	prefixSidList     string
 	prefixLFMToUser   string
-	sidExpirationTime int64
+	sidExpirationTime time.Duration
 }
 
-func NewRedisStateStore(client *redis.Client) *AuthStateStore {
+func NewRedisStateStore(client *redis.Client, sidExpiryTime time.Duration) *AuthStateStore {
 	return &AuthStateStore{
 		client:            client,
 		prefixAuth:        "login_state:", //TODO is this the right way to connect to redis?
@@ -46,7 +47,7 @@ func NewRedisStateStore(client *redis.Client) *AuthStateStore {
 		prefixSidToUser:   "user_sids",
 		prefixSidList:     "sidlist",
 		prefixLFMToUser:   "lfm_users",
-		sidExpirationTime: time.Duration(time.Hour * 24).Nanoseconds(),
+		sidExpirationTime: sidExpiryTime,
 	}
 }
 
@@ -196,6 +197,7 @@ func (r *AuthStateStore) GetUserByValidSessionID(context context.Context, sid st
 	//Get User from SID
 	userid, err := r.client.Get(context, keyUserSid).Result()
 	if err == redis.Nil {
+		glog.Errorf(" could not find sid upon validation: %s", sid)
 		return "", nil //We want to return entry string if we don't find any
 	}
 
@@ -203,7 +205,9 @@ func (r *AuthStateStore) GetUserByValidSessionID(context context.Context, sid st
 
 	//Eg. If expiryDuration is 24 hours, then it will only return session ids that were made in the last 24 hours
 	sids, err := r.GetValidSidByUser(context, userid, lastValidTime)
-
+	glog.Info(sid)
+	glog.Info("-----")
+	glog.Info(sids)
 	//Check if given SID is within these sids and return
 	if err != nil {
 		return "", err
@@ -217,7 +221,7 @@ func (r *AuthStateStore) GetUserByValidSessionID(context context.Context, sid st
 
 func (r *AuthStateStore) queueAddNewSidUserIndexCmd(pipe redis.Pipeliner, userid string, sid string) error {
 	keyUserSid := fmt.Sprintf("%s:%s", r.prefixSidToUser, sid) // user_sids:SID1 = USER1001	//This can have a EXPR
-	return pipe.Set(context.Background(), keyUserSid, userid, time.Duration(r.sidExpirationTime)).Err()
+	return pipe.Set(context.Background(), keyUserSid, userid, r.sidExpirationTime).Err()
 
 }
 
