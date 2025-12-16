@@ -44,9 +44,16 @@ var categoryRange = []blendCategory{
 	BlendCategoryTrack,
 }
 
+type platformid string
+
 type Blend struct {
-	id    string
-	users []userid
+	BlendId string       `json:"blendid"`
+	Value   int          `json:"value"`
+	Users   []platformid `json:"user"`
+}
+
+type Blends struct {
+	Blends []Blend `json:"blends"`
 }
 
 type BlendResponse struct {

@@ -17,6 +17,36 @@ type BlendService struct {
 	// authRepo       *auth.AuthStateStore
 }
 
+func (s *BlendService) GetUserBlends(context context.Context, user userid) (Blends, error) {
+
+	blendIds, err := s.repo.GetBlendsByUser(context, user)
+	if err != nil {
+		return Blends{}, fmt.Errorf(" could notn find blends from userid %s : %w", user, err)
+	}
+
+	blendAccumulator := make([]Blend, len(blendIds))
+	for i, v := range blendIds {
+		blendAccumulator[i].BlendId = string(v)
+
+		blendUsers, err := s.repo.GetUsersFromBlend(context, v)
+		if err != nil {
+			return Blends{}, fmt.Errorf(" could not find blendusers from blendid %s : %w", v, err)
+		}
+		blendPlatformUsernames := make([]platformid, len(blendUsers))
+		for j, v_2 := range blendUsers {
+			platformUser, err := s.repo.GetLFMByUserId(context, string(v_2))
+			if err != nil {
+				return Blends{}, fmt.Errorf(" could not extract platformid from userid %s : %w", v_2, err)
+			}
+
+			blendPlatformUsernames[j] = platformid(platformUser)
+		}
+		blendAccumulator[i].Users = blendPlatformUsernames
+	}
+	allBlends := Blends{Blends: blendAccumulator}
+	return allBlends, nil
+}
+
 const BLEND_USER_LIMIT = 2
 
 func (s *BlendService) GetDuoBlendData(context context.Context, blendId blendId) (DuoBlend, error) {
@@ -332,15 +362,6 @@ func (s *BlendService) PopulateUsersByBlend(context context.Context, id blendId)
 	}
 
 	return nil
-}
-
-func (s *BlendService) CacheBlend(context context.Context, blend *Blend) error {
-	panic("unimplemented")
-}
-
-func (s *BlendService) MakeDuoBlend(context context.Context, userids []userid) (Blend, error) {
-
-	return Blend{}, nil
 }
 
 func (s *BlendService) PopulateUserData(context context.Context, user userid) error {

@@ -205,9 +205,9 @@ func (r *AuthStateStore) GetUserByValidSessionID(context context.Context, sid st
 
 	//Eg. If expiryDuration is 24 hours, then it will only return session ids that were made in the last 24 hours
 	sids, err := r.GetValidSidByUser(context, userid, lastValidTime)
-	glog.Info(sid)
-	glog.Info("-----")
-	glog.Info(sids)
+	// glog.Info(sid)
+	// glog.Info("-----")
+	// glog.Info(sids)
 	//Check if given SID is within these sids and return
 	if err != nil {
 		return "", err

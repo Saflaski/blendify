@@ -13,10 +13,18 @@ const LFM_EXPIRY = time.Duration(time.Hour * 24 * 3) //Three days //TODO: Change
 const INVITE_EXPIRY = time.Duration(time.Hour * 24)
 
 type RedisStateStore struct {
-	client      *redis.Client
-	userPrefix  string
-	musicPrefix string
-	blendPrefix string
+	client           *redis.Client
+	userPrefix       string
+	musicPrefix      string
+	blendPrefix      string
+	blendIndexPrefix string
+}
+
+func (r *RedisStateStore) GetBlendsOfUser(context context.Context, username string) (Blends, error) {
+
+	// key := fmt.Sprintf("%s:%s", r.blendPrefix, username)
+	// Result, err := r.client.Get()
+	panic("")
 }
 
 func (r *RedisStateStore) GetFromCacheTopX(context context.Context, userName string, timeDuration blendTimeDuration, category blendCategory) (map[string]int, error) {
@@ -43,21 +51,49 @@ func (r *RedisStateStore) GetLFMByUserId(ctx context.Context, userID string) (st
 }
 
 func (r *RedisStateStore) AddUsersToBlend(context context.Context, id blendId, userids []userid) error {
-	key := fmt.Sprintf("%s:%s:%s", r.blendPrefix, id, "users")
 
+	pipe := r.client.TxPipeline() //Execute redis commands with atomicity
+
+	key := fmt.Sprintf("%s:%s:%s", r.blendPrefix, id, "users")
 	members := make([]interface{}, len(userids))
 	for i, u := range userids {
 		members[i] = string(u)
+
+		//For secondary indexing= userId -> blendId
+		s_index_key := fmt.Sprintf("%s:%s:%s", r.userPrefix, "blends", string(u))
+		pipe.SAdd(context, s_index_key, string(id))
+	}
+	pipe.SAdd(context, key, members...).Err()
+
+	_, err := pipe.Exec(context)
+
+	return err
+}
+
+func (r *RedisStateStore) GetBlendsByUser(context context.Context, user userid) ([]blendId, error) {
+	key := fmt.Sprintf("%s:%s:%s", r.userPrefix, "blends", string(user))
+	ress, err := r.client.SMembers(context, key).Result()
+	if err != nil {
+		return nil, fmt.Errorf(" could not get Blends of user from user id %s: and err %w", user, err)
 	}
 
-	return r.client.SAdd(context, key, members...).Err()
+	if len(ress) == 0 {
+		return nil, nil //Empty?
+	}
+
+	blends := make([]blendId, len(ress))
+	for i, res := range ress {
+		blends[i] = blendId(res)
+	}
+
+	return blends, nil
 }
 
 func (r *RedisStateStore) GetUsersFromBlend(context context.Context, id blendId) ([]userid, error) {
 	key := fmt.Sprintf("%s:%s:%s", r.blendPrefix, id, "users")
 	res, err := r.client.SMembers(context, key).Result()
 	if err != nil {
-		return nil, fmt.Errorf(" could not get LRange of users for users from blend id %s: and err %w", id, err)
+		return nil, fmt.Errorf(" could not get Members of users for users from blend id %s: and err %w", id, err)
 	}
 	users := make([]userid, len(res))
 	for i, v := range res {
@@ -78,10 +114,11 @@ func (r *RedisStateStore) IsUserInBlend(context context.Context, user userid, id
 
 func NewRedisStateStore(client *redis.Client) *RedisStateStore {
 	return &RedisStateStore{
-		client:      client,
-		userPrefix:  "user", //TODO is this the right way to connect to redis?
-		musicPrefix: "music_data",
-		blendPrefix: "blend_data",
+		client:           client,
+		userPrefix:       "user", //TODO is this the right way to connect to redis?
+		musicPrefix:      "music_data",
+		blendPrefix:      "blend_data",
+		blendIndexPrefix: "blend_data:index:",
 	}
 
 }

@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
@@ -40,7 +41,7 @@ func TestAuthService(t *testing.T) {
 		Password: DB_PASS,
 		DB:       0,
 		Protocol: DB_PROTOCOL,
-	}))
+	}), time.Duration(648000)*time.Second)
 	_ = DB_NUM
 
 	// lfmApi := musicapi.NewLastFMExternalAdapter(LASTFM_API_KEY, LAST_FM_URL, true)

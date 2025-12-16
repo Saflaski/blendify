@@ -37,6 +37,28 @@ type BlendRequest struct {
 	user         string
 }
 
+func (h *BlendHandler) GetUserBlends(w http.ResponseWriter, r *http.Request) {
+	userA, err := h.GetUserIdFromContext(r.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, " could not validate session id during generating new link. Contact Admin")
+		glog.Error("Error during generating new link, %w", err)
+		return
+	}
+
+	blends, err := h.svc.GetUserBlends(r.Context(), userA)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, " could not get blends. Contact Admin")
+		glog.Error("Error during generating blends for user:%s, %w", userA, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	json.NewEncoder(w).Encode(blends)
+
+}
+
 func (h *BlendHandler) GenerateNewLink(w http.ResponseWriter, r *http.Request) {
 	//Extract cookie?
 	glog.Info("Entered GenerateNewLink")
