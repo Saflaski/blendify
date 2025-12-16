@@ -31,6 +31,9 @@ func (r *RedisStateStore) GetFromCacheTopX(context context.Context, userName str
 	key := fmt.Sprintf("%s:%s:%s:%s", r.musicPrefix, userName, categoryPrefix[category], durationPrefix[timeDuration])
 
 	Result, err := r.client.Get(context, key).Result()
+	if err == redis.Nil {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, fmt.Errorf(" during extracting cache from db, could not get json map from db:%w", err)
 	}

@@ -12,7 +12,6 @@ func ValidateCookie(h AuthHandler, s AuthService) func(next http.Handler) http.H
 	ctx := context.Background()
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			glog.Info("Validating cookie")
 
 			cookieVal, err := r.Cookie(h.config.FrontendCookieName)
 			if err != nil {
