@@ -20,7 +20,7 @@ type BlendService struct {
 func (s *BlendService) GetUserBlends(context context.Context, user userid) (Blends, error) {
 	blendIds, err := s.repo.GetBlendsByUser(context, user)
 	if err != nil {
-		return Blends{}, fmt.Errorf(" could notn find blends from userid %s : %w", user, err)
+		return Blends{}, fmt.Errorf(" could not find blends from userid %s : %w", user, err)
 	}
 	blendAccumulator := make([]Blend, len(blendIds))
 	for i, v := range blendIds {
@@ -53,6 +53,13 @@ func (s *BlendService) GetUserBlends(context context.Context, user userid) (Blen
 				blendAccumulator[i].Value = overallVal
 			}
 		}
+		timeRes, err := s.repo.GetBlendTimeStamp(context, v)
+		if err != nil {
+			glog.Errorf(" could not get cached timestamp: %s", err)
+		} else {
+			blendAccumulator[i].CreatedAt = timeRes
+		}
+
 	}
 	allBlends := Blends{Blends: blendAccumulator}
 	return allBlends, nil

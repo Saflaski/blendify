@@ -48,8 +48,8 @@ func (r *RedisStateStore) GetLFMByUserId(ctx context.Context, userID string) (st
 }
 
 func (r *RedisStateStore) GetCachedOverallBlend(context context.Context, blendid blendId) (int, error) {
-	key := fmt.Sprintf("%s:%s:%s", r.blendPrefix, string(blendid), "overall")
-	res, err := r.client.Get(context, key).Result()
+	key := fmt.Sprintf("%s:%s", r.blendPrefix, string(blendid))
+	res, err := r.client.HGet(context, key, "Overall").Result()
 	if err != nil {
 		return -1, fmt.Errorf(" could not set overallblend num to blend: %w", err)
 	}
@@ -60,12 +60,29 @@ func (r *RedisStateStore) GetCachedOverallBlend(context context.Context, blendid
 	return num, nil
 }
 
-func (r *RedisStateStore) AssignOverallBlendToBlend(context context.Context, id blendId, blendNum int) error {
-	key := fmt.Sprintf("%s:%s:%s", r.blendPrefix, string(id), "overall")
-
-	err := r.client.Set(context, key, blendNum, 0).Err()
+func (r *RedisStateStore) GetBlendTimeStamp(context context.Context, id blendId) (time.Time, error) {
+	key_timestamp := fmt.Sprintf("%s:%s", r.blendPrefix, string(id))
+	res, err := r.client.HGet(context, key_timestamp, "Created At").Result()
 	if err != nil {
-		return fmt.Errorf(" could not set overallblend num to blend: %w", err)
+		return time.Time{}, fmt.Errorf(" could not get blend timestamp of blend: %s", err)
+	}
+	num, err := strconv.ParseInt(res, 10, 64)
+	if err != nil {
+		return time.Time{}, fmt.Errorf(" could not convert time value to num: %w", err)
+	}
+	return time.Unix(num, 0), nil
+
+}
+
+func (r *RedisStateStore) AssignOverallBlendToBlend(context context.Context, id blendId, blendNum int) error {
+	key := fmt.Sprintf("%s:%s", r.blendPrefix, string(id))
+	// key_overall := fmt.Sprintf("%s:%s:%s", r.blendPrefix, string(id), "Overall")
+	// key_timestamp := fmt.Sprintf("%s:%s:%s", r.blendPrefix, string(id), "Created At")
+
+	// err := r.client.Set(context, key, blendNum, 0).Err()
+	err := r.client.HSet(context, key, "Overall", blendNum, "Created At", time.Now().Unix())
+	if err != nil {
+		return fmt.Errorf(" could not set overallblend num to blend: %s", err)
 	}
 	return nil
 }

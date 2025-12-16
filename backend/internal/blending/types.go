@@ -2,6 +2,7 @@ package blend
 
 import (
 	musicapi "backend-lastfm/internal/music_api/lastfm"
+	"time"
 )
 
 type blendId string
@@ -47,9 +48,10 @@ var categoryRange = []blendCategory{
 type platformid string
 
 type Blend struct {
-	BlendId string       `json:"blendid"`
-	Value   int          `json:"value"`
-	Users   []platformid `json:"user"`
+	BlendId   string       `json:"blendid"`
+	Value     int          `json:"value"`
+	Users     []platformid `json:"user"`
+	CreatedAt time.Time    `json:"timestamp"`
 }
 
 type Blends struct {
