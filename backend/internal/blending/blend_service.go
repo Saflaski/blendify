@@ -42,11 +42,16 @@ func (s *BlendService) GetUserBlends(context context.Context, user userid) (Blen
 
 		//REMOVE this part when LIMIT>2
 		if BLEND_USER_LIMIT == 2 {
-			res, err := s.GenerateBlendOfTwo(context, blendUsers[0], blendUsers[1])
+			// res, err := s.GenerateBlendOfTwo(context, blendUsers[0], blendUsers[1])
+			// if err != nil {
+			// 	return Blends{}, fmt.Errorf(" could not generate blendnumber from blendid %s : %w", v, err)
+			// }
+			overallVal, err := s.repo.GetCachedOverallBlend(context, v)
 			if err != nil {
-				return Blends{}, fmt.Errorf(" could not generate blendnumber from blendid %s : %w", v, err)
+				glog.Errorf(" could not get cached overallblend: %s", err)
+			} else {
+				blendAccumulator[i].Value = overallVal
 			}
-			blendAccumulator[i].Value = res.OverallBlendNum
 		}
 	}
 	allBlends := Blends{Blends: blendAccumulator}
@@ -318,7 +323,7 @@ func (s *BlendService) AddOrMakeBlendFromLink(context context.Context, userA use
 			return "", fmt.Errorf(" could not check if user is in blend: %w", err)
 		}
 		if !ok {
-			err := s.repo.AddUsersToBlend(context, id, []userid{userA})
+			err := s.AddUsersToBlend(context, id, []userid{userA})
 			if err != nil {
 				return "", fmt.Errorf(" could not add user to blend: %w", err)
 			}
@@ -333,9 +338,39 @@ func (s *BlendService) AddOrMakeBlendFromLink(context context.Context, userA use
 
 }
 
+func (s *BlendService) AddUsersToBlend(context context.Context, id blendId, userids []userid) error {
+	err := s.repo.AddUsersToBlend(context, id, userids)
+	if err != nil {
+		return fmt.Errorf(" could not add user to blend: %w", err)
+	}
+
+	//Time to cache the overall blend num for retrieval later
+	//It does not need to be atomic
+	err = s.RefreshOverallBlendInCache(context, id)
+	if err != nil {
+		return fmt.Errorf(" During refresh blend: %w", err)
+	}
+	return nil
+}
+
+func (s *BlendService) RefreshOverallBlendInCache(context context.Context, id blendId) error {
+
+	duoblend, err := s.GetDuoBlendData(context, id)
+	if err != nil {
+		glog.Infof(" could not generate duoblend data during adding users to blend: %s: %w", id, err)
+		return nil //This is not a fatal error and we can live without it happening but still need to log
+	}
+	err = s.repo.AssignOverallBlendToBlend(context, id, duoblend.OverallBlendNum)
+	if err != nil {
+		glog.Infof(" could not assign duoblend integer value during adding users to blend:%s: %w", id, err)
+		return nil //This is not a fatal error and we can live without it happening but still need to log
+	}
+	return nil
+}
+
 func (s *BlendService) GenerateNewBlendId(context context.Context, userids []userid) (blendId, error) {
 	id := blendId(uuid.New().String())
-	err := s.repo.AddUsersToBlend(context, id, userids)
+	err := s.AddUsersToBlend(context, id, userids)
 	if err != nil {
 		return "", fmt.Errorf(" error during inserting new blend frame: %w", err)
 	}

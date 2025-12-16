@@ -4,6 +4,7 @@ import (
 	"backend-lastfm/internal/utility"
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -53,6 +54,28 @@ func (r *RedisStateStore) GetLFMByUserId(ctx context.Context, userID string) (st
 	return result, err
 }
 
+func (r *RedisStateStore) GetCachedOverallBlend(context context.Context, blendid blendId) (int, error) {
+	key := fmt.Sprintf("%s:%s:%s", r.blendPrefix, string(blendid), "overall")
+	res, err := r.client.Get(context, key).Result()
+	if err != nil {
+		return -1, fmt.Errorf(" could not set overallblend num to blend: %w", err)
+	}
+	num, err := strconv.Atoi(res)
+	if err != nil {
+		return -1, fmt.Errorf(" could not convert cache value to num: %w", err)
+	}
+	return num, nil
+}
+
+func (r *RedisStateStore) AssignOverallBlendToBlend(context context.Context, id blendId, blendNum int) error {
+	key := fmt.Sprintf("%s:%s:%s", r.blendPrefix, string(id), "overall")
+
+	err := r.client.Set(context, key, blendNum, 0).Err()
+	if err != nil {
+		return fmt.Errorf(" could not set overallblend num to blend: %w", err)
+	}
+	return nil
+}
 func (r *RedisStateStore) AddUsersToBlend(context context.Context, id blendId, userids []userid) error {
 
 	pipe := r.client.TxPipeline() //Execute redis commands with atomicity
@@ -64,6 +87,10 @@ func (r *RedisStateStore) AddUsersToBlend(context context.Context, id blendId, u
 
 		//For secondary indexing= userId -> blendId
 		s_index_key := fmt.Sprintf("%s:%s:%s", r.userPrefix, "blends", string(u))
+		// pipe.ZAdd(context, s_index_key, redis.Z{
+		// 	Score:  0.0,
+		// 	Member: string(id),
+		// })
 		pipe.SAdd(context, s_index_key, string(id))
 	}
 	pipe.SAdd(context, key, members...).Err()
@@ -76,6 +103,7 @@ func (r *RedisStateStore) AddUsersToBlend(context context.Context, id blendId, u
 func (r *RedisStateStore) GetBlendsByUser(context context.Context, user userid) ([]blendId, error) {
 	key := fmt.Sprintf("%s:%s:%s", r.userPrefix, "blends", string(user))
 	ress, err := r.client.SMembers(context, key).Result()
+	// ress, err := r.client.ZRange(context, key, -1, 999).Result()
 	if err != nil {
 		return nil, fmt.Errorf(" could not get Blends of user from user id %s: and err %w", user, err)
 	}

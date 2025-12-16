@@ -206,12 +206,14 @@ func (h *BlendHandler) AddBlendFromInviteLink(w http.ResponseWriter, r *http.Req
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, "Could not decode Invite Link for new blend")
+		return
 	}
 
 	blendLinkValue := blendLinkValue(blendResponse.Value)
 	if blendResponse.Value == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "Did not add blendlink value")
+		return
 	}
 
 	// cookie, err := r.Cookie(h.sessionIdCookieName)
@@ -236,17 +238,19 @@ func (h *BlendHandler) AddBlendFromInviteLink(w http.ResponseWriter, r *http.Req
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, " Could not add/make blend from link: %s", err)
 		glog.Errorf(" Could not add make/blend from link : %s from user :%s and error: %s", blendLinkValue, userA, err)
+		return
 	}
 
 	if blendId == "0" { //Code for user trying to make blend with themselves
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, " Cannot make blend with yourself: %s", err)
 		glog.Errorf(" User tried to make blend with themselves : %s :%s", blendLinkValue, userA)
+		return
 	} else if blendId == "-1" {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, " Cannot add more than 2 users to blend: %s", err)
 		glog.Errorf(" Not enough space on blend : %s :%s", blendLinkValue, userA)
-
+		return
 	}
 
 	// _ = blendId
