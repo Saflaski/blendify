@@ -21,13 +21,6 @@ type RedisStateStore struct {
 	blendIndexPrefix string
 }
 
-func (r *RedisStateStore) GetBlendsOfUser(context context.Context, username string) (Blends, error) {
-
-	// key := fmt.Sprintf("%s:%s", r.blendPrefix, username)
-	// Result, err := r.client.Get()
-	panic("")
-}
-
 func (r *RedisStateStore) GetFromCacheTopX(context context.Context, userName string, timeDuration blendTimeDuration, category blendCategory) (map[string]int, error) {
 	key := fmt.Sprintf("%s:%s:%s:%s", r.musicPrefix, userName, categoryPrefix[category], durationPrefix[timeDuration])
 

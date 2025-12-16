@@ -76,8 +76,20 @@ func (h *AuthHandler) HandleLastFMLoginFlow(w http.ResponseWriter, r *http.Reque
 			return
 		}
 		if found {
+			glog.Info(" FOUND VALID COOKIE SID")
 			//Cookie is found and is valid. Return to home
 			http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+
+		} else {
+			glog.Info(" DID NOT FIND VALID COOKIE SID")
+
+			err := h.startNewLoginFlow(w, r)
+			if err != nil { //Error during validity check
+				glog.Errorf("Error redirecting to new login flow: %v", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				fmt.Fprintf(w, "Error redirect to new login flow. Try deleting all cookies")
+				return
+			}
 		}
 	}
 }
