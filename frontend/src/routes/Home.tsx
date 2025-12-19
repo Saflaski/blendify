@@ -5,6 +5,45 @@ import cross from "/src/assets/images/cross.svg";
 import { useNavigate } from "react-router-dom";
 import React from "react";
 
+type Blend = {
+  blendid: string;
+  value: number;
+  user: string[];
+  timestamp: string;
+};
+
+var sampleJson = `{
+	"blends": [
+		{
+			"blendid": "7673f65c-ab37-4fec-a698-5a0528b9af4d",
+			"value": 55,
+			"user": [
+				"test2002",
+				"saflas"
+			],
+			"timestamp": "2025-12-17T01:54:11+05:30"
+		},
+    {
+			"blendid": "7673f65c-ab37-4fec-a698-5a0528b9af4d",
+			"value": 67,
+			"user": [
+				"test2002",
+				"ethan"
+			],
+			"timestamp": "2025-13-14T01:54:11+05:30"
+		},
+    {
+			"blendid": "7673f65c-ab37-4fec-a698-5a0528b9af4d",
+			"value": 98,
+			"user": [
+				"test2002",
+				"kia"
+			],
+			"timestamp": "2025-02-12T01:54:11+05:30"
+		}
+	]
+}`;
+
 export function Home() {
   const navigate = useNavigate();
   let value: any;
@@ -50,53 +89,114 @@ export function Home() {
     navigate("/blend", { state: value });
   }
 
+  const [blends, setBlends] = useState<Blend[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchBlends() {
+      try {
+        const url = "http://localhost:3000/v1/blend/userblends";
+        const res = await fetch(url, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+        const json = await res.json();
+        setBlends(json.blends);
+      } catch (err) {
+        console.error("Error fetching blends:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchBlends();
+  }, []);
+
   return (
     <div className="min-h-screen w-full flex items-start justify-center py-5 font-[Roboto_Mono]">
       <div className="w-full max-w-xl bg-white border border-slate-300 px-5 py-6 flex flex-col gap-y-4 text-slate-900">
         <header className="w-full flex flex-col gap-1">
           <h1 className="text-xl font-semibold tracking-tight">Your blends</h1>
           <p className="text-sm text-slate-500">
-            Generate a Blendify link and send it to someone
-          </p>
-          <section>
-            <GenerateLink />
-          </section>
-          <div className="w-1/2 border-t my-4 mx-auto justify-center"></div>
-          <p className="text-sm text-slate-500">
             Paste a Blendify link from someone to start a blend
           </p>
           <section className="w-full">
             <AddNewBlendBar AddBlend={AddBlend} />
           </section>
+          <div className="w-1/2 border-t my-4 mx-auto justify-center"></div>
+
+          <p className="text-sm text-slate-500">
+            Generate a Blendify link and send it to someone
+          </p>
+          <section>
+            <GenerateLink />
+          </section>
         </header>
 
         <div className="text-xs text-slate-500">
-          23 blends — 3 added recently
+          {blends.length} {blends.length == 1 ? "blend" : "blends"}
         </div>
 
         <section className="w-full flex flex-col gap-3">
           <RecentOrTop />
-
-          <div className="space-y-1.5 text-sm">
-            <div className="flex items-center justify-between border border-slate-200 px-3 py-2 hover:bg-slate-50 transition">
-              <span className="truncate font-['Roboto_Mono'] text-xs">
-                Ethan + Saf // 50%
-              </span>
-              <span className="text-[10px] text-slate-400 ml-2 shrink-0">
-                added 2d ago
-              </span>
-            </div>
-            <div className="flex items-center justify-between border border-slate-200 px-3 py-2 hover:bg-slate-50 transition">
-              <span className="truncate font-['Roboto_Mono'] text-xs">
-                Laurence + Saf // 80%
-              </span>
-              <span className="text-[10px] text-slate-400 ml-2 shrink-0">
-                added 5d ago
-              </span>
-            </div>
-          </div>
+          <ListOfBlends blends={blends} loading={loading} />
         </section>
       </div>
+    </div>
+  );
+}
+
+function BlendSkeleton() {
+  return (
+    <div className="flex items-center justify-between border border-slate-200 px-3 py-2 animate-pulse">
+      <div className="h-3 w-40 bg-slate-200 rounded" />
+      <div className="h-2 w-16 bg-slate-200 rounded" />
+    </div>
+  );
+}
+
+function ListOfBlends({ blends, loading }) {
+  if (loading) {
+    return (
+      <div className="space-y-1">
+        <BlendSkeleton />
+        <BlendSkeleton />
+        <BlendSkeleton />
+      </div>
+    );
+  }
+
+  function daysAgo(isoDate) {
+    const now = new Date();
+    const then = new Date(isoDate);
+    const diff = Math.floor(
+      (Number(now) - Number(then)) / (1000 * 60 * 60 * 24),
+    );
+    return diff;
+  }
+
+  return (
+    <div className="space-y-1">
+      {blends.map((blend) => (
+        <div
+          key={blend.blendid}
+          className="flex items-center justify-between border border-slate-200 px-3 py-2 hover:bg-slate-50 transition"
+        >
+          <span className="truncate font-['Roboto_Mono'] text-xs">
+            {blend.user.join(" + ")} // {blend.value}%
+          </span>
+
+          <span className="text-[10px] text-slate-400 ml-2 shrink-0">
+            {daysAgo(blend.timestamp) === 0
+              ? "added today"
+              : `added ${daysAgo(blend.timestamp)}d ago`}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -108,9 +208,9 @@ function RecentOrTop() {
         <button className="px-3 py-2 border-b-2 border-slate-900 font-bold">
           Recent
         </button>
-        <button className="px-3 py-2 text-slate-500 hover:text-slate-900 transition">
+        {/* <button className="px-3 py-2 text-slate-500 hover:text-slate-900 transition">
           Top
-        </button>
+        </button> */}
       </div>
     </div>
   );
