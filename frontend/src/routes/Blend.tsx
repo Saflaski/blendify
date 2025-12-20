@@ -29,87 +29,103 @@ export function Blend() {
   const [blendId, setBlendId] = useState<string | null>(null);
   type LocationState = {
     invite?: string;
+    blendid?: string;
   };
-  useEffect(() => {
-    //From URL Paste
-    const params = new URLSearchParams(location.search);
-    const urlInvite = params.get("invite");
+  console.log;
+  console.log(location.state);
+  const navBlendId = (location.state as LocationState | null)?.blendid;
+  console.log(" NavBlend ID: ", navBlendId);
+  if (navBlendId !== undefined) {
+    setBlendId(navBlendId);
+  } else {
+    useEffect(() => {
+      //First check if blendid provided
 
-    //From Add button
+      //From URL Paste
+      const params = new URLSearchParams(location.search);
+      const urlInvite = params.get("invite");
 
-    const value = location.state;
-    // const navigateInvite = value?.invite;
-    const navigateInvite = (location.state as LocationState | null)?.invite;
+      //From Add button
 
-    //Log them
-    console.log("urlInvite: ", urlInvite);
-    console.log("Navigated Invite Link Data: ", navigateInvite);
+      const value = location.state;
+      // const navigateInvite = value?.invite;
 
-    // if (!invite) {
-    //   setError("Missing Invite Code");
-    //   setLoading(false);
-    //   return;
-    // }
+      const navigateInvite = (location.state as LocationState | null)?.invite;
 
-    const invite = navigateInvite ?? urlInvite;
+      //Log them
+      console.log("urlInvite: ", urlInvite);
+      console.log("Navigated Invite Link Data: ", navigateInvite);
 
-    //Get blendid as authenticated user.
-    const checkInvite = async () => {
-      try {
-        const res = await fetch("http://localhost:3000/v1/blend/add", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ value: invite }),
-        });
+      // if (!invite) {
+      //   setError("Missing Invite Code");
+      //   setLoading(false);
+      //   return;
+      // }
 
-        if (res.status == 401) {
-          navigate(
-            `/login?redirectTo=${encodeURIComponent(location.pathname + location.search)}`,
-          );
-          return;
-        }
+      const invite = navigateInvite ?? urlInvite;
 
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          setError(data.message || "Invite is invalid.");
+      //Get blendid as authenticated user.
+      const checkInvite = async () => {
+        try {
+          const res = await fetch("http://localhost:3000/v1/blend/add", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({ value: invite }),
+          });
+
+          if (res.status == 401) {
+            navigate(
+              `/login?redirectTo=${encodeURIComponent(location.pathname + location.search)}`,
+            );
+            return;
+          }
+
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            setError(data.message || "Invite is invalid.");
+            // setLoading(false);
+            return;
+          }
+
+          const data = await res.json();
+          setBlendId(data["blendId"]);
+
           // setLoading(false);
-          return;
+        } catch (err) {
+          console.error(err);
+          setError("Something went wrong. Please try again.");
+          setLoading(false);
         }
+      };
 
-        const data = await res.json();
-        setBlendId(data["blendId"]);
-
-        // setLoading(false);
-      } catch (err) {
-        console.error(err);
-        setError("Something went wrong. Please try again.");
-        setLoading(false);
+      // If user clicked on existing blend from homepage
+      const blendId = value?.blendId;
+      if (!blendId) {
+        checkInvite();
       }
-    };
 
-    // If user clicked on existing blend from homepage
-    const blendId = value?.blendId;
-    if (!blendId) {
-      checkInvite();
-    }
-
-    //
-  }, []);
+      //
+    }, []);
+  }
 
   useEffect(() => {
-    const getBlend = async () => {
+    console.log("Getting data");
+    const getBlendData = async (blendId: string) => {
       try {
-        const res = await fetch("http://localhost:3000/v1/blend/data", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
+        const encodedValue = encodeURIComponent(blendId);
+        const res = await fetch(
+          `http://localhost:3000/v1/blend/data?blendId=${encodedValue}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
           },
-          credentials: "include",
-          body: JSON.stringify({ blendId }),
-        });
+        );
 
         if (res.status == 401) {
           navigate(
@@ -136,14 +152,18 @@ export function Blend() {
       setLoading(false);
     };
 
-    if (blendId !== null) {
+    if (blendId === null) {
       setError("Could not get blendid.");
+      console.log("Blend ID is null, cannot get data?");
     } else {
-      getBlend();
+      getBlendData(blendId);
+      console.log("Getting blend data");
     }
   }, []);
-
-  console.log(blendId);
+  if (error === null) {
+    console.error(error);
+  }
+  console.log("Blend ID:", blendId);
 
   // ----- Copy button functionality -----
   const captureRef = useRef(null); //Div to be captured

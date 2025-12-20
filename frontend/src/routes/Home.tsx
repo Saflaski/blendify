@@ -86,7 +86,12 @@ export function Home() {
     // const invite = parsed.searchParams.get("invite");
 
     console.log("Adding new blend from Blend Add URL Value:", value);
-    navigate("/blend", { state: value });
+    navigate("/blend", {
+      state: {
+        id: "linkid",
+        value: value,
+      },
+    });
   }
 
   const [blends, setBlends] = useState<Blend[]>([]);
@@ -116,19 +121,30 @@ export function Home() {
     fetchBlends();
   }, []);
 
+  function navToBlendPage(blendid: string) {
+    // const navigate = useNavigate();
+    navigate("/blend", {
+      state: {
+        id: "blendid",
+        value: blendid,
+      },
+    });
+  }
+
   return (
     <div className="min-h-screen w-full flex items-start justify-center py-5 font-[Roboto_Mono]">
       <div className="w-full max-w-xl bg-white border border-slate-300 px-5 py-6 flex flex-col gap-y-4 text-slate-900">
         <header className="w-full flex flex-col gap-1">
           <h1 className="text-xl font-semibold tracking-tight">Your blends</h1>
+
           <p className="text-sm text-slate-500">
             Paste a Blendify link from someone to start a blend
           </p>
           <section className="w-full">
             <AddNewBlendBar AddBlend={AddBlend} />
           </section>
-          <div className="w-1/2 border-t my-4 mx-auto justify-center"></div>
 
+          <div className="w-1/2 border-t my-4 mx-auto justify-center"></div>
           <p className="text-sm text-slate-500">
             Generate a Blendify link and send it to someone
           </p>
@@ -143,7 +159,11 @@ export function Home() {
 
         <section className="w-full flex flex-col gap-3">
           <RecentOrTop />
-          <ListOfBlends blends={blends} loading={loading} />
+          <ListOfBlends
+            funcNav={navToBlendPage}
+            blends={blends}
+            loading={loading}
+          />
         </section>
       </div>
     </div>
@@ -159,7 +179,13 @@ function BlendSkeleton() {
   );
 }
 
-function ListOfBlends({ blends, loading }) {
+type ListOfBlendsProps = {
+  funcNav: (blendid: string) => void;
+  blends: Blend[];
+  loading: boolean;
+};
+
+function ListOfBlends({ funcNav, blends, loading }: ListOfBlendsProps) {
   if (loading) {
     return (
       <div className="space-y-1">
@@ -182,9 +208,10 @@ function ListOfBlends({ blends, loading }) {
   return (
     <div className="space-y-1">
       {blends.map((blend) => (
-        <div
+        <button
           key={blend.blendid}
-          className="flex items-center justify-between border border-slate-200 px-3 py-2 hover:bg-slate-50 transition"
+          className="flex w-full text-left items-center justify-between border border-slate-200 px-3 py-2 hover:bg-slate-50 transition"
+          onClick={() => funcNav(blend.blendid)}
         >
           <span className="truncate font-['Roboto_Mono'] text-xs">
             {blend.user.join(" + ")} // {blend.value}%
@@ -195,7 +222,7 @@ function ListOfBlends({ blends, loading }) {
               ? "added today"
               : `added ${daysAgo(blend.timestamp)}d ago`}
           </span>
-        </div>
+        </button>
       ))}
     </div>
   );
@@ -219,7 +246,7 @@ function RecentOrTop() {
 function AddNewBlendBar({ AddBlend }) {
   const [value, setValue] = useState("");
   var prefix = `http://localhost:5173/blend/`;
-  const isValid = (value) => {
+  const isValid = (value: string) => {
     //Simple URL check for now. Change slice num and url for prod
     if (value.slice(0, prefix.length) == prefix) {
       return true;
@@ -235,13 +262,13 @@ function AddNewBlendBar({ AddBlend }) {
           value={value}
           onChange={(e) => setValue(e.target.value)}
           rows={1}
-          className="resize-none w-full focus:outline-none overflow-hidden flex"
+          className="resize-none w-full focus:outline-none overflow-hidden text-nowrap flex"
         ></textarea>
         {value.length > 0 && (
           <img
             src={isValid(value) ? tick : cross}
             alt={isValid(value) ? "Valid" : "Invalid"}
-            className="justify-end relative w-4 h-4 align-middle content-center"
+            className="justify-end relative w-6 h-4 pl-1 align-middle content-center"
           />
         )}
       </div>
