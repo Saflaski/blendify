@@ -27,20 +27,34 @@ export function Blend() {
   const location = useLocation();
 
   const [blendId, setBlendId] = useState<string | null>(null);
+  const [navLinkId, setNavLinkId] = useState<string | null>(null);
+  const [userBlendData, setUserBlendData] = useState<BlendApiResponse | null>(
+    null,
+  );
   type LocationState = {
-    invite?: string;
-    blendid?: string;
+    id?: string;
+    value?: string;
   };
-  console.log;
-  console.log(location.state);
-  const navBlendId = (location.state as LocationState | null)?.blendid;
-  console.log(" NavBlend ID: ", navBlendId);
-  if (navBlendId !== undefined) {
-    setBlendId(navBlendId);
-  } else {
-    useEffect(() => {
-      //First check if blendid provided
 
+  console.log(location.state);
+
+  useEffect(() => {
+    const state = location.state as LocationState | null;
+    if (state?.id == "blendid") {
+      state?.value != null
+        ? setBlendId(state?.value)
+        : console.log("undefined blendid given");
+    } else if (state?.id == "linkid") {
+      state?.value != null
+        ? setNavLinkId(state?.value)
+        : console.log("undefined navlinkid given");
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    //First check if blendid provided
+
+    const getBlendIdFromInviteLink = async () => {
       //From URL Paste
       const params = new URLSearchParams(location.search);
       const urlInvite = params.get("invite");
@@ -50,7 +64,7 @@ export function Blend() {
       const value = location.state;
       // const navigateInvite = value?.invite;
 
-      const navigateInvite = (location.state as LocationState | null)?.invite;
+      const navigateInvite = (location.state as LocationState | null)?.value;
 
       //Log them
       console.log("urlInvite: ", urlInvite);
@@ -102,20 +116,23 @@ export function Blend() {
       };
 
       // If user clicked on existing blend from homepage
-      const blendId = value?.blendId;
-      if (!blendId) {
+
+      if (blendId == null) {
         checkInvite();
       }
+    };
 
-      //
-    }, []);
-  }
+    //
+  }, []);
 
+  console.log("Final blendId to use: ", blendId);
   useEffect(() => {
-    console.log("Getting data");
-    const getBlendData = async (blendId: string) => {
+    console.log("Getting data for blendId (1): ", blendId);
+    const getBlendData = async () => {
+      console.log("Getting data for blendId (2): ", blendId);
+
       try {
-        const encodedValue = encodeURIComponent(blendId);
+        const encodedValue = encodeURIComponent(blendId as string);
         const res = await fetch(
           `http://localhost:3000/v1/blend/data?blendId=${encodedValue}`,
           {
@@ -142,7 +159,11 @@ export function Blend() {
         }
 
         const data = await res.json();
-        // setBlendData(data["blendId"]);
+        console.log("Blend data received:", data);
+        const userData = JSON.parse(data) as BlendApiResponse;
+
+        console.log("Parsed blend data:", userData);
+        setUserBlendData(userData);
       } catch (err) {
         console.error(err);
         setError("Something went wrong. Please try again.");
@@ -152,18 +173,18 @@ export function Blend() {
       setLoading(false);
     };
 
-    if (blendId === null) {
+    if (blendId == null) {
       setError("Could not get blendid.");
       console.log("Blend ID is null, cannot get data?");
     } else {
-      getBlendData(blendId);
+      getBlendData();
       console.log("Getting blend data");
     }
-  }, []);
-  if (error === null) {
-    console.error(error);
-  }
-  console.log("Blend ID:", blendId);
+  }, [blendId]);
+
+  // if (error != null) {
+  //   console.error(error);
+  // }
 
   // ----- Copy button functionality -----
   const captureRef = useRef(null); //Div to be captured
@@ -179,8 +200,6 @@ export function Blend() {
       }
     }; // cleanup on unmount
   }, []);
-
-  const [displayBlendValue, SetBlendValue] = useState(0);
 
   const handleScreenshot = async () => {
     setIsCapturing(true);
