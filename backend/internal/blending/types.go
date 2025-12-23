@@ -73,20 +73,20 @@ type IndividualUserData struct {
 }
 
 type DuoBlend struct {
-	Users           []string   `json:"usernames"`
-	OverallBlendNum int        `json:"overall"`
-	ArtistBlend     TypeBlend  `json:"artist"`
-	AlbumBlend      TypeBlend  `json:"album"`
-	TrackBlend      TypeBlend  `json:"track"`
+	Users           []string   `json:"Usernames"`
+	OverallBlendNum int        `json:"OverallBlendNum"`
+	ArtistBlend     TypeBlend  `json:"ArtistBlend"`
+	AlbumBlend      TypeBlend  `json:"AlbumBlend"`
+	TrackBlend      TypeBlend  `json:"TrackBlend"`
 	TopArtists      []TopEntry `json:"topartists"`
 	TopAlbums       []TopEntry `json:"topalbums"`
 	TopTracks       []TopEntry `json:"toptracks"`
 }
 
 type TypeBlend struct {
-	ThreeMonth int `json:"3month"`
-	OneMonth   int `json:"1month"`
-	OneYear    int `json:"1year"`
+	ThreeMonth int `json:"ThreeMonth"`
+	OneMonth   int `json:"OneMonth"`
+	OneYear    int `json:"OneYear"`
 }
 
 type TopEntry struct {

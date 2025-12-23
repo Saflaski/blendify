@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-
+import type { ControlPanelProps, BlendApiResponse } from "../prop-types";
 function ControlPanelTileButton({ children, label, onClick }) {
   return (
     <button
@@ -21,30 +21,101 @@ function ControlPanelTileButton({ children, label, onClick }) {
   );
 }
 
-export function ControlPanel({ setBlendPercent }) {
-  async function updateBlendFromAPI({ user, mode, timeDuration }) {
-    console.log("Updating blend from API:", { user, mode, timeDuration });
-    try {
-      const baseURL = "http:/localhost:3000/v1/blend/new";
-      const params = new URLSearchParams({
-        category: mode,
-        user: user,
-        timeDuration: timeDuration,
-      });
-      const url = new URL(baseURL);
-      url.search = params.toString();
-      const response = await fetch(url, { credentials: "include" });
-      if (!response.ok) {
-        throw new Error(`Backend request error. Status: ${response.status}`);
-      }
-      const data = await response.json();
-      const newVal = data["blend_percentage"];
+export function ControlPanel({
+  setMode,
+  setUsers,
+  setBlendPercent,
+  blendApiResponse: BlendApiResponse,
+}: ControlPanelProps) {
+  // async function updateBlendFromAPI({ user, mode, timeDuration }) {
+  //   console.log("Updating blend from API:", { user, mode, timeDuration });
+  //   try {
+  //     const baseURL = "http:/localhost:3000/v1/blend/new";
+  //     const params = new URLSearchParams({
+  //       category: mode,
+  //       user: user,
+  //       timeDuration: timeDuration,
+  //     });
+  //     const url = new URL(baseURL);
+  //     url.search = params.toString();
+  //     const response = await fetch(url, { credentials: "include" });
+  //     if (!response.ok) {
+  //       throw new Error(`Backend request error. Status: ${response.status}`);
+  //     }
+  //     const data = await response.json();
+  //     const newVal = data["blend_percentage"];
 
-      console.log("API response data:", data);
-      console.log("Blend percentage from API:", newVal);
+  //     console.log("API response data:", data);
+  //     console.log("Blend percentage from API:", newVal);
+  //     setBlendPercent(newVal);
+  //   } catch (err) {
+  //     console.error("API error:", err);
+  //   }
+
+  //   return;
+  // }
+
+  async function updateBlendFromStoredValue({ mode, timeDuration }) {
+    console.log("Updating blend from stored value:", {
+      mode,
+      timeDuration,
+    });
+    try {
+      var typeBlend: {
+        OneMonth: number;
+        ThreeMonth: number;
+        OneYear: number;
+      } | null = null; // e.g., "artist", "track", "album"
+      var displayedMode = "";
+      var newVal = 0;
+      switch (mode) {
+        case "artist":
+          typeBlend = BlendApiResponse.ArtistBlend;
+          displayedMode = "Artists Only";
+          break;
+        case "track":
+          typeBlend = BlendApiResponse.TrackBlend;
+          displayedMode = "Songs Only";
+          break;
+        case "album":
+          typeBlend = BlendApiResponse.AlbumBlend;
+          displayedMode = "Albums Only";
+          break;
+        case "default": // OverallBlendNum, not unknown case
+          newVal = BlendApiResponse.OverallBlendNum;
+          displayedMode = "Default";
+          break;
+        default:
+          console.warn("Unknown mode:", mode);
+          return;
+      }
+
+      if (typeBlend !== null) {
+        switch (timeDuration) {
+          case "1month":
+            newVal = typeBlend.OneMonth;
+            displayedMode += " - Last 1 Month";
+            break;
+          case "3month":
+            newVal = typeBlend.ThreeMonth;
+            displayedMode += " - Last 3 Month";
+            break;
+          case "1year":
+            newVal = typeBlend.OneYear;
+            displayedMode += " - Last 1 Year";
+            break;
+          default:
+            console.warn("Unknown time duration:", timeDuration);
+            return;
+        }
+      }
+
       setBlendPercent(newVal);
+      setMode(displayedMode);
+      setUsers(BlendApiResponse.Usernames.join(" + "));
+      console.log("Updated blend percentage:", newVal);
     } catch (err) {
-      console.error("API error:", err);
+      console.error("Error retrieving stored blend percentage:", err);
     }
 
     return;
@@ -53,7 +124,7 @@ export function ControlPanel({ setBlendPercent }) {
   const [curMode, setCurMode] = useState("artist");
   const [curDuration, setCurDuration] = useState("3month");
   React.useEffect(() => {
-    updateBlendFromAPI({
+    updateBlendFromStoredValue({
       // user: user,
       mode: curMode,
       timeDuration: curDuration,
@@ -163,7 +234,12 @@ export function ControlPanel({ setBlendPercent }) {
 
         {/* --- DEFAULT --- */}
         <div className="outline-2 outline-black w-fit mx-auto p-2">
-          <ControlPanelTileButton label="Default">
+          <ControlPanelTileButton
+            onClick={() => {
+              setCurMode("default");
+            }}
+            label="Default"
+          >
             <svg
               viewBox="0 0 24 24"
               fill="currentColor"

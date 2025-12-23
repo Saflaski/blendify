@@ -3,21 +3,32 @@ import { ControlPanel } from "../components/blend-options/ControlPanel";
 import { useLocation, useNavigate } from "react-router-dom";
 import React, { useRef, useState, useEffect } from "react";
 import { toBlob } from "html-to-image";
+import {
+  ControlPanelProps,
+  BlendApiResponse,
+  BlendApiResponseSchema,
+} from "../components/prop-types";
+import { set, z } from "zod";
 
-type BlendApiResponse = {
-  usernames: string[];
-  overallBlendNum: number;
-  ArtistBlend: TypeBlend;
-  AlbumBlend: TypeBlend;
-  TrackBlend: TypeBlend;
-};
-type MetricKey = keyof BlendApiResponse;
+// type ControlPanelProps = {
+//   setBlendPercent: (num: number) => void;
+//   blendApiResponse: BlendApiResponse;
+// };
 
-type TypeBlend = {
-  OneMonth: number;
-  ThreeMonth: number;
-  OneYear: number;
-};
+// type BlendApiResponse = {
+//   usernames: string[];
+//   overallBlendNum: number;
+//   ArtistBlend: TypeBlend;
+//   AlbumBlend: TypeBlend;
+//   TrackBlend: TypeBlend;
+// };
+// type MetricKey = keyof BlendApiResponse;
+
+// type TypeBlend = {
+//   OneMonth: number;
+//   ThreeMonth: number;
+//   OneYear: number;
+// };
 
 export function Blend() {
   // ------ If user is from invite link and not Add button -------
@@ -28,8 +39,8 @@ export function Blend() {
 
   const [blendId, setBlendId] = useState<string | null>(null);
   const [navLinkId, setNavLinkId] = useState<string | null>(null);
-  const [userBlendData, setUserBlendData] = useState<BlendApiResponse | null>(
-    null,
+  const [userBlendData, setUserBlendData] = useState<BlendApiResponse>(
+    {} as BlendApiResponse,
   );
   type LocationState = {
     id?: string;
@@ -152,17 +163,16 @@ export function Blend() {
 
         const data = await res.json();
         console.log("Blend data received:", data);
-        const userData = JSON.parse(data) as BlendApiResponse;
-
+        // const userData = JSON.parse(data) as BlendApiResponse;
+        const userData = BlendApiResponseSchema.parse(data);
         console.log("Parsed blend data:", userData);
         setUserBlendData(userData);
+        setLoading(false);
       } catch (err) {
         console.error(err);
         setError("Something went wrong. Please try again.");
         setLoading(false);
       }
-
-      setLoading(false);
     };
 
     if (blendId == null) {
@@ -232,6 +242,27 @@ export function Blend() {
     // link.click();
   };
   const [blendPercent, setBlendPercent] = useState(3);
+  const [mode, setMode] = useState("Default");
+  const [users, setUsers] = useState<string>("You and someone");
+
+  const props: ControlPanelProps = {
+    setMode,
+    setUsers,
+    setBlendPercent,
+    blendApiResponse: userBlendData,
+  };
+
+  useEffect(() => {
+    if (userBlendData != undefined && loading == false) {
+      setBlendPercent(userBlendData.OverallBlendNum);
+      setMode("Default mode");
+      if (userBlendData.Usernames.length == 2)
+        setUsers(
+          `${userBlendData.Usernames[0]} and ${userBlendData.Usernames[1]}`,
+        );
+    }
+  }, [userBlendData]);
+  // setBlendPercent(userBlendData.OverallBlendNum);
 
   return (
     <div className="w-full flex justify-center">
@@ -239,6 +270,7 @@ export function Blend() {
         <div className="flex justify-left">
           <button
             type="button"
+            onClick={() => navigate("/home")}
             className="inline-flex items-center gap-2 outline-2 outline-black font-[Roboto_Mono] font-bold border border-black/10 bg-white px-4 py-2 text-sm text-black shadow-sm hover:shadow md:text-base"
           >
             &lt; Your blends
@@ -246,14 +278,12 @@ export function Blend() {
         </div>
 
         <div className="md:flex md:flex-wrap pr-2 mt-8 lg:grid lg:grid-cols-2 ">
-          {/* --- Blendify Card ---*/}
           <div className="w-full flex justify-center md:mb-10 ">
             <div //Div to be screenshotted
               ref={captureRef}
               className="shine-element relative outline-2 outline-black bg-neutral-200 lg:w-80 md:w-50 h-auto p-10 aspect-2/3
              bg-size-[auto_200px] bg-[url(/src/assets/images/topography.svg)]"
             >
-              {/* Copy button */}
               {!isCapturing && (
                 <button
                   onClick={handleScreenshot}
@@ -262,7 +292,6 @@ export function Blend() {
                   <img src="/src/assets/images/copy.svg" />
                 </button>
               )}
-              {/* Tooltip */}
               {copied && (
                 <div
                   className=" absolute right-15 top-3 bg-gray-500 text-white 
@@ -271,19 +300,19 @@ export function Blend() {
                   Copied!
                 </div>
               )}
-              {/* Hero number */}
               <h1 className="mt-0 text-6xl leading-none font-[Roboto_Mono] tracking-tight text-black md:text-4xl lg:text-7xl">
                 {loading ? "--" : blendPercent}%
               </h1>
-              {/* Big important text under the 80% */}
-              <p className="mt-2 text-3xl md:text-3xl lg:text-4xl font-semibold text-gray-800">
-                Ethan + Saf
+              <p
+                className="mt-2 text-nowrap font-semibold text-gray-800"
+                // className="mt-2 text-2xl md:text-2xl lg:text-3xl text-nowrap font-semibold text-gray-800"
+                style={{ fontSize: "clamp(0.5rem, 2.0vw, 1.5rem)" }}
+              >
+                {users}
               </p>
-              {/* Filtering Mode */}
               <p className="mt-2 text-1xl md:text-1xl lg:text-1xl font-semibold text-gray-800">
-                Default Mode
+                {mode}
               </p>
-              {/* Top Songs and Artists */}
               <div className="grid grid-row-2 gap-3 text-left text-black font-[Roboto_Mono] ">
                 <ul>
                   <p className="font-black">Top Artists</p>
@@ -298,10 +327,9 @@ export function Blend() {
                   <li>Bags</li>
                 </ul>
               </div>
-              <div className="flex justify-between gap-3 absolute bottom-3 left-1/2 -translate-x-1/1 size-12 h-auto">
+              <div className=" absolute bottom-3 left-1/2 -translate-x-1/2 size-15 h-auto">
                 <img src="/src/assets/images/lastfm.svg" />
-
-                <img src="/src/assets/images/apple.svg" />
+                {/* <img src="/src/assets/images/apple.svg" /> */}
               </div>
             </div>
           </div>
@@ -309,7 +337,7 @@ export function Blend() {
 
           <div className=" flex flex-wrap justify-center items-center  lg:pl-10 gap-3">
             {/* Replace this block with <DropDownMenu /> if you already have it */}
-            <ControlPanel setBlendPercent={setBlendPercent} />
+            <ControlPanel {...props} />
           </div>
         </div>
 
