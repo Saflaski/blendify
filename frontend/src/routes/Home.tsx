@@ -203,23 +203,58 @@ function ListOfBlends({ funcNav, blends, loading }: ListOfBlendsProps) {
   }
 
   return (
-    <div className="space-y-1">
+    <div className="w-full space-y-1">
       {blends.map((blend) => (
-        <button
+        <div
           key={blend.blendid}
-          className="flex w-full text-left items-center justify-between border border-slate-200 px-3 py-2 hover:bg-slate-50 transition"
-          onClick={() => funcNav(blend.blendid)}
+          className="flex overflow-hidden w-full group relative"
         >
-          <span className="truncate font-['Roboto_Mono'] text-xs">
-            {blend.user.join(" + ")} // {blend.value}%
-          </span>
+          <button
+            className=" flex flex-1 w-full text-left items-center transition-all duration-300 ease-in-out
+            justify-between border border-slate-200 px-3 py-2 hover:bg-slate-50"
+            onClick={() => funcNav(blend.blendid)}
+          >
+            <span className="truncate font-['Roboto_Mono'] text-xs">
+              {blend.user.join(" + ")} // {blend.value}%
+            </span>
 
-          <span className="text-[10px] text-slate-400 ml-2 shrink-0">
-            {daysAgo(blend.timestamp) === 0
-              ? "added today"
-              : `added ${daysAgo(blend.timestamp)}d ago`}
-          </span>
-        </button>
+            <span className="text-[10px] text-right text-slate-400 ml-2 shrink-0">
+              {daysAgo(blend.timestamp) === 0
+                ? "added today"
+                : `added ${daysAgo(blend.timestamp)}d ago`}
+            </span>
+          </button>
+          <button
+            className="
+          -transition-x-4
+          opacity-0 w-0
+          transition-transform duration-100 ease-in
+          
+          group-hover:opacity-100
+          group-hover:translate-x-0
+          group-hover:pointer-events-auto
+          group-hover:w-auto
+          group-focus-within:opacity-100
+          group-focus-within:translate-x-0
+          group-focus-within:pointer-events-auto
+          group-focus:w-auto
+          pointer-events-none
+          group-hover:px-1
+          hover:bg-red-200
+          hover:border-2
+          focus:border-2
+          hover:border-red-600
+          text-xs 
+         text-white
+        "
+          >
+            <img
+              src="src/assets/images/delete.svg"
+              className="bg-inherit"
+              alt="Go to blend"
+            />
+          </button>
+        </div>
       ))}
     </div>
   );
@@ -252,14 +287,18 @@ function AddNewBlendBar({ AddBlend }) {
 
   return (
     <div className="flex w-full gap-2">
-      <div className="flex w-full border border-slate-600 bg-white px-3 py-2 text-xs font-['Roboto_Mono'] focus:outline-none focus:border-slate-900">
+      <div
+        className={`flex w-full border border-slate-600 bg-white px-3 py-2 text-xs font-['Roboto_Mono'] focus:outline-none focus:border-slate-900`}
+      >
         <textarea
           name="newBlend"
           placeholder={prefix}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           rows={1}
-          className="resize-none w-full focus:outline-none overflow-hidden text-nowrap flex"
+          className="resize-none w-full focus:outline-none overflow-hidden text-nowrap flex
+         
+          "
         ></textarea>
         {value.length > 0 && (
           <img
