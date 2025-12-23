@@ -51,79 +51,71 @@ export function Blend() {
     }
   }, [location.state]);
 
-  useEffect(() => {
-    //First check if blendid provided
+  console.log("NavLinkId state: ", navLinkId);
+  const getBlendIdFromInviteLink = async () => {
+    //From URL Paste
+    const params = new URLSearchParams(location.search);
+    const urlInvite = params.get("invite");
 
-    const getBlendIdFromInviteLink = async () => {
-      //From URL Paste
-      const params = new URLSearchParams(location.search);
-      const urlInvite = params.get("invite");
+    //From Add button
+    const value = location.state;
+    // const navigateInvite = value?.invite;
 
-      //From Add button
+    const navigateInvite = navLinkId;
 
-      const value = location.state;
-      // const navigateInvite = value?.invite;
+    //Log them
+    console.log("urlInvite: ", urlInvite);
+    console.log("Navigated Invite Link Data: ", navigateInvite);
 
-      const navigateInvite = (location.state as LocationState | null)?.value;
+    const invite = navigateInvite ?? urlInvite;
+    console.log("Getting blendid from Link: ", invite);
+    //Get blendid as authenticated user.
+    const requestBlendId = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/v1/blend/add", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ value: invite }),
+        });
 
-      //Log them
-      console.log("urlInvite: ", urlInvite);
-      console.log("Navigated Invite Link Data: ", navigateInvite);
-
-      // if (!invite) {
-      //   setError("Missing Invite Code");
-      //   setLoading(false);
-      //   return;
-      // }
-
-      const invite = navigateInvite ?? urlInvite;
-
-      //Get blendid as authenticated user.
-      const checkInvite = async () => {
-        try {
-          const res = await fetch("http://localhost:3000/v1/blend/add", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify({ value: invite }),
-          });
-
-          if (res.status == 401) {
-            navigate(
-              `/login?redirectTo=${encodeURIComponent(location.pathname + location.search)}`,
-            );
-            return;
-          }
-
-          if (!res.ok) {
-            const data = await res.json().catch(() => ({}));
-            setError(data.message || "Invite is invalid.");
-            // setLoading(false);
-            return;
-          }
-
-          const data = await res.json();
-          setBlendId(data["blendId"]);
-
-          // setLoading(false);
-        } catch (err) {
-          console.error(err);
-          setError("Something went wrong. Please try again.");
-          setLoading(false);
+        if (res.status == 401) {
+          navigate(
+            `/login?redirectTo=${encodeURIComponent(location.pathname + location.search)}`,
+          );
+          return;
         }
-      };
 
-      // If user clicked on existing blend from homepage
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setError(data.message || "Invite is invalid.");
+          // setLoading(false);
+          return;
+        }
 
-      if (blendId == null) {
-        checkInvite();
+        const data = await res.json();
+        const blendIdFromAPI = data["blendId"];
+        setBlendId(blendIdFromAPI);
+
+        // setLoading(false);
+      } catch (err) {
+        console.error(err);
+        setError("Something went wrong. Please try again.");
+        setLoading(false);
       }
     };
+    requestBlendId();
 
-    //
-  }, []);
+    // If user clicked on existing blend from homepage
+  };
+  if (blendId === null) {
+    console.log("Getting blendid from API");
+    getBlendIdFromInviteLink();
+  }
+
+  //
 
   console.log("Final blendId to use: ", blendId);
   useEffect(() => {

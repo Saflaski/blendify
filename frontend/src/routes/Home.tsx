@@ -46,12 +46,12 @@ var sampleJson = `{
 
 export function Home() {
   const navigate = useNavigate();
-  let value: any;
   async function AddBlend(givenURL: URL) {
     let url: URL | RequestInfo;
     // let value: any;
     const parsedGivenURL = new URL(givenURL);
     const invite = parsedGivenURL.searchParams.get("invite");
+    let value: number;
 
     try {
       // const baseURL = "http://localhost:3000/v1/blend/add";
@@ -76,19 +76,16 @@ export function Home() {
 
       const data = await response.json();
       console.log("API response data:", data);
-      value = data["linkId"];
+      value = data["blendId"];
     } catch (err) {
       console.error("API error:", err);
       return;
     }
 
-    // const parsed = new URL(givenURL);
-    // const invite = parsed.searchParams.get("invite");
-
     console.log("Adding new blend from Blend Add URL Value:", value);
     navigate("/blend", {
       state: {
-        id: "linkid",
+        id: "blendid",
         value: value,
       },
     });
