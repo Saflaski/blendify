@@ -55,8 +55,8 @@ export function ControlPanel({
   //   return;
   // }
 
-  const [selectedGroup1, setSelectedGroup1] = useState(null);
-  const [selectedGroup2, setSelectedGroup2] = useState(null);
+  const [selectedGroup1, setSelectedGroup1] = useState("");
+  const [selectedGroup2, setSelectedGroup2] = useState("");
   const [group3Selected, setGroup3Selected] = useState(true);
 
   const handleGroup1Click = (option) => {
@@ -66,53 +66,85 @@ export function ControlPanel({
 
   const handleGroup2Click = (option) => {
     setSelectedGroup2(option);
+    // if (selectedGroup1 == "") {
+    //   setSelectedGroup1("3month");
+    // }
     setGroup3Selected(false);
   };
 
   const handleGroup3Click = () => {
     setGroup3Selected(!group3Selected);
     if (!group3Selected) {
-      setSelectedGroup1(null);
-      setSelectedGroup2(null);
+      setSelectedGroup1("");
+      setSelectedGroup2("");
     }
   };
 
+  const handleGroup3Click_Alternate = () => {
+    setGroup3Selected(true);
+    setSelectedGroup1("");
+    setSelectedGroup2("");
+  };
+
   async function updateBlendFromStoredValue({ mode, timeDuration }) {
-    console.log("Updating blend from stored value:", {
-      mode,
-      timeDuration,
-    });
     try {
       var typeBlend: {
         OneMonth: number;
         ThreeMonth: number;
         OneYear: number;
       } | null = null; // e.g., "artist", "track", "album"
+
+      // if (
+      //   (mode === undefined || mode === "") &&
+      //   timeDuration != "" &&
+      //   timeDuration != undefined
+      // ) {
+      //   console.log("Mode is empty, time is selected");
+      // } else if (
+      //   (mode != undefined || mode !== "") &&
+      //   (timeDuration === undefined || timeDuration === null)
+      // ) {
+      //   console.log("Time is empty, mode is selected");
+      // } else {
+      //   console.log("Mode: ", mode, " Time Duration: ", timeDuration);
+      //   mode = "artist";
+      //   timeDuration = "1month";
+      // }
+
+      // if (
+      //   (mode !== "default" || mode != "" || mode != undefined) &&
+      //   (timeDuration === undefined || timeDuration === "")
+      // ) {
+      //   timeDuration = "1month";
+      //   updateBlendFromStoredValue({ mode, timeDuration });
+      // } else if (mode === "default") {
+      //   timeDuration = "";
+      //   handleGroup3Click_Alternate();
+      // }
       var displayedMode = "";
       var newVal = 0;
-      switch (mode) {
-        case "artist":
-          typeBlend = BlendApiResponse.ArtistBlend;
-          displayedMode = "Artists Only";
-          break;
-        case "track":
-          typeBlend = BlendApiResponse.TrackBlend;
-          displayedMode = "Songs Only";
-          break;
-        case "album":
-          typeBlend = BlendApiResponse.AlbumBlend;
-          displayedMode = "Albums Only";
-          break;
-        case "default": // OverallBlendNum, not unknown case
-          newVal = BlendApiResponse.OverallBlendNum;
-          displayedMode = "Default";
-          break;
-        default:
-          console.warn("Unknown mode:", mode);
-          return;
-      }
 
-      if (typeBlend !== null) {
+      if (mode != "default") {
+        switch (mode) {
+          case "artist":
+            typeBlend = BlendApiResponse.ArtistBlend;
+            displayedMode = "Artists Only";
+            break;
+          case "track":
+            typeBlend = BlendApiResponse.TrackBlend;
+            displayedMode = "Songs Only";
+            break;
+          case "album":
+            typeBlend = BlendApiResponse.AlbumBlend;
+            displayedMode = "Albums Only";
+            break;
+          default:
+            typeBlend = BlendApiResponse.ArtistBlend;
+            displayedMode = "Artists Only";
+            console.log("Defaulting to Artists Only");
+            break;
+        }
+
         switch (timeDuration) {
           case "1month":
             newVal = typeBlend.OneMonth;
@@ -127,14 +159,19 @@ export function ControlPanel({
             displayedMode += " - Last 1 Year";
             break;
           default:
-            console.warn("Unknown time duration:", timeDuration);
-            return;
+            newVal = typeBlend.OneMonth;
+            displayedMode += " - Last 1 Month";
+            console.log("Defaulting to Last 1 Month");
+            break;
         }
+      } else {
+        newVal = BlendApiResponse.OverallBlendNum;
+        displayedMode = "Default";
       }
 
       setBlendPercent(newVal);
       setMode(displayedMode);
-      setUsers(BlendApiResponse.Usernames.join(" + "));
+      setUsers(BlendApiResponse.Usernames.join(" and "));
       console.log("Updated blend percentage:", newVal);
     } catch (err) {
       console.error("Error retrieving stored blend percentage:", err);
@@ -143,8 +180,9 @@ export function ControlPanel({
     return;
   }
   // const user = "test2002";
-  const [curMode, setCurMode] = useState("artist");
-  const [curDuration, setCurDuration] = useState("3month");
+  const [curMode, setCurMode] = useState("");
+  const [curDuration, setCurDuration] = useState("");
+
   React.useEffect(() => {
     updateBlendFromStoredValue({
       // user: user,
@@ -163,7 +201,7 @@ export function ControlPanel({
             label="Last 1 Month"
             onClick={() => {
               setCurDuration("1month");
-              handleGroup1Click("1month");
+              // handleGroup1Click("1month");
             }}
           >
             <svg
@@ -180,7 +218,7 @@ export function ControlPanel({
             label="Last 3 Month"
             onClick={() => {
               setCurDuration("3month");
-              handleGroup1Click("3month");
+              // handleGroup1Click("3month");
             }}
           >
             <svg
@@ -197,7 +235,7 @@ export function ControlPanel({
             label="Last 1 Year"
             onClick={() => {
               setCurDuration("1year");
-              handleGroup1Click("1year");
+              // handleGroup1Click("1year");
             }}
           >
             <svg
@@ -218,7 +256,7 @@ export function ControlPanel({
             label="Artists Only"
             onClick={() => {
               setCurMode("artist");
-              handleGroup2Click("artist");
+              // handleGroup2Click("artist");
             }}
           >
             <svg
@@ -235,7 +273,7 @@ export function ControlPanel({
             label="Songs Only"
             onClick={() => {
               setCurMode("track");
-              handleGroup2Click("track");
+              // handleGroup2Click("track");
             }}
           >
             <svg
@@ -252,7 +290,7 @@ export function ControlPanel({
             label="Albums"
             onClick={() => {
               setCurMode("album");
-              handleGroup2Click("album");
+              // handleGroup2Click("album");
             }}
           >
             <svg
@@ -272,7 +310,7 @@ export function ControlPanel({
             highlight={group3Selected}
             onClick={() => {
               setCurMode("default");
-              handleGroup3Click();
+              // handleGroup3Click();
             }}
             label="Default"
           >
