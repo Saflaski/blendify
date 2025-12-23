@@ -21,6 +21,17 @@ type RedisStateStore struct {
 	blendIndexPrefix string
 }
 
+func (r *RedisStateStore) DeleteBlendByBlendId(context context.Context, user userid, blendId blendId) error {
+	keyByUser := fmt.Sprintf("%s:%s:%s", r.userPrefix, "blends", string(user))
+	keyByBlend := fmt.Sprintf("%s:%s:%s", r.blendPrefix, string(blendId), "users")
+
+	pipe := r.client.TxPipeline()
+	pipe.SRem(context, keyByUser, string(blendId)).Err()
+	pipe.Del(context, keyByBlend).Err()
+	_, err := pipe.Exec(context)
+	return err
+}
+
 func (r *RedisStateStore) GetFromCacheTopX(context context.Context, userName string, timeDuration blendTimeDuration, category blendCategory) (map[string]int, error) {
 	key := fmt.Sprintf("%s:%s:%s:%s", r.musicPrefix, userName, categoryPrefix[category], durationPrefix[timeDuration])
 

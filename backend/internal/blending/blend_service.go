@@ -17,6 +17,16 @@ type BlendService struct {
 	// authRepo       *auth.AuthStateStore
 }
 
+// Deletes blend on backend for all users
+func (s *BlendService) DeleteBlend(context context.Context, user userid, blendId blendId) error {
+
+	err := s.repo.DeleteBlendByBlendId(context, user, blendId)
+	if err != nil {
+		return fmt.Errorf(" could not delete blend: %w", err)
+	}
+	return nil
+}
+
 func (s *BlendService) GetUserBlends(context context.Context, user userid) (Blends, error) {
 	blendIds, err := s.repo.GetBlendsByUser(context, user)
 	if err != nil {

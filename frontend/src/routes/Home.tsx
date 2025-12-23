@@ -157,6 +157,7 @@ export function Home() {
         <section className="w-full flex flex-col gap-3">
           <RecentOrTop />
           <ListOfBlends
+            setEachBlend={setBlends}
             funcNav={navToBlendPage}
             blends={blends}
             loading={loading}
@@ -177,12 +178,18 @@ function BlendSkeleton() {
 }
 
 type ListOfBlendsProps = {
+  setEachBlend: React.Dispatch<React.SetStateAction<Blend[]>>;
   funcNav: (blendid: string) => void;
   blends: Blend[];
   loading: boolean;
 };
 
-function ListOfBlends({ funcNav, blends, loading }: ListOfBlendsProps) {
+function ListOfBlends({
+  setEachBlend,
+  funcNav,
+  blends,
+  loading,
+}: ListOfBlendsProps) {
   if (loading) {
     return (
       <div className="space-y-1">
@@ -191,6 +198,32 @@ function ListOfBlends({ funcNav, blends, loading }: ListOfBlendsProps) {
         <BlendSkeleton />
       </div>
     );
+  }
+
+  async function handleDelete(blendIdToDelete: string) {
+    try {
+      const blendId = blendIdToDelete;
+      var url = new URL("http://localhost:3000/v1/blend/delete");
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          blendId: blendId,
+        }),
+      });
+      if (!response.ok)
+        throw new Error(`Backend request error: ${response.status}`);
+
+      const data = await response.json();
+      console.log("API response data:", data);
+      setEachBlend(blends.filter((blend) => blend.blendid !== blendIdToDelete));
+    } catch {
+      console.error("Error deleting blend:", blendIdToDelete);
+    }
   }
 
   function daysAgo(isoDate) {
@@ -225,6 +258,10 @@ function ListOfBlends({ funcNav, blends, loading }: ListOfBlendsProps) {
             </span>
           </button>
           <button
+            onClick={() => {
+              console.log("Deleting blend:", blend.blendid);
+              handleDelete(blend.blendid);
+            }}
             className="
           -transition-x-4
           opacity-0 w-0
@@ -240,10 +277,9 @@ function ListOfBlends({ funcNav, blends, loading }: ListOfBlendsProps) {
           group-focus:w-auto
           pointer-events-none
           group-hover:px-1
-          hover:bg-red-200
-          hover:border-2
-          focus:border-2
-          hover:border-red-600
+          hover:bg-red-100
+          hover:border-1
+          focus:border-1
           text-xs 
          text-white
         "

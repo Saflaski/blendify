@@ -13,6 +13,14 @@ type userid string
 type blendCategory string
 type blendTimeDuration string
 
+type responseStruct struct {
+	Value string `json:"value"`
+}
+
+type deleteStruct struct {
+	BlendId blendId `json:"blendId"`
+}
+
 var durationMap = map[blendTimeDuration]musicapi.Period{
 	BlendTimeDurationOneMonth:   musicapi.ONE_MONTH,
 	BlendTimeDurationThreeMonth: musicapi.THREE_MONTHS,

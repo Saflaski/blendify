@@ -192,10 +192,6 @@ func (h *BlendHandler) GetBlendPageData(w http.ResponseWriter, r *http.Request) 
 
 // }
 
-type responseStruct struct {
-	Value string `json:"value"`
-}
-
 // This is where frontend consumes an invite link and expects a blend id in response.
 // An auth association is made with user and blend id
 func (h *BlendHandler) AddBlendFromInviteLink(w http.ResponseWriter, r *http.Request) {
@@ -256,6 +252,45 @@ func (h *BlendHandler) AddBlendFromInviteLink(w http.ResponseWriter, r *http.Req
 	// _ = blendId
 	glog.Infof("Blend Link Value: %s, User: %s", blendLinkValue, userA)
 
+	w.WriteHeader(http.StatusOK)
+	resp := map[string]string{
+		"blendId": string(blendId),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (h *BlendHandler) DeleteBlend(w http.ResponseWriter, r *http.Request) {
+
+	glog.Info("Entered DeleteBlend")
+
+	// response := r.URL.Query()
+	// blendId := blendId(response.Get("blendId"))
+	userid, err := h.GetUserIdFromContext(r.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, " Could not find user")
+		glog.Errorf(" Could not delete blend due to cannot find user: %s and error: %s", userid, err)
+		return
+	}
+	blendResponse, err := utility.DecodeRequest[deleteStruct](r)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, "Could not decode Blend Id for deleting blend")
+		glog.Errorf("Could not decode Blend Id for deleting blend from user", userid)
+		return
+	}
+
+	blendId := blendId(blendResponse.BlendId)
+
+	err = h.svc.DeleteBlend(r.Context(), userid, blendId)
+	if err != nil || blendId == "" {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, " Could not delete blend: %s", blendId)
+		glog.Errorf(" Could not delete blend: %s and error: %s", blendId, err)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 	resp := map[string]string{
 		"blendId": string(blendId),
