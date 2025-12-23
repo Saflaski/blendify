@@ -235,8 +235,7 @@ function ListOfBlends({
                 className="
           -transition-x-4
           opacity-0 w-0
-          transition-transform duration-100 ease-in
-          
+          transition-all duration-100 ease-in-out
           group-hover:opacity-100
           group-hover:translate-x-0
           group-hover:pointer-events-auto
