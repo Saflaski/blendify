@@ -1,5 +1,5 @@
 import { BlendsButton } from "../components/BlendsButton";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import tick from "/src/assets/images/tick.svg";
 import cross from "/src/assets/images/cross.svg";
 import { useNavigate } from "react-router-dom";
@@ -200,6 +200,73 @@ function ListOfBlends({
     );
   }
 
+  const renderCategory = (title, blendsArray) => {
+    if (blendsArray.length === 0) return null;
+
+    return (
+      <div w-full>
+        <h3 className="text-xs pl-2 font-bold  text-gray-700 mb-2">{title}</h3>
+        <div className="space-y-1">
+          {blendsArray.map((blend) => (
+            <div
+              key={blend.blendid}
+              className="flex overflow-hidden w-full group relative"
+            >
+              <button
+                className=" flex flex-1 w-full text-left items-center transition-all duration-300 ease-in-out
+            justify-between border border-slate-200 px-3 py-2 hover:bg-slate-50"
+                onClick={() => funcNav(blend.blendid)}
+              >
+                <span className="truncate font-['Roboto_Mono'] text-xs">
+                  {blend.user.join(" + ")} // {blend.value}%
+                </span>
+
+                <span className="text-[10px] text-right text-slate-400 ml-2 shrink-0">
+                  {daysAgo(blend.timestamp) === 0
+                    ? "added today"
+                    : `added ${daysAgo(blend.timestamp)}d ago`}
+                </span>
+              </button>
+              <button
+                onClick={() => {
+                  console.log("Deleting blend:", blend.blendid);
+                  handleDelete(blend.blendid);
+                }}
+                className="
+          -transition-x-4
+          opacity-0 w-0
+          transition-transform duration-100 ease-in
+          
+          group-hover:opacity-100
+          group-hover:translate-x-0
+          group-hover:pointer-events-auto
+          group-hover:w-auto
+          group-focus-within:opacity-100
+          group-focus-within:translate-x-0
+          group-focus-within:pointer-events-auto
+          group-focus:w-auto
+          pointer-events-none
+          group-hover:px-1
+          hover:bg-red-100
+          hover:border-1
+          focus:border-1
+          text-xs 
+         text-white
+        "
+              >
+                <img
+                  src="src/assets/images/delete.svg"
+                  className="bg-inherit"
+                  alt="Go to blend"
+                />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   async function handleDelete(blendIdToDelete: string) {
     try {
       const blendId = blendIdToDelete;
@@ -235,63 +302,53 @@ function ListOfBlends({
     return diff;
   }
 
+  const categoriseBlendsByDate = (blends: Blend[]) => {
+    {
+      /* Example categorization logic based on date */
+    }
+    const categories: {
+      today: Blend[];
+      yesterday: Blend[];
+      thisWeek: Blend[];
+      older: Blend[];
+    } = {
+      today: [],
+      yesterday: [],
+      thisWeek: [],
+      older: [],
+    };
+    const now = new Date();
+    blends.forEach((blend) => {
+      const blendDate = new Date(blend.timestamp);
+      const diffInDays = Math.floor(
+        (Number(now) - Number(blendDate)) / (1000 * 60 * 60 * 24),
+      );
+      if (diffInDays === 0) {
+        categories.today.push(blend);
+      } else if (diffInDays <= 7) {
+        categories.thisWeek.push(blend);
+      } else {
+        categories.older.push(blend);
+      }
+    });
+    Object.keys(categories).forEach((key) => {
+      categories[key as keyof typeof categories].sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      );
+    });
+    return categories;
+  };
+
+  const categorizedBlends = useMemo(
+    () => categoriseBlendsByDate(blends),
+    [blends],
+  );
   return (
     <div className="w-full space-y-1">
-      {blends.map((blend) => (
-        <div
-          key={blend.blendid}
-          className="flex overflow-hidden w-full group relative"
-        >
-          <button
-            className=" flex flex-1 w-full text-left items-center transition-all duration-300 ease-in-out
-            justify-between border border-slate-200 px-3 py-2 hover:bg-slate-50"
-            onClick={() => funcNav(blend.blendid)}
-          >
-            <span className="truncate font-['Roboto_Mono'] text-xs">
-              {blend.user.join(" + ")} // {blend.value}%
-            </span>
-
-            <span className="text-[10px] text-right text-slate-400 ml-2 shrink-0">
-              {daysAgo(blend.timestamp) === 0
-                ? "added today"
-                : `added ${daysAgo(blend.timestamp)}d ago`}
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              console.log("Deleting blend:", blend.blendid);
-              handleDelete(blend.blendid);
-            }}
-            className="
-          -transition-x-4
-          opacity-0 w-0
-          transition-transform duration-100 ease-in
-          
-          group-hover:opacity-100
-          group-hover:translate-x-0
-          group-hover:pointer-events-auto
-          group-hover:w-auto
-          group-focus-within:opacity-100
-          group-focus-within:translate-x-0
-          group-focus-within:pointer-events-auto
-          group-focus:w-auto
-          pointer-events-none
-          group-hover:px-1
-          hover:bg-red-100
-          hover:border-1
-          focus:border-1
-          text-xs 
-         text-white
-        "
-          >
-            <img
-              src="src/assets/images/delete.svg"
-              className="bg-inherit"
-              alt="Go to blend"
-            />
-          </button>
-        </div>
-      ))}
+      {renderCategory("Today", categorizedBlends.today)}
+      {renderCategory("This Week", categorizedBlends.thisWeek)}
+      {renderCategory("Older", categorizedBlends.older)}
     </div>
   );
 }
