@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import type { ControlPanelProps, BlendApiResponse } from "../prop-types";
-function ControlPanelTileButton({ children, label, onClick }) {
+function ControlPanelTileButton({ highlight, children, label, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="group relative aspect-square w-18.75 select-none bg-white p-3 outline-2 outline-black transition-all flex flex-col items-center justify-center gap-1"
+      className={`group relative aspect-square w-18.75 select-none  ${highlight ? "bg-green-400" : "bg-white"}  p-3 outline-2 outline-black transition-all flex flex-col items-center justify-center gap-1`}
     >
       <div className="flex items-center justify-center flex-1 w-full">
         <div className="w-3 h-3 flex items-center justify-center">
@@ -54,6 +54,28 @@ export function ControlPanel({
 
   //   return;
   // }
+
+  const [selectedGroup1, setSelectedGroup1] = useState(null);
+  const [selectedGroup2, setSelectedGroup2] = useState(null);
+  const [group3Selected, setGroup3Selected] = useState(true);
+
+  const handleGroup1Click = (option) => {
+    setSelectedGroup1(option);
+    setGroup3Selected(false);
+  };
+
+  const handleGroup2Click = (option) => {
+    setSelectedGroup2(option);
+    setGroup3Selected(false);
+  };
+
+  const handleGroup3Click = () => {
+    setGroup3Selected(!group3Selected);
+    if (!group3Selected) {
+      setSelectedGroup1(null);
+      setSelectedGroup2(null);
+    }
+  };
 
   async function updateBlendFromStoredValue({ mode, timeDuration }) {
     console.log("Updating blend from stored value:", {
@@ -137,9 +159,11 @@ export function ControlPanel({
         {/* DATE RANGES */}
         <div className="outline-2 outline-black p-2 flex gap-4">
           <ControlPanelTileButton
+            highlight={selectedGroup1 == "1month"}
             label="Last 1 Month"
             onClick={() => {
               setCurDuration("1month");
+              handleGroup1Click("1month");
             }}
           >
             <svg
@@ -152,9 +176,11 @@ export function ControlPanel({
             </svg>
           </ControlPanelTileButton>
           <ControlPanelTileButton
+            highlight={selectedGroup1 == "3month"}
             label="Last 3 Month"
             onClick={() => {
               setCurDuration("3month");
+              handleGroup1Click("3month");
             }}
           >
             <svg
@@ -167,9 +193,11 @@ export function ControlPanel({
             </svg>
           </ControlPanelTileButton>
           <ControlPanelTileButton
+            highlight={selectedGroup1 == "1year"}
             label="Last 1 Year"
             onClick={() => {
               setCurDuration("1year");
+              handleGroup1Click("1year");
             }}
           >
             <svg
@@ -186,9 +214,11 @@ export function ControlPanel({
         {/* --- ARTIST / GENRE / SONG  --- */}
         <div className="outline-2 outline-black p-2 flex gap-4">
           <ControlPanelTileButton
+            highlight={selectedGroup2 == "artist"}
             label="Artists Only"
             onClick={() => {
               setCurMode("artist");
+              handleGroup2Click("artist");
             }}
           >
             <svg
@@ -201,9 +231,11 @@ export function ControlPanel({
             </svg>
           </ControlPanelTileButton>
           <ControlPanelTileButton
+            highlight={selectedGroup2 == "track"}
             label="Songs Only"
             onClick={() => {
               setCurMode("track");
+              handleGroup2Click("track");
             }}
           >
             <svg
@@ -216,9 +248,11 @@ export function ControlPanel({
             </svg>
           </ControlPanelTileButton>
           <ControlPanelTileButton
+            highlight={selectedGroup2 == "album"}
             label="Albums"
             onClick={() => {
               setCurMode("album");
+              handleGroup2Click("album");
             }}
           >
             <svg
@@ -235,8 +269,10 @@ export function ControlPanel({
         {/* --- DEFAULT --- */}
         <div className="outline-2 outline-black w-fit mx-auto p-2">
           <ControlPanelTileButton
+            highlight={group3Selected}
             onClick={() => {
               setCurMode("default");
+              handleGroup3Click();
             }}
             label="Default"
           >
