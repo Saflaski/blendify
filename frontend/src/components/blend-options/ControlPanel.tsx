@@ -14,11 +14,11 @@ function ControlPanelTileButton({ highlight, children, label, onClick }) {
         </div>
       </div>
 
-      {/* {label ? (
-        <span className="text-[10px] font-semibold tracking-wide  leading-none">
+      {label ? (
+        <span className="text-[8px] font-semibold tracking-wide  leading-none">
           {label}
         </span>
-      ) : null} */}
+      ) : null}
     </button>
   );
 }
@@ -200,7 +200,7 @@ export function ControlPanel({
         <div className="outline-2 outline-black p-2 flex gap-4">
           <ControlPanelTileButton
             highlight={selectedGroup1 == "1month"}
-            label="Last 1 Month"
+            label=""
             onClick={() => {
               if (curMode == "default") setCurMode("artist");
               setCurDuration("1month");
@@ -212,7 +212,7 @@ export function ControlPanel({
           </ControlPanelTileButton>
           <ControlPanelTileButton
             highlight={selectedGroup1 == "3month"}
-            label="Last 3 Month"
+            label=""
             onClick={() => {
               if (curMode == "default") setCurMode("artist");
               setCurDuration("3month");
@@ -223,7 +223,7 @@ export function ControlPanel({
           </ControlPanelTileButton>
           <ControlPanelTileButton
             highlight={selectedGroup1 == "1year"}
-            label="Last 1 Year"
+            label=""
             onClick={() => {
               if (curMode == "default") setCurMode("artist");
               setCurDuration("1year");
@@ -238,7 +238,7 @@ export function ControlPanel({
         <div className="outline-2 outline-black p-2 flex gap-4">
           <ControlPanelTileButton
             highlight={selectedGroup2 == "artist"}
-            label="Artists Only"
+            label="Artists"
             onClick={() => {
               setCurMode("artist");
               // handleGroup2Click("artist");
@@ -248,7 +248,7 @@ export function ControlPanel({
           </ControlPanelTileButton>
           <ControlPanelTileButton
             highlight={selectedGroup2 == "track"}
-            label="Songs Only"
+            label="Songs"
             onClick={() => {
               setCurMode("track");
               // handleGroup2Click("track");
