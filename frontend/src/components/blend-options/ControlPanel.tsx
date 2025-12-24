@@ -101,7 +101,13 @@ export function ControlPanel({
 
       var displayedMode = "";
       var newVal = 0;
-
+      console.log(mode === "default" && conditionOnlyModeSelected);
+      console.log(mode === "default" && conditionOnlyDurationSelected);
+      console.log(
+        mode === "default" &&
+          !conditionOnlyDurationSelected &&
+          !conditionOnlyModeSelected,
+      );
       if (
         (mode === "default" && conditionOnlyModeSelected) ||
         (mode === "default" && conditionOnlyDurationSelected) ||
@@ -194,6 +200,7 @@ export function ControlPanel({
             highlight={selectedGroup1 == "1month"}
             label="Last 1 Month"
             onClick={() => {
+              if (curMode == "default") setCurMode("artist");
               setCurDuration("1month");
               // handleGroup1Click("1month");
             }}
@@ -211,6 +218,7 @@ export function ControlPanel({
             highlight={selectedGroup1 == "3month"}
             label="Last 3 Month"
             onClick={() => {
+              if (curMode == "default") setCurMode("artist");
               setCurDuration("3month");
               // handleGroup1Click("3month");
             }}
@@ -228,6 +236,7 @@ export function ControlPanel({
             highlight={selectedGroup1 == "1year"}
             label="Last 1 Year"
             onClick={() => {
+              if (curMode == "default") setCurMode("artist");
               setCurDuration("1year");
               // handleGroup1Click("1year");
             }}
