@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 
 export function Navbar() {
@@ -27,55 +27,8 @@ export function Navbar() {
     <nav className="w-full bg-[#E0AD46] h-12 flex items-center z-20">
       <div className="lg:w-[full] md:w-[60%] w-[100%] mx-auto flex justify-between relative items-center px-2">
         {/* LEFT: Menu button + dropdown */}
-        <div
-          ref={menuWrapperRef}
-          className="relative flex items-center justify-start"
-        >
-          <button
-            type="button"
-            onClick={() => setOpen((prev) => !prev)}
-            className="
-              bg-transparent
-              text-black
-              w-7 h-7
-              flex items-center justify-center
-            "
-          >
-            <img
-              src="/src/assets/images/menu.svg"
-              alt="menu"
-              className="w-full h-full"
-            />
-          </button>
-
-          {open && (
-            <div
-              ref={dropdownRef}
-              className="
-                absolute
-                top-[100%] left-0
-                mt-5
-                z-30
-                inline-block
-                bg-white
-                px-10 py-4                
-                 outline-1 outline-[#bbb]
-                shadow-md
-              "
-            >
-              <ul className="list-none m-0 p-0 space-y-1">
-                {/* <DropDownItem page="/" funcName={null} text="Home" /> */}
-                <DropDownItem page="/blends" funcName={null} text="Blends" />
-                <DropDownItem page="/about" funcName={null} text="About" />
-                <DropDownItem page="/privacy" funcName={null} text="Privacy" />
-                <DropDownItem
-                  page="/login"
-                  funcName={handleLogOut}
-                  text="Log Out"
-                />
-              </ul>
-            </div>
-          )}
+        <div className="relative flex items-center justify-start">
+          <HomeButton onClick={Navigate("/home")} />
         </div>
 
         {/* CENTER: Blendify brand */}
@@ -102,8 +55,52 @@ export function Navbar() {
         </div>
 
         {/* RIGHT: Add button */}
-        <div className="flex items-center justify-end">
-          <AddButton />
+        <div ref={menuWrapperRef} className="flex items-center justify-end">
+          <button
+            type="button"
+            onClick={() => setOpen((prev) => !prev)}
+            className="
+              bg-transparent
+              text-black
+              w-7 h-7
+              flex items-center justify-center
+            "
+          >
+            <img
+              src="/src/assets/images/menu.svg"
+              alt="menu"
+              className="w-full h-full"
+            />
+          </button>
+
+          {open && (
+            <div
+              ref={dropdownRef}
+              className="
+                absolute
+                top-[100%] right-0
+                mt-5
+                z-30
+                inline-block
+                bg-white
+                px-10 py-4                
+                 outline-1 outline-[#bbb]
+                shadow-md
+              "
+            >
+              <ul className="list-none m-0 p-0 space-y-1">
+                {/* <DropDownItem page="/" funcName={null} text="Home" /> */}
+                <DropDownItem page="/blends" funcName={null} text="Blends" />
+                <DropDownItem page="/about" funcName={null} text="About" />
+                <DropDownItem page="/privacy" funcName={null} text="Privacy" />
+                <DropDownItem
+                  page="/login"
+                  funcName={handleLogOut}
+                  text="Log Out"
+                />
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </nav>
@@ -139,23 +136,25 @@ function DropDownItem({ page, funcName, text }) {
   );
 }
 
-function AddButton({ onClick }) {
+function HomeButton({ onClick }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="
+    <Link to={"/home"} className="no-underline">
+      <button
+        type="button"
+        onClick={onClick}
+        className="
         bg-transparent
         text-black
         w-7 h-7
         flex items-center justify-center
       "
-    >
-      <img
-        src="/src/assets/images/plus.svg"
-        alt="add"
-        className="w-full h-full"
-      />
-    </button>
+      >
+        <img
+          src="/src/assets/images/home.svg"
+          alt="home"
+          className="w-full h-full"
+        />
+      </button>
+    </Link>
   );
 }
