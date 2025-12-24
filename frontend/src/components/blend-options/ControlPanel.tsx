@@ -94,54 +94,47 @@ export function ControlPanel({
         OneYear: number;
       } | null = null; // e.g., "artist", "track", "album"
 
-      // if (
-      //   (mode === undefined || mode === "") &&
-      //   timeDuration != "" &&
-      //   timeDuration != undefined
-      // ) {
-      //   console.log("Mode is empty, time is selected");
-      // } else if (
-      //   (mode != undefined || mode !== "") &&
-      //   (timeDuration === undefined || timeDuration === null)
-      // ) {
-      //   console.log("Time is empty, mode is selected");
-      // } else {
-      //   console.log("Mode: ", mode, " Time Duration: ", timeDuration);
-      //   mode = "artist";
-      //   timeDuration = "1month";
-      // }
+      const conditionOnlyModeSelected = mode != "" && timeDuration == "";
+      const conditionOnlyDurationSelected = mode == "" && timeDuration != "";
+      console.log("Condition Only Mode: ", conditionOnlyModeSelected);
+      console.log("Condition Only Duration: ", conditionOnlyDurationSelected);
 
-      // if (
-      //   (mode !== "default" || mode != "" || mode != undefined) &&
-      //   (timeDuration === undefined || timeDuration === "")
-      // ) {
-      //   timeDuration = "1month";
-      //   updateBlendFromStoredValue({ mode, timeDuration });
-      // } else if (mode === "default") {
-      //   timeDuration = "";
-      //   handleGroup3Click_Alternate();
-      // }
       var displayedMode = "";
       var newVal = 0;
 
-      if (mode != "default") {
+      if (
+        (mode === "default" && conditionOnlyModeSelected) ||
+        (mode === "default" && conditionOnlyDurationSelected) ||
+        (mode === "default" &&
+          !conditionOnlyDurationSelected &&
+          !conditionOnlyModeSelected)
+      ) {
+        newVal = BlendApiResponse.OverallBlendNum;
+        displayedMode = "Default mode";
+        handleGroup3Click_Alternate();
+      } else {
+        console.log("ELSE: ", mode);
         switch (mode) {
           case "artist":
             typeBlend = BlendApiResponse.ArtistBlend;
             displayedMode = "Artists Only";
+            handleGroup2Click("artist");
             break;
           case "track":
             typeBlend = BlendApiResponse.TrackBlend;
             displayedMode = "Songs Only";
+            handleGroup2Click("track");
             break;
           case "album":
             typeBlend = BlendApiResponse.AlbumBlend;
             displayedMode = "Albums Only";
+            handleGroup2Click("album");
             break;
           default:
             typeBlend = BlendApiResponse.ArtistBlend;
             displayedMode = "Artists Only";
             console.log("Defaulting to Artists Only");
+            handleGroup2Click("artist");
             break;
         }
 
@@ -149,24 +142,25 @@ export function ControlPanel({
           case "1month":
             newVal = typeBlend.OneMonth;
             displayedMode += " - Last 1 Month";
+            handleGroup1Click("1month");
             break;
           case "3month":
             newVal = typeBlend.ThreeMonth;
             displayedMode += " - Last 3 Month";
+            handleGroup1Click("3month");
             break;
           case "1year":
             newVal = typeBlend.OneYear;
             displayedMode += " - Last 1 Year";
+            handleGroup1Click("1year");
             break;
           default:
             newVal = typeBlend.OneMonth;
             displayedMode += " - Last 1 Month";
             console.log("Defaulting to Last 1 Month");
+            handleGroup1Click("1month");
             break;
         }
-      } else {
-        newVal = BlendApiResponse.OverallBlendNum;
-        displayedMode = "Default";
       }
 
       setBlendPercent(newVal);
@@ -179,11 +173,11 @@ export function ControlPanel({
 
     return;
   }
-  // const user = "test2002";
-  const [curMode, setCurMode] = useState("");
+  const [curMode, setCurMode] = useState("default");
   const [curDuration, setCurDuration] = useState("");
 
   React.useEffect(() => {
+    console.log("UPDATE: \nmode: ", curMode, " \nDuration: ", curDuration);
     updateBlendFromStoredValue({
       // user: user,
       mode: curMode,
