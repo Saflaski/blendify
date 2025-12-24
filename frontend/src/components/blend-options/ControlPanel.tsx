@@ -4,16 +4,16 @@ function ControlPanelTileButton({ highlight, children, label, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`group relative aspect-square w-full h-auto select-none  ${highlight ? "bg-green-400" : "bg-white"}  p-3 outline-2 outline-black transition-all flex flex-col items-center justify-center gap-1`}
+      className={`group relative aspect-square w-14 select-none  ${highlight ? "bg-[#005b4c] text-slate-100 outline-[#005b4c]" : "bg-white text-slate-950 outline-black "}  p-3 outline-2 transition-all flex flex-col items-center justify-center gap-1`}
     >
       <div className="flex items-center justify-center flex-1 w-full">
         <div className="w-2.5 h-2.5 flex items-center justify-center">
-          {children}
+          {/* {children} */}
         </div>
       </div>
 
       {label ? (
-        <span className="text-[9px] font-semibold tracking-wide text-neutral-800 leading-none">
+        <span className="text-[10px] font-semibold tracking-wide  leading-none">
           {label}
         </span>
       ) : null}
@@ -192,8 +192,8 @@ export function ControlPanel({
   }, [curMode, curDuration]);
 
   return (
-    <div className=" flex items-center w-56 justify-center  bg-inherit outline-black ">
-      <div className="grid grid-row-3 w-56 items-center gap-4">
+    <div className=" flex items-center justify-center  bg-inherit outline-black ">
+      <div className="grid grid-row-3 items-center gap-3">
         {/* DATE RANGES */}
         <div className="outline-2 outline-black p-2 flex gap-4">
           <ControlPanelTileButton

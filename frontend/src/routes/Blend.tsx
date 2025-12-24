@@ -272,9 +272,9 @@ export function Blend() {
 
         {/* <div className="md:flex md:flex-wrap pr-2 mt-8 lg:grid lg:grid-cols-2 "> Old*/}
         {/* LEFT CONTENT AREA */}
-        <div className="  md:w-[40%] outline-amber-600 flex flex-col flex-wrap items-center justify-baseline gap-y-5">
+        <div className="  md:w-[40%] flex flex-col flex-wrap items-center justify-baseline gap-y-5">
           {/* Back button */}
-          <div className=" text-[14px]">
+          {/* <div className=" text-[14px]">
             <button
               type="button"
               onClick={() => navigate("/home")}
@@ -282,14 +282,14 @@ export function Blend() {
             >
               &lt; Blends
             </button>
-          </div>
+          </div> */}
           {/* Player card */}
           <div className="w-full flex justify-center  ">
             <div className="w-full flex justify-center ">
               <div
                 ref={captureRef}
                 className="shine-element relative ring-2 ring-black bg-neutral-200 
-    w-56 md:w-56 lg:w-56 p-4 aspect-[2/3]
+    w-58 md:w-58 lg:w-66 p-4 aspect-[2/3]
     bg-size-[auto_120px] bg-[url(/src/assets/images/topography.svg)]"
               >
                 {!isCapturing && (
@@ -314,10 +314,13 @@ export function Blend() {
                 )}
 
                 <h1
-                  className="mt-0 text-5xl md:text-5xl lg:text-5xl 
-      leading-none font-[Roboto_Mono] tracking-tight text-black"
+                  className="mt-0 text-6xl md:text-5xl lg:text-7xl 
+    leading-none font-[Filepile] font-normal -left-2 tracking-tight text-black relative inline-block"
                 >
-                  {loading ? "--" : blendPercent}%
+                  {loading ? "--" : blendPercent}
+                  <span className="absolute bottom-1 -right-12 text-lg font-normal ">
+                    /100
+                  </span>
                 </h1>
 
                 <p
@@ -327,7 +330,7 @@ export function Blend() {
                   {users}
                 </p>
 
-                <p className="mt-1 text-sm/snug font-semibold text-gray-800">
+                <p className="mt-1 text-sm/snug font-bold text-gray-800">
                   {mode}
                 </p>
 
@@ -360,10 +363,11 @@ export function Blend() {
                   </ul>
                 </div>
 
-                <div className="flex flex-col justify-between gap-3 absolute bottom-7 left-1/2 -translate-x-1/2 size-12 h-auto">
+                <div className="flex flex-col justify-between gap-3 absolute bottom-8 left-1/2 -translate-x-1/2 size-12 h-auto">
                   <img src="/src/assets/images/lastfm.svg" />
                 </div>
-                <p className="text-center w-full font-['Roboto_Mono','monospace'] font-medium absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-slate-600 text-shadow-2xs">
+
+                <p className="text-center w-full font-[Filepile] text-[#000000] bg-clip-text bg-amber-500 tracking-widest font-medium absolute bottom-2 left-1/2 -translate-x-1/2 text-xs  text-shadow-2xs">
                   blendify.fm
                 </p>
               </div>
