@@ -20,7 +20,7 @@ const SplitRatioBar: React.FC<SplitRatioBarProps> = ({
   valueB,
   imageUrlA = "https://lastfm.freetls.fastly.net/i/u/avatar170s/4711b0010c2035b2a26777f666cd3f3e.png",
   imageUrlB = "https://cdn-icons-png.flaticon.com/512/25/25231.png",
-  colorA = "bg-[#987c4d]",
+  colorA = "bg-amber-400",
   colorB = "bg-[#ffedcb]",
   height = "h-10",
   urlToNavigateA,
