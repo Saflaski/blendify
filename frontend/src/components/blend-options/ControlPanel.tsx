@@ -123,22 +123,22 @@ export function ControlPanel({
         switch (mode) {
           case "artist":
             typeBlend = BlendApiResponse.ArtistBlend;
-            displayedMode = "Artists Only";
+            displayedMode = "Artists";
             handleGroup2Click("artist");
             break;
           case "track":
             typeBlend = BlendApiResponse.TrackBlend;
-            displayedMode = "Songs Only";
+            displayedMode = "Songs";
             handleGroup2Click("track");
             break;
           case "album":
             typeBlend = BlendApiResponse.AlbumBlend;
-            displayedMode = "Albums Only";
+            displayedMode = "Albums";
             handleGroup2Click("album");
             break;
           default:
             typeBlend = BlendApiResponse.ArtistBlend;
-            displayedMode = "Artists Only";
+            displayedMode = "Artists";
             console.log("Defaulting to Artists Only");
             handleGroup2Click("artist");
             break;
@@ -147,17 +147,17 @@ export function ControlPanel({
         switch (timeDuration) {
           case "1month":
             newVal = typeBlend.OneMonth;
-            displayedMode += " - Last 1 Month";
+            displayedMode += " in last 1 month";
             handleGroup1Click("1month");
             break;
           case "3month":
             newVal = typeBlend.ThreeMonth;
-            displayedMode += " - Last 3 Month";
+            displayedMode += " in last 3 months";
             handleGroup1Click("3month");
             break;
           case "1year":
             newVal = typeBlend.OneYear;
-            displayedMode += " - Last 1 Year";
+            displayedMode += " in last 1 year";
             handleGroup1Click("1year");
             break;
           default:
