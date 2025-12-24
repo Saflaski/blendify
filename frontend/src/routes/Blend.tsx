@@ -266,29 +266,29 @@ export function Blend() {
 
   return (
     <div className="w-full ">
-      <div className="w-full md:w-[60%] flex flex-col md:flex-row gap-x-5 mx-auto text-center px-4 gap-y-4 md:px-0 py-0 md:py-5">
+      <div className="w-full md:w-[60%] flex pt-4 flex-col md:flex-row gap-x-5 mx-auto text-center px-4 gap-y-4 md:px-0 py-0 md:py-5">
         {/* <div className="flex justify-left"></div> */}
 
         {/* <div className="md:flex md:flex-wrap pr-2 mt-8 lg:grid lg:grid-cols-2 "> Old*/}
         {/* LEFT CONTENT AREA */}
-        <div className=" outline-1 md:w-[40%] outline-amber-600 flex flex-col flex-wrap items-center justify-baseline gap-y-5">
+        <div className="  md:w-[40%] outline-amber-600 flex flex-col flex-wrap items-center justify-baseline gap-y-5">
           {/* Back button */}
           <div className=" text-[14px]">
             <button
               type="button"
               onClick={() => navigate("/home")}
-              className="inline-flex items-center outline-2 h-auto  ring-1 font-[Roboto_Mono] font-bold border border-black/10 bg-white px-4 py-2 text-black shadow-sm hover:shadow "
+              className="inline-flex items-center outline-2 h-auto  font-[Roboto_Mono] font-bold border border-black/10 bg-white px-4 py-2 text-black shadow-sm hover:shadow "
             >
               &lt; Blends
             </button>
           </div>
           {/* Player card */}
-          <div className="w-full flex justify-center ring-2 ">
+          <div className="w-full flex justify-center  ">
             <div className="w-full flex justify-center ">
               <div
                 ref={captureRef}
-                className="shine-element relative outline outline-black bg-neutral-200 
-    w-36 md:w-40 lg:w-48 p-4 aspect-[2/3]
+                className="shine-element relative ring-2 ring-black bg-neutral-200 
+    w-56 md:w-56 lg:w-56 p-4 aspect-[2/3]
     bg-size-[auto_120px] bg-[url(/src/assets/images/topography.svg)]"
               >
                 {!isCapturing && (
@@ -313,45 +313,58 @@ export function Blend() {
                 )}
 
                 <h1
-                  className="mt-0 text-3xl md:text-3xl lg:text-4xl 
+                  className="mt-0 text-5xl md:text-5xl lg:text-5xl 
       leading-none font-[Roboto_Mono] tracking-tight text-black"
                 >
                   {loading ? "--" : blendPercent}%
                 </h1>
 
                 <p
-                  className="mt-1 font-semibold text-gray-800"
-                  style={{ fontSize: "clamp(0.75rem, 1.2vw, 1rem)" }}
+                  className="mt-1 font-bold text-gray-800"
+                  style={{ fontSize: "clamp(1rem, 1.5vw, 1.2rem)" }}
                 >
                   {users}
                 </p>
 
-                <p className="mt-1 text-xs font-semibold text-gray-800">
+                <p className="mt-1 text-sm/snug font-semibold text-gray-800">
                   {mode}
                 </p>
 
                 <div className="grid grid-row-2 gap-1 text-left text-black font-[Roboto_Mono] mt-2">
                   <ul>
-                    <p className="font-semibold text-xs">Top Artists</p>
+                    <p className="font-semibold text-base">Top Artists</p>
 
-                    <li className="text-[10px] leading-tight">Clairo</li>
-                    <li className="text-[10px] leading-tight">Men I Trust</li>
-                    <li className="text-[10px] leading-tight">
-                      Bring Me The Horizon
+                    <li className="text-[13px] font-medium leading-tight">
+                      - Clairo
+                    </li>
+                    <li className="text-[13px] font-medium leading-tight">
+                      - Men I Trust
+                    </li>
+                    <li className="text-[13px] font-medium leading-tight">
+                      - Bring Me The Horizon
                     </li>
                   </ul>
 
                   <ul>
-                    <p className="font-semibold text-xs">Top Songs</p>
-                    <li className="text-[10px] leading-tight">Bababooey 2</li>
-                    <li className="text-[10px] leading-tight">Come Down</li>
-                    <li className="text-[10px] leading-tight">Bags</li>
+                    <p className="font-semibold text-base">Top Songs</p>
+                    <li className="text-[13px] font-medium leading-tight">
+                      - Bababooey 2
+                    </li>
+                    <li className="text-[13px] font-medium leading-tight">
+                      - Come Down
+                    </li>
+                    <li className="text-[13px] font-medium leading-tight">
+                      - Bags
+                    </li>
                   </ul>
                 </div>
 
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 size-8">
+                <div className="flex flex-col justify-between gap-3 absolute bottom-7 left-1/2 -translate-x-1/2 size-12 h-auto">
                   <img src="/src/assets/images/lastfm.svg" />
                 </div>
+                <p className="text-center w-full font-['Roboto_Mono','monospace'] font-medium absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-slate-600 text-shadow-2xs">
+                  blendify.fm
+                </p>
               </div>
             </div>
           </div>
@@ -365,7 +378,7 @@ export function Blend() {
         </div>
 
         {/* RIGHT CONTENT AREA */}
-        <div className=" outline-1 md:w-[60%] outline-amber-600 flex flex-col flex-wrap items-center justify-baseline gap-y-5">
+        <div className=" md:w-[60%] outline-amber-600 flex flex-col flex-wrap items-center justify-baseline gap-y-5">
           {/* Top blend artists section */}
           <section className=" w-full flex flex-col">
             <h2 className="text-xl md:text-2xl font-semibold text-black mb-4 text-center">
@@ -373,9 +386,9 @@ export function Blend() {
             </h2>
             {/* Placeholder list/cards — replace with real data */}
             <div className="items-center gap-6 text-zinc-950">
-              <div className="outline-purple-200 outline-2">Artist 1</div>
-              <div className="outline-purple-200 outline-2">Artist 2</div>
-              <div className="outline-purple-200 outline-2">Artist 3</div>
+              <div className="outline-purple-200 ">Artist 1</div>
+              <div className="outline-purple-200 ">Artist 2</div>
+              <div className="outline-purple-200 ">Artist 3</div>
             </div>
           </section>
 
@@ -386,9 +399,9 @@ export function Blend() {
             </h2>
             {/* Placeholder list/cards — replace with real data */}
             <div className="items-center gap-4 text-zinc-950">
-              <div className="outline-purple-200 outline-2">Song 1</div>
-              <div className="outline-purple-200 outline-2">Song 2</div>
-              <div className="outline-purple-200 outline-2">Song 3</div>
+              <div className="outline-purple-200 ">Song 1</div>
+              <div className="outline-purple-200 ">Song 2</div>
+              <div className="outline-purple-200 ">Song 3</div>
             </div>
           </section>
         </div>
