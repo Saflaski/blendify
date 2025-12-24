@@ -7,16 +7,18 @@ function ControlPanelTileButton({ highlight, children, label, onClick }) {
       className={`group relative aspect-square w-14 select-none  ${highlight ? "bg-[#005b4c] text-slate-100 outline-[#005b4c]" : "bg-white text-slate-950 outline-black "}  p-3 outline-2 transition-all flex flex-col items-center justify-center gap-1`}
     >
       <div className="flex items-center justify-center flex-1 w-full">
-        <div className="w-2.5 h-2.5 flex items-center justify-center">
-          {/* {children} */}
+        <div
+          className={`w-full h-full flex items-center ${highlight ? "brightness-0 invert" : ""} justify-center`}
+        >
+          {children}
         </div>
       </div>
 
-      {label ? (
+      {/* {label ? (
         <span className="text-[10px] font-semibold tracking-wide  leading-none">
           {label}
         </span>
-      ) : null}
+      ) : null} */}
     </button>
   );
 }
@@ -205,14 +207,8 @@ export function ControlPanel({
               // handleGroup1Click("1month");
             }}
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              stroke="black"
-              strokeWidth="2"
-            >
-              <rect x="4" y="4" width="16" height="16" />
-            </svg>
+            {/* <img src="/src/assets/images/1month.svg" alt="1 Month" /> */}
+            <p className="font-[Roboto_Mono] text-xs font-bold">1 MONTH</p>
           </ControlPanelTileButton>
           <ControlPanelTileButton
             highlight={selectedGroup1 == "3month"}
@@ -223,14 +219,7 @@ export function ControlPanel({
               // handleGroup1Click("3month");
             }}
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              stroke="black"
-              strokeWidth="2"
-            >
-              <polygon points="12,2 22,22 2,22" />
-            </svg>
+            <p className="font-[Roboto_Mono] text-xs font-bold">3 MONTH</p>
           </ControlPanelTileButton>
           <ControlPanelTileButton
             highlight={selectedGroup1 == "1year"}
@@ -241,14 +230,7 @@ export function ControlPanel({
               // handleGroup1Click("1year");
             }}
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              stroke="black"
-              strokeWidth="2"
-            >
-              <path d="M12 2v20M2 12h20" />
-            </svg>
+            <p className="font-[Roboto_Mono] text-xs font-bold">1 YEAR</p>
           </ControlPanelTileButton>
         </div>
 
@@ -262,14 +244,7 @@ export function ControlPanel({
               // handleGroup2Click("artist");
             }}
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              stroke="black"
-              strokeWidth="2"
-            >
-              <path d="M4 4h16v16H4z M4 4l16 16" />
-            </svg>
+            <img src="/src/assets/images/artist.svg" alt="Artist" />
           </ControlPanelTileButton>
           <ControlPanelTileButton
             highlight={selectedGroup2 == "track"}
@@ -279,14 +254,7 @@ export function ControlPanel({
               // handleGroup2Click("track");
             }}
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              stroke="black"
-              strokeWidth="2"
-            >
-              <path d="M12 2L2 12l10 10 10-10z" />
-            </svg>
+            <img src="/src/assets/images/track.svg" alt="Song" />
           </ControlPanelTileButton>
           <ControlPanelTileButton
             highlight={selectedGroup2 == "album"}
@@ -296,14 +264,7 @@ export function ControlPanel({
               // handleGroup2Click("album");
             }}
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              stroke="black"
-              strokeWidth="2"
-            >
-              <path d="M3 3h18v18H3z M3 9h18M9 3v18" />
-            </svg>
+            <img src="/src/assets/images/album.svg" alt="Song" />
           </ControlPanelTileButton>
         </div>
 
@@ -317,14 +278,16 @@ export function ControlPanel({
             }}
             label="Default"
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              stroke="black"
-              strokeWidth="2"
-            >
-              <circle cx="12" cy="12" r="9" />
-            </svg>
+            <button className="group">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="35"
+                viewBox="0 -960 960 960"
+                width="35"
+              >
+                <path d="M600-160v-280h280v280H600ZM440-520v-280h440v280H440ZM80-160v-280h440v280H80Zm0-360v-280h280v280H80Zm440-80h280v-120H520v120ZM160-240h280v-120H160v120Zm520 0h120v-120H680v120ZM160-600h120v-120H160v120Zm360 0Zm-80 240Zm240 0ZM280-600Z" />
+              </svg>
+            </button>
           </ControlPanelTileButton>
         </div>
       </div>
