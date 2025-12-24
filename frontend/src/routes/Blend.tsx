@@ -265,137 +265,133 @@ export function Blend() {
   // setBlendPercent(userBlendData.OverallBlendNum);
 
   return (
-    <div className="w-full flex justify-center">
-      <div className="w-full md:w-[60%] mx-auto text-center px-4 md:px-0 py-0 md:py-5">
-        <div className="flex justify-left">
-          <button
-            type="button"
-            onClick={() => navigate("/home")}
-            className="inline-flex items-center gap-2 outline-2 outline-black font-[Roboto_Mono] font-bold border border-black/10 bg-white px-4 py-2 text-sm text-black shadow-sm hover:shadow md:text-base"
-          >
-            &lt; Your blends
-          </button>
-        </div>
+    <div className="w-full ">
+      <div className="w-full md:w-[60%] flex flex-col md:flex-row gap-x-5 mx-auto text-center px-4 gap-y-4 md:px-0 py-0 md:py-5">
+        {/* <div className="flex justify-left"></div> */}
 
-        <div className="md:flex md:flex-wrap pr-2 mt-8 lg:grid lg:grid-cols-2 ">
-          <div className="w-full flex justify-center md:mb-10 ">
-            <div //Div to be screenshotted
-              ref={captureRef}
-              className="shine-element relative outline-2 outline-black bg-neutral-200 lg:w-80 md:w-50 h-auto p-10 aspect-2/3
-             bg-size-[auto_200px] bg-[url(/src/assets/images/topography.svg)]"
+        {/* <div className="md:flex md:flex-wrap pr-2 mt-8 lg:grid lg:grid-cols-2 "> Old*/}
+        {/* LEFT CONTENT AREA */}
+        <div className=" outline-1 md:w-[40%] outline-amber-600 flex flex-col flex-wrap items-center justify-baseline gap-y-5">
+          {/* Back button */}
+          <div className=" text-[14px]">
+            <button
+              type="button"
+              onClick={() => navigate("/home")}
+              className="inline-flex items-center outline-2 h-auto  ring-1 font-[Roboto_Mono] font-bold border border-black/10 bg-white px-4 py-2 text-black shadow-sm hover:shadow "
             >
-              {!isCapturing && (
-                <button
-                  onClick={handleScreenshot}
-                  className="absolute outline-1 active:bg-green-600  outline-black top-2 right-2 bg-inherit text-white px-1 py-1 "
-                >
-                  <img src="/src/assets/images/copy.svg" />
-                </button>
-              )}
-              {copied && (
-                <div
-                  className=" absolute right-15 top-3 bg-gray-500 text-white 
-              text-xs px-3 py-1 shadow-lg animate-fade-in-out"
-                >
-                  Copied!
-                </div>
-              )}
-              <h1 className="mt-0 text-6xl leading-none font-[Roboto_Mono] tracking-tight text-black md:text-4xl lg:text-7xl">
-                {loading ? "--" : blendPercent}%
-              </h1>
-              <p
-                className="mt-2 text-nowrap font-semibold text-gray-800"
-                // className="mt-2 text-2xl md:text-2xl lg:text-3xl text-nowrap font-semibold text-gray-800"
-                style={{ fontSize: "clamp(0.5rem, 2.0vw, 1.5rem)" }}
+              &lt; Blends
+            </button>
+          </div>
+          {/* Player card */}
+          <div className="w-full flex justify-center ring-2 ">
+            <div className="w-full flex justify-center ">
+              <div
+                ref={captureRef}
+                className="shine-element relative outline outline-black bg-neutral-200 
+    w-36 md:w-40 lg:w-48 p-4 aspect-[2/3]
+    bg-size-[auto_120px] bg-[url(/src/assets/images/topography.svg)]"
               >
-                {users}
-              </p>
-              <p className="mt-2 text-1xl md:text-1xl lg:text-1xl font-semibold text-gray-800">
-                {mode}
-              </p>
-              <div className="grid grid-row-2 gap-3 text-left text-black font-[Roboto_Mono] ">
-                <ul>
-                  <p className="font-black">Top Artists</p>
-                  <li>Clairo</li>
-                  <li>Men I Trust</li>
-                  <li>Bring Me The Horizon</li>
-                </ul>
-                <ul>
-                  <p className="font-black">Top Songs</p>
-                  <li>Bababooey 2</li>
-                  <li>Come Down</li>
-                  <li>Bags</li>
-                </ul>
-              </div>
-              <div className=" absolute bottom-3 left-1/2 -translate-x-1/2 size-15 h-auto">
-                <img src="/src/assets/images/lastfm.svg" />
-                {/* <img src="/src/assets/images/apple.svg" /> */}
+                {!isCapturing && (
+                  <button
+                    onClick={handleScreenshot}
+                    className="absolute top-1 right-1 outline outline-black bg-inherit p-1"
+                  >
+                    <img
+                      src="/src/assets/images/copy.svg"
+                      className="w-4 h-4"
+                    />
+                  </button>
+                )}
+
+                {copied && (
+                  <div
+                    className="absolute right-8 top-2 bg-gray-500 text-white 
+        text-[10px] px-2 py-0.5 shadow animate-fade-in-out"
+                  >
+                    Copied!
+                  </div>
+                )}
+
+                <h1
+                  className="mt-0 text-3xl md:text-3xl lg:text-4xl 
+      leading-none font-[Roboto_Mono] tracking-tight text-black"
+                >
+                  {loading ? "--" : blendPercent}%
+                </h1>
+
+                <p
+                  className="mt-1 font-semibold text-gray-800"
+                  style={{ fontSize: "clamp(0.75rem, 1.2vw, 1rem)" }}
+                >
+                  {users}
+                </p>
+
+                <p className="mt-1 text-xs font-semibold text-gray-800">
+                  {mode}
+                </p>
+
+                <div className="grid grid-row-2 gap-1 text-left text-black font-[Roboto_Mono] mt-2">
+                  <ul>
+                    <p className="font-semibold text-xs">Top Artists</p>
+
+                    <li className="text-[10px] leading-tight">Clairo</li>
+                    <li className="text-[10px] leading-tight">Men I Trust</li>
+                    <li className="text-[10px] leading-tight">
+                      Bring Me The Horizon
+                    </li>
+                  </ul>
+
+                  <ul>
+                    <p className="font-semibold text-xs">Top Songs</p>
+                    <li className="text-[10px] leading-tight">Bababooey 2</li>
+                    <li className="text-[10px] leading-tight">Come Down</li>
+                    <li className="text-[10px] leading-tight">Bags</li>
+                  </ul>
+                </div>
+
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 size-8">
+                  <img src="/src/assets/images/lastfm.svg" />
+                </div>
               </div>
             </div>
           </div>
           {/* End of player card */}
 
-          <div className=" flex flex-wrap justify-center items-center  lg:pl-10 gap-3">
-            {/* Replace this block with <DropDownMenu /> if you already have it */}
+          {/* Control panel */}
+          <div className=" flex flex-wrap justify-center items-center ">
             <ControlPanel {...props} />
           </div>
+          {/* End of control panel */}
         </div>
 
-        {/* Top blend artists section */}
-        <section className="mt-12 text-left">
-          <h2 className="text-xl md:text-2xl font-semibold text-black mb-4 text-center md:text-left">
-            Top blend artists
-          </h2>
-          {/* Placeholder list/cards — replace with real data */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {["Artist One", "Artist Two", "Artist Three", "Artist Four"].map(
-              (name) => (
-                <div
-                  key={name}
-                  className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm hover:shadow"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-black">{name}</p>
-                      <p className="text-sm text-black/60">
-                        Blended frequently
-                      </p>
-                    </div>
-                    <button className="rounded-lg border border-black/10 px-3 py-1 text-sm hover:shadow">
-                      View
-                    </button>
-                  </div>
-                </div>
-              ),
-            )}
-          </div>
-        </section>
+        {/* RIGHT CONTENT AREA */}
+        <div className=" outline-1 md:w-[60%] outline-amber-600 flex flex-col flex-wrap items-center justify-baseline gap-y-5">
+          {/* Top blend artists section */}
+          <section className=" w-full flex flex-col">
+            <h2 className="text-xl md:text-2xl font-semibold text-black mb-4 text-center">
+              Top blend artists
+            </h2>
+            {/* Placeholder list/cards — replace with real data */}
+            <div className="items-center gap-6 text-zinc-950">
+              <div className="outline-purple-200 outline-2">Artist 1</div>
+              <div className="outline-purple-200 outline-2">Artist 2</div>
+              <div className="outline-purple-200 outline-2">Artist 3</div>
+            </div>
+          </section>
 
-        {/* Top blend songs section */}
-        <section className="mt-12 text-left">
-          <h2 className="text-xl md:text-2xl font-semibold text-black mb-4 text-center md:text-left">
-            Top blend songs
-          </h2>
-          <div className="space-y-3">
-            {[
-              "Song A — Artist One",
-              "Song B — Artist Two",
-              "Song C — Artist Three",
-            ].map((title) => (
-              <div
-                key={title}
-                className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm hover:shadow"
-              >
-                <div className="flex items-center justify-between">
-                  <p className="text-black">{title}</p>
-                  <button className="rounded-lg border border-black/10 px-3 py-1 text-sm hover:shadow">
-                    Play
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+          {/* Top blend songs section */}
+          <section className=" w-full">
+            <h2 className="text-xl md:text-2xl font-semibold text-black mb-4 text-center">
+              Top blend songs
+            </h2>
+            {/* Placeholder list/cards — replace with real data */}
+            <div className="items-center gap-4 text-zinc-950">
+              <div className="outline-purple-200 outline-2">Song 1</div>
+              <div className="outline-purple-200 outline-2">Song 2</div>
+              <div className="outline-purple-200 outline-2">Song 3</div>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );

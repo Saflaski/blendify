@@ -24,6 +24,10 @@ func FindIntersectKeys(m1, m2 map[string]int) []string {
 	return result
 }
 
+func GetTopDuoArtists(lambda float64, user1Map, user2Map map[string]int) {
+
+}
+
 // Calculate Log Weighted Cosine Similarity
 func CalculateLWCS(lambda float64, user1Map, user2Map map[string]int) int {
 	common_keys := FindIntersectKeys(user1Map, user2Map)
