@@ -9,6 +9,7 @@ import {
   BlendApiResponseSchema,
 } from "../components/prop-types";
 import { set, z } from "zod";
+import SplitRatioBar from "../components/SplitRatioBar";
 
 // type ControlPanelProps = {
 //   setBlendPercent: (num: number) => void;
@@ -385,10 +386,28 @@ export function Blend() {
               Top blend artists
             </h2>
             {/* Placeholder list/cards — replace with real data */}
-            <div className="items-center gap-6 text-zinc-950">
-              <div className="outline-purple-200 ">Artist 1</div>
-              <div className="outline-purple-200 ">Artist 2</div>
-              <div className="outline-purple-200 ">Artist 3</div>
+            <div className="flex flex-col gap-y-4 items-center gap-4 text-zinc-950">
+              <SplitRatioBar
+                itemName="Clairo"
+                valueA={40}
+                valueB={30}
+                urlToNavigateA="https://www.last.fm/user/saflas"
+                urlToNavigateB="https://www.last.fm/user/test2002"
+              />
+              <SplitRatioBar
+                itemName="Bring Me The Horizon"
+                valueA={59}
+                valueB={20}
+                urlToNavigateA="https://www.last.fm/user/saflas"
+                urlToNavigateB="https://www.last.fm/user/test2002"
+              />
+              <SplitRatioBar
+                itemName="Linkin Park"
+                valueA={10}
+                valueB={40}
+                urlToNavigateA="https://www.last.fm/user/saflas"
+                urlToNavigateB="https://www.last.fm/user/test2002"
+              />
             </div>
           </section>
 
@@ -398,10 +417,28 @@ export function Blend() {
               Top blend songs
             </h2>
             {/* Placeholder list/cards — replace with real data */}
-            <div className="items-center gap-4 text-zinc-950">
-              <div className="outline-purple-200 ">Song 1</div>
-              <div className="outline-purple-200 ">Song 2</div>
-              <div className="outline-purple-200 ">Song 3</div>
+            <div className="flex flex-col gap-y-4 items-center gap-4  text-zinc-950">
+              <SplitRatioBar
+                itemName="Charm"
+                valueA={40}
+                valueB={30}
+                urlToNavigateA="https://www.last.fm/user/saflas"
+                urlToNavigateB="https://www.last.fm/user/test2002"
+              />
+              <SplitRatioBar
+                itemName="Sempiternal"
+                valueA={59}
+                valueB={20}
+                urlToNavigateA="https://www.last.fm/user/saflas"
+                urlToNavigateB="https://www.last.fm/user/test2002"
+              />
+              <SplitRatioBar
+                itemName="Hybrid Theory"
+                valueA={10}
+                valueB={40}
+                urlToNavigateA="https://www.last.fm/user/saflas"
+                urlToNavigateB="https://www.last.fm/user/test2002"
+              />
             </div>
           </section>
         </div>
