@@ -83,13 +83,25 @@ export function Navbar() {
               className="
                 absolute
                 top-[100%] right-0
-                mt-5
+                mt-2
+                
                 z-30
                 inline-block
                 bg-white
                 px-10 py-4                
-                 outline-1 outline-[#bbb]
+                ring-1
+                ring-black
                 shadow-md
+                w-full
+                h-dvh
+                
+                text-center
+                lg:h-auto
+                lg:text-left
+                lg:w-40
+
+                
+                
               "
             >
               <ul className="list-none m-0 p-0 space-y-1">
