@@ -173,7 +173,7 @@ export function ControlPanel({
 
       setBlendPercent(newVal);
       setMode(displayedMode);
-      setUsers(BlendApiResponse.Usernames.join(" and "));
+      setUsers(BlendApiResponse.Usernames);
       console.log("Updated blend percentage:", newVal);
     } catch (err) {
       console.error("Error retrieving stored blend percentage:", err);

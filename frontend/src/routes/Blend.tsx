@@ -244,7 +244,7 @@ export function Blend() {
   };
   const [blendPercent, setBlendPercent] = useState(3);
   const [mode, setMode] = useState("Default");
-  const [users, setUsers] = useState<string[]>(["You", "and", "someone"]);
+  const [users, setUsers] = useState<string[]>(["", ""]);
 
   const props: ControlPanelProps = {
     setMode,
@@ -271,16 +271,6 @@ export function Blend() {
         {/* <div className="md:flex md:flex-wrap pr-2 mt-8 lg:grid lg:grid-cols-2 "> Old*/}
         {/* LEFT CONTENT AREA */}
         <div className="  md:w-[40%] flex flex-col flex-wrap items-center justify-baseline gap-y-5">
-          {/* Back button */}
-          {/* <div className=" text-[14px]">
-            <button
-              type="button"
-              onClick={() => navigate("/home")}
-              className="inline-flex items-center outline-2 h-auto  font-[Roboto_Mono] font-bold border border-black/10 bg-white px-4 py-2 text-black shadow-sm hover:shadow "
-            >
-              &lt; Blends
-            </button>
-          </div> */}
           {/* Player card */}
           <div className="w-full flex justify-center  ">
             <div className="w-full flex justify-center ">
@@ -326,7 +316,7 @@ export function Blend() {
                     className="font-bold"
                     style={{ fontSize: "clamp(1rem, 1.5vw, 1.2rem)" }}
                   >
-                    {users[0].toLocaleUpperCase()}
+                    {users ? users[0] : "You"}
                   </span>
 
                   <span className="font-normal text-gray-500">and</span>
@@ -335,7 +325,7 @@ export function Blend() {
                     className="font-bold"
                     style={{ fontSize: "clamp(1rem, 1.5vw, 1.2rem)" }}
                   >
-                    {users[1].toLocaleUpperCase()}
+                    {users ? users[1] : "someone"}
                   </span>
                 </div>
 
