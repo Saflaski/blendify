@@ -3,6 +3,10 @@ export default {
   theme: {
     extend: {
       colors: {},
+      fontFamily: {
+        bubble_outline: ['"Bubble Caps Outline"', "sans-serif"],
+        bubble_fill: ['"Bubble Caps Fill"', "sans-serif"],
+      },
     },
   },
   plugins: [],

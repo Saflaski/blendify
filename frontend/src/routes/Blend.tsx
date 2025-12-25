@@ -367,8 +367,8 @@ export function Blend() {
                   <img src="/src/assets/images/lastfm.svg" />
                 </div>
 
-                <p className="text-center w-full font-[Filepile] text-[#000000] bg-clip-text bg-amber-500 tracking-widest font-medium absolute bottom-2 left-1/2 -translate-x-1/2 text-xs  text-shadow-2xs">
-                  blendify.fm
+                <p className="text-center w-full font-[toxigenesis] text-[#404040] tracking-widest font-medium absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px]  text-shadow-2xs">
+                  BLENDIFY.FM
                 </p>
               </div>
             </div>

@@ -13,6 +13,26 @@
   src: url("/public/fonts/RobotoMono-Medium.ttf") format("truetype");
 }
 
+.test-font {
+  font-family: "Bubble Caps Outline", sans-serif;
+}
+
+@font-face {
+  font-family: "Bubble Caps Fill";
+  src: url("/src/assets/fonts/Bubble-Caps-Fill.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Bubble Caps Outline";
+  src: url("/src/assets/fonts/Bubble-Caps-Outline.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* latin-ext */
 @font-face {
   font-family: "Lato";

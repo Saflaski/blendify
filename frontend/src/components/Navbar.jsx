@@ -106,7 +106,7 @@ export function Navbar() {
             >
               <ul className="list-none m-0 p-0 space-y-1">
                 {/* <DropDownItem page="/" funcName={null} text="Home" /> */}
-                <DropDownItem page="/blends" funcName={null} text="Blends" />
+                <DropDownItem page="/home" funcName={null} text="Blends" />
                 <DropDownItem page="/about" funcName={null} text="About" />
                 <DropDownItem page="/privacy" funcName={null} text="Privacy" />
                 <DropDownItem
