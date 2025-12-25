@@ -2,6 +2,7 @@ package blend
 
 import (
 	musicapi "backend-lastfm/internal/music_api/lastfm"
+	"backend-lastfm/internal/utility"
 	"time"
 )
 
@@ -99,5 +100,26 @@ type TypeBlend struct {
 
 type TopEntry struct {
 	Name         string `json:"name"`
+	Artist       string `json:"artist,omitempty"` //Not needed when it's an artist
 	Distribution []int  `json:"distribution"`
 }
+
+// type CatalogueStats struct { //A catalogue can be an album, track or artist. The following is metadata for a catalogue
+// 	Artist      string `json:"artist"`
+// 	Count       int    `json:"count"`
+// 	PlatformURL string `json:"platformurl"` //Catalogue URL
+// 	Image       string `json:"imageurl"`    //Image URL
+// 	PlatformID  string `json:"platformid"`  //Catalogue Platform ID
+// }
+
+type CatalogueStats = utility.CatalogueStats
+
+type complexResponse struct {
+	user     userid
+	data     map[string]CatalogueStats // Album/Track/Artist -> stats. this used to be map [string]int
+	duration blendTimeDuration
+	category blendCategory
+	err      error
+}
+
+// type MapCatStats map[string]CatalogueStats

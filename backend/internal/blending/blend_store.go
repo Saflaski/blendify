@@ -32,7 +32,7 @@ func (r *RedisStateStore) DeleteBlendByBlendId(context context.Context, user use
 	return err
 }
 
-func (r *RedisStateStore) GetFromCacheTopX(context context.Context, userName string, timeDuration blendTimeDuration, category blendCategory) (map[string]int, error) {
+func (r *RedisStateStore) GetFromCacheTopX(context context.Context, userName string, timeDuration blendTimeDuration, category blendCategory) (map[string]CatalogueStats, error) {
 	key := fmt.Sprintf("%s:%s:%s:%s", r.musicPrefix, userName, categoryPrefix[category], durationPrefix[timeDuration])
 
 	Result, err := r.client.Get(context, key).Result()
@@ -43,7 +43,12 @@ func (r *RedisStateStore) GetFromCacheTopX(context context.Context, userName str
 		return nil, fmt.Errorf(" during extracting cache from db, could not get json map from db:%w", err)
 	}
 
-	respMap, err := utility.JSONToMap([]byte(Result))
+	// respMap, err := utility.JSONToMap([]byte(Result))
+	// if err != nil {
+	// 	return nil, fmt.Errorf(" during extracting cache db, error in decoding from json: %w", err)
+	// }
+
+	respMap, err := utility.JSONToMapCatStats([]byte(Result))
 	if err != nil {
 		return nil, fmt.Errorf(" during extracting cache db, error in decoding from json: %w", err)
 	}
@@ -254,10 +259,10 @@ var durationPrefix = map[blendTimeDuration]string{
 	BlendTimeDurationYear:       "one_year",
 }
 
-func (r *RedisStateStore) CacheUserMusicData(context context.Context, resp response) error {
+func (r *RedisStateStore) CacheUserMusicData(context context.Context, resp complexResponse) error {
 	key := fmt.Sprintf("%s:%s:%s:%s", r.musicPrefix, resp.user, categoryPrefix[resp.category], durationPrefix[resp.duration])
 
-	jsonBytes, err := utility.MapToJSON(resp.chart)
+	jsonBytes, err := utility.ObjectToJSON(resp.data)
 	if err != nil {
 		return fmt.Errorf(" during caching to db, error in encoding to json: %w", err)
 	}

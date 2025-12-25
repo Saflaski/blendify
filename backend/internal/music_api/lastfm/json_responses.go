@@ -30,6 +30,12 @@ type Artist struct {
 	Name       string         `json:"name"`
 	Attributes map[string]any `json:"@attr"`
 	Playcount  string         `json:"playcount"`
+	LFMImages  []LFMImage     `json:"image"`
+}
+
+type LFMImage struct {
+	Size string `json:"size"`
+	URL  string `json:"#text"`
 }
 
 // user.getweeklyalbumchart
@@ -45,6 +51,7 @@ type Album struct {
 	Name       string         `json:"name"`
 	Attributes map[string]any `json:"@attr"`
 	Playcount  string         `json:"playcount"`
+	LFMImages  []LFMImage     `json:"image"`
 }
 
 type UserWeeklyAlbumList struct {
@@ -66,6 +73,7 @@ type Track struct {
 	Name       string         `json:"name"`
 	Attributes map[string]any `json:"@attr"`
 	Playcount  string         `json:"playcount"`
+	LFMImages  []LFMImage     `json:"image"`
 }
 
 type UserWeeklyTrackList struct {
@@ -98,7 +106,10 @@ type Topartist_artist struct {
 	Playcount  string         `json:"playcount"`
 	Attributes map[string]any `json:"attr"`
 	Name       string         `json:"name"`
+	LFMImages  []LFMImage     `json:"image"`
 }
+
+// type LFMImages []LFMImage
 
 // user.gettopalbums
 type UserTopAlbums struct {

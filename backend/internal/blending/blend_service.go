@@ -463,7 +463,8 @@ func (s *BlendService) GetNewDataForUser(ctx context.Context, user userid) error
 	}
 
 	requestSize := len(durationRange) * len(categoryRange)
-	respc := make(chan response, requestSize)
+	// respc := make(chan response, requestSize)
+	respc := make(chan complexResponse, requestSize)
 	var wg sync.WaitGroup
 
 	for _, duration := range durationRange {
@@ -472,14 +473,14 @@ func (s *BlendService) GetNewDataForUser(ctx context.Context, user userid) error
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				respMap, err := s.downloadLFMData(ctx, platformUsername, d, c)
-				if len(respMap) == 0 {
+				respData, err := s.downloadLFMData(ctx, platformUsername, d, c)
+				if len(respData) == 0 {
 					//wrap the error regardless of it is nil/not nil
 					err = fmt.Errorf(" downloaded empty map from platform: %w", err)
 				}
-				resp := response{
+				resp := complexResponse{
 					user:     user,
-					chart:    respMap,
+					data:     respData,
 					duration: d,
 					category: c,
 					err:      err,
@@ -505,7 +506,7 @@ func (s *BlendService) GetNewDataForUser(ctx context.Context, user userid) error
 	return nil
 }
 
-func (s *BlendService) cacheLFMData(ctx context.Context, resp response) error {
+func (s *BlendService) cacheLFMData(ctx context.Context, resp complexResponse) error {
 	err := s.repo.CacheUserMusicData(ctx, resp)
 	if err != nil {
 		return err
@@ -513,7 +514,7 @@ func (s *BlendService) cacheLFMData(ctx context.Context, resp response) error {
 	return nil
 }
 
-func (s *BlendService) downloadLFMData(context context.Context, user string, timePeriod blendTimeDuration, category blendCategory) (map[string]int, error) {
+func (s *BlendService) downloadLFMData(context context.Context, user string, timePeriod blendTimeDuration, category blendCategory) (map[string]CatalogueStats, error) {
 
 	_ = context //TODO: Change the request methods to accept and use a context
 	switch category {
@@ -586,6 +587,7 @@ func (s *BlendService) getArtistBlend(context context.Context, userA, userB user
 	if err != nil {
 		return 0, fmt.Errorf("could not retrieve top artists for %s as it returned error: %w", userA, err)
 	}
+
 	listenHistoryB, err := s.getTopX(context, userB, timeDuration, BlendCategoryArtist)
 	if err != nil {
 		return 0, fmt.Errorf("could not retrieve top artists for %s as it returned error: %w", userB, err)
@@ -599,7 +601,7 @@ func (s *BlendService) getArtistBlend(context context.Context, userA, userB user
 	return blendNumber, nil
 }
 
-func (s *BlendService) getTopX(context context.Context, userid userid, timeDuration blendTimeDuration, category blendCategory) (map[string]int, error) {
+func (s *BlendService) getTopX(context context.Context, userid userid, timeDuration blendTimeDuration, category blendCategory) (map[string]CatalogueStats, error) {
 	dbResp, err := s.repo.GetFromCacheTopX(context, string(userid), timeDuration, category)
 	if err != nil {
 		glog.Errorf(" Cache error during getting topX for user %s with duration %s and category %s that needs to be checked: %w", userid, timeDuration, category, err)
@@ -617,7 +619,7 @@ func (s *BlendService) getTopX(context context.Context, userid userid, timeDurat
 	}
 }
 
-func (s *BlendService) downloadTopX(context context.Context, userName string, timeDuration blendTimeDuration, category blendCategory) (map[string]int, error) {
+func (s *BlendService) downloadTopX(context context.Context, userName string, timeDuration blendTimeDuration, category blendCategory) (map[string]CatalogueStats, error) {
 	switch category {
 	case BlendCategoryAlbum:
 		return s.downloadTopAlbums(context, userName, timeDuration)
@@ -630,9 +632,9 @@ func (s *BlendService) downloadTopX(context context.Context, userName string, ti
 	}
 }
 
-func (s *BlendService) downloadTopArtists(context context.Context, userName string, timeDuration blendTimeDuration) (map[string]int, error) {
+func (s *BlendService) downloadTopArtists(context context.Context, userName string, timeDuration blendTimeDuration) (map[string]CatalogueStats, error) {
 
-	artistToPlaybacks := make(map[string]int)
+	artistToPlaybacks := make(map[string]CatalogueStats)
 	topArtist, err := s.LastFMExternal.GetUserTopArtists(
 		context,
 		userName,
@@ -644,12 +646,31 @@ func (s *BlendService) downloadTopArtists(context context.Context, userName stri
 	if err != nil {
 		return artistToPlaybacks, fmt.Errorf("could not extract TopArtists object from lastfm adapter, %w", err)
 	}
+	// for _, v := range topArtist.TopArtists.Artist {
+	// 	playcount, err := strconv.Atoi(v.Playcount)
+	// 	if err != nil {
+	// 		return artistToPlaybacks, fmt.Errorf("got unparseable string during string -> int conversation: %w", err)
+	// 	}
+	// 	artistToPlaybacks[v.Name] = playcount
+	// }
+
 	for _, v := range topArtist.TopArtists.Artist {
 		playcount, err := strconv.Atoi(v.Playcount)
 		if err != nil {
 			return artistToPlaybacks, fmt.Errorf("got unparseable string during string -> int conversation: %w", err)
 		}
-		artistToPlaybacks[v.Name] = playcount
+
+		imageURL := s.getCatalogueImageURL(v.LFMImages) //Selects a good pic out of the ones given
+
+		catStat := CatalogueStats{
+			Artist:      v.Name,
+			Count:       playcount,
+			PlatformURL: v.URL,
+			Image:       imageURL,
+			PlatformID:  v.MBID,
+		}
+		artistToPlaybacks[v.Name] = catStat
+
 	}
 
 	return artistToPlaybacks, nil
@@ -674,8 +695,8 @@ func (s *BlendService) getAlbumBlend(context context.Context, userA, userB useri
 	return blendNumber, nil
 }
 
-func (s *BlendService) downloadTopAlbums(context context.Context, userName string, timeDuration blendTimeDuration) (map[string]int, error) {
-	albumToPlays := make(map[string]int)
+func (s *BlendService) downloadTopAlbums(context context.Context, userName string, timeDuration blendTimeDuration) (map[string]CatalogueStats, error) {
+	albumToPlays := make(map[string]CatalogueStats, 50)
 	topAlbums, err := s.LastFMExternal.GetUserTopAlbums(
 		context,
 		userName,
@@ -692,7 +713,18 @@ func (s *BlendService) downloadTopAlbums(context context.Context, userName strin
 		if err != nil {
 			return albumToPlays, fmt.Errorf("got unparseable string during string -> int conversation: %w", err)
 		}
-		albumToPlays[v.Name] = playcount
+
+		imageURL := s.getCatalogueImageURL(v.LFMImages) //Selects a good pic out of the ones given
+
+		catStat := CatalogueStats{
+			Artist:      v.Name,
+			Count:       playcount,
+			PlatformURL: v.URL,
+			Image:       imageURL,
+			PlatformID:  v.MBID,
+		}
+		albumToPlays[v.Name] = catStat
+
 	}
 
 	return albumToPlays, nil
@@ -719,8 +751,8 @@ func (s *BlendService) getTrackBlend(context context.Context, userA, userB useri
 	return blendNumber, nil
 }
 
-func (s *BlendService) downloadTopTracks(context context.Context, userName string, timeDuration blendTimeDuration) (map[string]int, error) {
-	trackToPlays := make(map[string]int)
+func (s *BlendService) downloadTopTracks(context context.Context, userName string, timeDuration blendTimeDuration) (map[string]CatalogueStats, error) {
+	trackToPlays := make(map[string]CatalogueStats)
 	topTracks, err := s.LastFMExternal.GetUserTopTracks(
 		context,
 		userName,
@@ -732,13 +764,45 @@ func (s *BlendService) downloadTopTracks(context context.Context, userName strin
 	if err != nil {
 		return trackToPlays, fmt.Errorf("could not extract TopTracks object from lastfm adapter, %w", err)
 	}
+	// for _, v := range topTracks.TopTracks.Track {
+	// 	playcount, err := strconv.Atoi(v.Playcount)
+	// 	if err != nil {
+	// 		return trackToPlays, fmt.Errorf("got unparseable string during string -> int conversation: %w", err)
+	// 	}
+	// 	trackToPlays[v.Name] = playcount
+	// }
+
 	for _, v := range topTracks.TopTracks.Track {
 		playcount, err := strconv.Atoi(v.Playcount)
 		if err != nil {
 			return trackToPlays, fmt.Errorf("got unparseable string during string -> int conversation: %w", err)
 		}
-		trackToPlays[v.Name] = playcount
+
+		imageURL := s.getCatalogueImageURL(v.LFMImages) //Selects a good pic out of the ones given
+
+		catStat := CatalogueStats{
+			Artist:      v.Name,
+			Count:       playcount,
+			PlatformURL: v.URL,
+			Image:       imageURL,
+			PlatformID:  v.MBID,
+		}
+		trackToPlays[v.Name] = catStat
+
 	}
 
 	return trackToPlays, nil
+}
+
+func (s *BlendService) getCatalogueImageURL(images []musicapi.LFMImage) string {
+	for _, img := range images {
+		if img.Size == "large" {
+			return img.URL
+		}
+	}
+	//If no large image found, return the first available image
+	if len(images) > 0 {
+		return images[0].URL
+	}
+	return ""
 }
