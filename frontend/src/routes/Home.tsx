@@ -1,9 +1,10 @@
 import { BlendsButton } from "../components/BlendsButton";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import tick from "/src/assets/images/tick.svg";
 import cross from "/src/assets/images/cross.svg";
 import { useNavigate } from "react-router-dom";
 import React from "react";
+import "/src/assets/styles/home.css";
 
 type Blend = {
   blendid: string;
@@ -130,7 +131,9 @@ export function Home() {
 
   return (
     <div className="min-h-screen w-full flex items-start justify-center py-5 font-[Roboto_Mono]">
-      <div className="w-full max-w-xl bg-white border border-slate-300 px-5 py-6 flex flex-col gap-y-4 text-slate-900">
+      <div
+        className={`w-full max-w-xl slate-bg  border border-slate-300 px-5 py-6 flex flex-col gap-y-4 text-slate-900`}
+      >
         <header className="w-full flex flex-col gap-1">
           <h1 className="text-xl font-semibold tracking-tight">Your blends</h1>
 
@@ -378,7 +381,7 @@ function AddNewBlendBar({ AddBlend }) {
   };
 
   return (
-    <div className="flex w-full gap-2">
+    <div className="flex  w-full gap-2">
       <div
         className={`flex w-full border border-slate-600 bg-white px-3 py-2 text-xs font-['Roboto_Mono'] focus:outline-none focus:border-slate-900`}
       >
@@ -403,7 +406,7 @@ function AddNewBlendBar({ AddBlend }) {
 
       <button
         onClick={() => AddBlend(value)}
-        className="border border-slate-900 bg-amber-400 px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide hover:bg-amber-300 focus:outline-none focus:border-black"
+        className={`border home-slate-button   border-slate-900  px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide  focus:outline-none focus:border-black`}
       >
         Add
       </button>
@@ -413,6 +416,8 @@ function AddNewBlendBar({ AddBlend }) {
 
 function GenerateLink() {
   const [link, setLink] = useState("");
+  const [copied, setCopied] = useState(false);
+  const hideTimer = useRef<number | null>(null);
 
   async function handleGenerateLink() {
     const newLink = await generateNewLinkSomehow(); // your async fn
@@ -424,8 +429,15 @@ function GenerateLink() {
   }, []);
 
   const handleCopy = async () => {
+    setCopied(false);
     if (!link) return;
     await navigator.clipboard.writeText(link); // full URL
+    setCopied(true);
+    if (hideTimer.current !== null) {
+      clearTimeout(hideTimer.current);
+    }
+    // clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => setCopied(false), 1400);
   };
 
   return (
@@ -437,19 +449,30 @@ function GenerateLink() {
         rows={1}
         className="flex-1 text-[11px] sm:text-xs resize-none overflow-hidden text-nowrap  border opacity-90 border-slate-300 bg-slate-50 focus:outline-none focus:ring-0 focus:border-slate-300 px-3 py-2 text-xs font-['Roboto_Mono'] cursor-default"
       ></textarea>
-      <button
-        onClick={handleCopy}
-        className="flex items-center justify-center border border-slate-900 bg-amber-400 px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide hover:bg-amber-300 focus:outline-none focus:border-black"
-      >
-        <img
-          className="size-4"
-          src="src/assets/images/copy.svg"
-          alt="Copy URL"
-        />
-      </button>
+
+      <div className="relative">
+        {copied && (
+          <div
+            className="absolute right-14.5 bg-gray-500 text-white 
+        text-[10px] px-2 py-0.5 shadow animate-fade-in-out"
+          >
+            Copied!
+          </div>
+        )}
+        <button
+          onClick={handleCopy}
+          className={`flex items-center justify-center border border-slate-900 home-slate-button px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide  focus:outline-none focus:border-black`}
+        >
+          <img
+            className="size-4"
+            src="src/assets/images/copy.svg"
+            alt="Copy URL"
+          />
+        </button>
+      </div>
       <button
         onClick={handleGenerateLink}
-        className="border border-slate-900 bg-amber-400 px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide hover:bg-amber-300 focus:outline-none focus:border-black"
+        className={`border border-slate-900 px-4 py-2 text-xs font-['Roboto_Mono'] home-slate-button  font-bold tracking-wide  focus:outline-none focus:border-black`}
       >
         Refresh
       </button>

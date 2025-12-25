@@ -4,6 +4,22 @@
   overflow: hidden; /* Keeps the shine inside the element bounds */
 }
 
+.slate-bg {
+  background-color: #fff;
+}
+
+.home-slate-button {
+  background-color: #ef7b45;
+}
+
+.home-slate-button:hover {
+  background-color: #ef966c;
+}
+
+.home-slate-button:active {
+  background-color: #d84727;
+}
+
 .shine-element::after {
   content: "";
   position: absolute;

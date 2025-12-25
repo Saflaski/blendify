@@ -24,9 +24,9 @@ export function Navbar() {
   }, []);
 
   return (
-    <nav className="w-full bg-[#E0AD46] h-12 flex items-center z-20">
+    <nav className="w-full bg-[#D84727] h-12 flex items-center z-20">
       <div className="lg:w-[full] md:w-[60%] w-[100%] mx-auto flex justify-between relative items-center px-2">
-        {/* LEFT: Menu button + dropdown */}
+        {/* LEFT: HOME button */}
         <div className="relative flex items-center justify-start">
           <HomeButton onClick={Navigate("/home")} />
         </div>
@@ -38,18 +38,22 @@ export function Navbar() {
               type="button"
               className="
                 bg-transparent
-                font-bold
+                font-extrabold
                 text-2xl
                 flex items-center justify-center
                 min-h-[5px]
                 text-center
                 text-[#F6E8CB]
+                font-['Roboto_Mono','monospace']
+                [text-shadow:2px_2px_0_#000]
                 transition-all duration-75 ease-in-out
                 active:translate-x-[1px] active:translate-y-[1px]
+                active:[text-shadow:1px_1px_0_#000]
+
               "
-              style={{ textShadow: "2px 2px 0 #000" }}
+              // style={{ textShadow: "2px 2px 0 #000" }}
             >
-              Blendify
+              BLENDIFY
             </button>
           </Link>
         </div>

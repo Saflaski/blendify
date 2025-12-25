@@ -4,7 +4,7 @@ function ControlPanelTileButton({ highlight, children, label, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`group relative aspect-square w-14 select-none  ${highlight ? "bg-[#005b4c] text-slate-100 outline-[#005b4c]" : "bg-white text-slate-950 outline-black "}  p-3 outline-2 transition-all flex flex-col items-center justify-center gap-1`}
+      className={`group relative aspect-square w-14 select-none  ${highlight ? "bg-[#D84727] text-slate-100 outline-[#000000]" : "bg-white text-slate-950 outline-black "}  p-3 outline-2 transition-all flex flex-col items-center justify-center gap-1`}
     >
       <div className="flex items-center justify-center flex-1 w-full">
         <div
