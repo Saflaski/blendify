@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export type ControlPanelProps = {
   setMode: (val: string) => void;
-  setUsers: (val: string) => void;
+  setUsers: (val: string[]) => void;
   setBlendPercent: (num: number) => void;
   blendApiResponse: BlendApiResponse;
 };

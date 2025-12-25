@@ -9,7 +9,9 @@
 }
 
 .home-slate-button {
-  background-color: #ef7b45;
+  background-color: #d84727;
+  color: #f6e8cb;
+  text-shadow: #00000080 2px 1px;
 }
 
 .home-slate-button:hover {

@@ -61,7 +61,7 @@ const SplitRatioBar: React.FC<SplitRatioBarProps> = ({
           bg-stone-900 text-stone-100 text-[12px] 
           font-mono px-2 py-0.5 z-50 text-nowrap"
         >
-          {valueA} plays
+          {valueA} plays // {Math.round((valueA * 100) / (valueA + valueB))} %
         </div>
       </div>
 
@@ -83,12 +83,12 @@ const SplitRatioBar: React.FC<SplitRatioBarProps> = ({
           bg-stone-900 text-stone-100 text-[12px] 
           font-mono px-2 py-0.5 z-50 text-nowrap"
         >
-          {valueB} plays
+          {valueB} plays // {Math.round((valueB * 100) / (valueA + valueB))} %
         </div>
       </div>
 
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-xs font-mono font-bold text-stone-900 tracking-tight">
+        <span className="text-sm font-mono font-bold text-stone-900 tracking-tight">
           {itemName}
         </span>
       </div>

@@ -244,7 +244,7 @@ export function Blend() {
   };
   const [blendPercent, setBlendPercent] = useState(3);
   const [mode, setMode] = useState("Default");
-  const [users, setUsers] = useState<string>("You and someone");
+  const [users, setUsers] = useState<string[]>(["You", "and", "someone"]);
 
   const props: ControlPanelProps = {
     setMode,
@@ -258,9 +258,7 @@ export function Blend() {
       setBlendPercent(userBlendData.OverallBlendNum);
       setMode("Default mode");
       if (userBlendData.Usernames.length == 2)
-        setUsers(
-          `${userBlendData.Usernames[0]} and ${userBlendData.Usernames[1]}`,
-        );
+        setUsers(userBlendData.Usernames);
     }
   }, [userBlendData]);
   // setBlendPercent(userBlendData.OverallBlendNum);
@@ -323,12 +321,23 @@ export function Blend() {
                   </span>
                 </h1>
 
-                <p
-                  className="mt-1 font-bold text-gray-800"
-                  style={{ fontSize: "clamp(1rem, 1.5vw, 1.2rem)" }}
-                >
-                  {users}
-                </p>
+                <div className="flex items-center font-[Roboto_Mono] gap-2 mt-2 justify-center text-gray-800">
+                  <span
+                    className="font-bold"
+                    style={{ fontSize: "clamp(1rem, 1.5vw, 1.2rem)" }}
+                  >
+                    {users[0].toLocaleUpperCase()}
+                  </span>
+
+                  <span className="font-normal text-gray-500">and</span>
+
+                  <span
+                    className="font-bold"
+                    style={{ fontSize: "clamp(1rem, 1.5vw, 1.2rem)" }}
+                  >
+                    {users[1].toLocaleUpperCase()}
+                  </span>
+                </div>
 
                 <p className="mt-1 text-sm/snug font-bold text-gray-800">
                   {mode}
