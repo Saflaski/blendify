@@ -109,6 +109,33 @@ func (h *BlendHandler) GetBlendHealth(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+func (h *BlendHandler) GetBlendedEntryData(w http.ResponseWriter, r *http.Request) {
+	// /dataentry?blendId=&category=&timeDuration=&type=
+	response := r.URL.Query()
+
+	blendId := blendId(response.Get("blendId"))
+	category := blendCategory(response.Get("category"))
+	timeDuration := blendTimeDuration(response.Get("timeDuration"))
+
+	id, err := h.GetUserIdFromContext(r.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "Could not interpret userid from request. Either try deleting all cookies and trying again or contact admin")
+		glog.Errorf("Could not parse userid from context, %s", id)
+		return
+	}
+
+	blendedData, err := h.svc.GetBlendEntryByBlendId(r.Context(), blendId, category, timeDuration)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "could not get blended entry data ")
+		glog.Errorf(" could not get blended entry data %s for user %s with error: %w", blendId, id, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(blendedData)
+}
+
 func (h *BlendHandler) GetBlendPageData(w http.ResponseWriter, r *http.Request) {
 
 	response := r.URL.Query()

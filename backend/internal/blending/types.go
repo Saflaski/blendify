@@ -98,9 +98,13 @@ type TypeBlend struct {
 }
 
 type TopEntry struct {
-	Name         string `json:"name"`
-	Artist       string `json:"artist,omitempty"` //Not needed when it's an artist
-	Distribution []int  `json:"distribution"`
+	Name           string `json:"name"`
+	URL            string `json:"entryurl,omitempty"`
+	ImageURL       string `json:"entryimageurl,omitempty"`
+	ArtistName     string `json:"artist,omitempty"` //Not needed when it's an artist
+	ArtistURL      string `json:"artisturl,omitempty"`
+	ArtistImageURL string `json:"artistimageurl,omitempty"`
+	Playcounts     []int  `json:"playcounts"`
 }
 
 type CatalogueStats = musicapi.CatalogueStats

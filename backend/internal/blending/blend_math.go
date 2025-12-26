@@ -7,7 +7,7 @@ import (
 	"slices"
 )
 
-func FindIntersectKeys(m1, m2 map[string]int) []string {
+func FindIntersectKeys[T any](m1, m2 map[string]T) []string {
 	//Smaller map on outside loop leads to better stack order
 
 	if len(m1) > len(m2) {

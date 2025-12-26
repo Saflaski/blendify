@@ -151,6 +151,17 @@ func (s *BlendService) GenerateBlendOfTwo(context context.Context, userA userid,
 	if err != nil {
 		return DuoBlend{}, fmt.Errorf("could not get overall blend with %s and %s: %w", userA, userB, err)
 	}
+
+	// blendedArtists, err := s.BuildBlendedEntries(
+	// 	context,
+	// 	userA,
+	// 	userB,
+	// 	BlendTimeDurationYear,
+	// 	BlendCategoryArtist,
+	// 	25,
+	// )
+	// _ = blendedArtists //TODO use this later
+
 	duoBlend := DuoBlend{Users: []string{usernameA, usernameB},
 		OverallBlendNum: overallBlendNum,
 		ArtistBlend:     artistBlend,
@@ -160,6 +171,71 @@ func (s *BlendService) GenerateBlendOfTwo(context context.Context, userA userid,
 	}
 
 	return duoBlend, nil
+}
+
+func (s *BlendService) GetBlendEntryByBlendId(context context.Context, blendId blendId, category blendCategory, duration blendTimeDuration) ([]TopEntry, error) {
+
+	userids, err := s.repo.GetUsersFromBlend(context, blendId)
+	if err != nil {
+		return nil, fmt.Errorf(" error getting users from blend id: %s, err: %w", blendId, err)
+	}
+
+	if len(userids) != 2 {
+		return nil, fmt.Errorf(" only blends of 2 users are supported currently")
+	}
+
+	blendedEntries, err := s.BuildBlendedEntries(context, userids[0], userids[1], duration, category, 25)
+	if err != nil {
+		return nil, fmt.Errorf(" could not build blended entries for blendid %s: %w", blendId, err)
+	}
+
+	return blendedEntries, nil
+}
+
+func (s *BlendService) BuildBlendedEntries(context context.Context, userA, userB userid, duration blendTimeDuration, category blendCategory, minimum int) ([]TopEntry, error) {
+
+	//Get common and unique artists between both users
+	aEntries, err := s.getTopX(context, userA, duration, category)
+	if err != nil {
+		return nil, fmt.Errorf(" could not get top entries for userA %s: %w", userA, err)
+	}
+	bEntries, err := s.getTopX(context, userB, duration, category)
+	if err != nil {
+		return nil, fmt.Errorf(" could not get top entries for userB %s: %w", userB, err)
+	}
+
+	entries := s.GetCommonAndSortedEntries(aEntries, bEntries)
+
+	blendedEntries := make([]TopEntry, len(entries))
+	for k, v := range entries {
+		aStat := aEntries[v]
+		bStat := bEntries[v]
+		blendedEntries[k] = s.ConvertCatalogueStatsToEntry(aStat, v, aStat.Count, bStat.Count)
+	}
+	return blendedEntries, nil
+}
+
+func (s *BlendService) ConvertCatalogueStatsToEntry(aStat CatalogueStats, name string, aCount int, bCount int) TopEntry {
+	countA := aCount
+	countB := bCount
+
+	entry := TopEntry{
+		Name:           name,
+		ImageURL:       aStat.Image,
+		URL:            aStat.PlatformURL,
+		ArtistName:     aStat.Artist.Name,
+		ArtistURL:      aStat.Artist.URL,
+		ArtistImageURL: s.getCatalogueImageURL(aStat.Artist.LFMImages),
+		Playcounts:     []int{countA, countB},
+	}
+	return entry
+}
+
+func (s *BlendService) GetCommonAndSortedEntries(aEntries map[string]CatalogueStats, bEntries map[string]CatalogueStats) []string {
+	commonKeys := FindIntersectKeys[CatalogueStats](aEntries, bEntries)
+	//No sorting for now
+
+	return commonKeys
 }
 
 func (s *BlendService) buildOverallBlend(artistBlend, albumBlend, trackBlend TypeBlend) (int, error) {
@@ -508,7 +584,6 @@ func (s *BlendService) cacheLFMData(ctx context.Context, resp complexResponse) e
 
 func (s *BlendService) downloadLFMData(context context.Context, user string, timePeriod blendTimeDuration, category blendCategory) (map[string]CatalogueStats, error) {
 
-	_ = context //TODO: Change the request methods to accept and use a context
 	switch category {
 	case BlendCategoryArtist:
 		return s.downloadTopArtists(context, user, timePeriod)
@@ -546,7 +621,6 @@ func NewBlendService(blendStore RedisStateStore, lfmAdapter musicapi.LastFMAPIEx
 	return &BlendService{&blendStore, &lfmAdapter}
 }
 
-// TODO: Delete this function or change UUID to userid type
 func (s *BlendService) GetBlend(context context.Context, userA userid, userB userid, category blendCategory, timeDuration blendTimeDuration) (int, error) {
 	//Implement logic to calculate blend percentage based on user data, category, and time duration
 
