@@ -4,24 +4,20 @@ services:
   backend:
     build: ./backend
     ports:
-      - "8080:8080"
+      - "3000:3000"
+    env_file:
+      - ./backend/.env
     depends_on:
       - redis
 
   frontend:
     build: ./frontend
+    ports:
+      - "80:80"
     depends_on:
       - backend
 
   redis:
     image: redis:7
-
-  nginx:
-    image: nginx
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
     ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - frontend
+      - "6379:6379"
