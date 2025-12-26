@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+.maintitle {
+  font-family: "Magnolia Script", "opentype";
+  src: url("/public/fonts/Magnolia Script.otf") format("opentype");
+  font-weight: 600;
+  margin-bottom: 2rem;
+  font-size: large;
+}
