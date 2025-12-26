@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import type { ControlPanelProps, BlendApiResponse } from "../prop-types";
+import type { ControlPanelProps, CardApiResponse } from "../prop-types";
 function ControlPanelTileButton({ highlight, children, label, onClick }) {
   return (
     <button

@@ -4,7 +4,7 @@ export type ControlPanelProps = {
   setMode: (val: string) => void;
   setUsers: (val: string[]) => void;
   setBlendPercent: (num: number) => void;
-  blendApiResponse: BlendApiResponse;
+  blendApiResponse: CardApiResponse;
 };
 
 // export type BlendApiResponse = {
@@ -28,11 +28,31 @@ const TypeBlendSchema = z.object({
   OneYear: z.number(),
 });
 
-export const BlendApiResponseSchema = z.object({
+export const CardApiResponseSchema = z.object({
   Usernames: z.array(z.string()),
   OverallBlendNum: z.number(),
   ArtistBlend: TypeBlendSchema,
   AlbumBlend: TypeBlendSchema,
   TrackBlend: TypeBlendSchema,
 });
-export type BlendApiResponse = z.infer<typeof BlendApiResponseSchema>;
+export type CardApiResponse = z.infer<typeof CardApiResponseSchema>;
+
+export const CatalogueBlendSchema = z.object({
+  Name: z.string(),
+  ImageUrl: z.url(),
+  Artist: z.string().optional(),
+  ArtistUrl: z.url().optional(),
+  ArtistImageUrl: z.url().optional(),
+  EntryUrl: z.url().optional(),
+  Playcounts: z.array(z.number()),
+});
+
+export type CatalogueBlendResponse = z.infer<typeof CatalogueBlendSchema>;
+
+// `json:"Name"`
+// URL            string `json:"EntryUrl,omitempty"`
+// ImageURL       string `json:"ImageUrl,omitempty"`
+// ArtistName     string `json:"Artist,omitempty"` //Not needed when it's an artist
+// ArtistURL      string `json:"ArtistUrl,omitempty"`
+// ArtistImageURL string `json:"ArtistImageUrl,omitempty"`
+// Playcounts     []int  `json:"Playcounts"`

@@ -5,11 +5,16 @@ import React, { useRef, useState, useEffect } from "react";
 import { toBlob } from "html-to-image";
 import {
   ControlPanelProps,
-  BlendApiResponse,
-  BlendApiResponseSchema,
+  CardApiResponse,
+  CardApiResponseSchema,
+  CatalogueBlendResponse,
+  CatalogueBlendSchema,
 } from "../components/prop-types";
 import { set, z } from "zod";
-import SplitRatioBar from "../components/SplitRatioBar";
+import {
+  SplitRatioBar,
+  SplitRatioBarSkeleton,
+} from "../components/SplitRatioBar";
 
 // type ControlPanelProps = {
 //   setBlendPercent: (num: number) => void;
@@ -34,15 +39,30 @@ import SplitRatioBar from "../components/SplitRatioBar";
 export function Blend() {
   // ------ If user is from invite link and not Add button -------
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [cardLoading, setCardLoading] = useState(true);
+  const [catalogueLoading, setCatalogueLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
   const [blendId, setBlendId] = useState<string | null>(null);
   const [navLinkId, setNavLinkId] = useState<string | null>(null);
-  const [userBlendData, setUserBlendData] = useState<BlendApiResponse>(
-    {} as BlendApiResponse,
+  const [userCardData, setUserCardData] = useState<CardApiResponse>(
+    {} as CardApiResponse,
   );
+  const [userCatalogueArtist3MonthData, setUserCatalogueArtist3MonthData] =
+    useState<CatalogueBlendResponse[]>([]);
+  const [userCatalogueArtist1YearData, setUserCatalogueArtist1YearData] =
+    useState<CatalogueBlendResponse[]>([]);
+  const [userCatalogueTrack1YearData, setUserCatalogueTrack1YearData] =
+    useState<CatalogueBlendResponse[]>([]);
+  const [userCatalogueTrack3MonthData, setUserCatalogueTrack3MonthData] =
+    useState<CatalogueBlendResponse[]>([]);
+
+  const [catArt1Year, setCatArt1Year] = useState(true);
+  const [catArt3Month, setCatArt3Month] = useState(true);
+  const [catTrack1Year, setCatTrack1Year] = useState(true);
+  const [catTrack3Month, setCatTrack3Month] = useState(true);
+
   type LocationState = {
     id?: string;
     value?: string;
@@ -115,7 +135,7 @@ export function Blend() {
       } catch (err) {
         console.error(err);
         setError("Something went wrong. Please try again.");
-        setLoading(false);
+        // setCardLoading(false);
       }
     };
     requestBlendId();
@@ -132,18 +152,15 @@ export function Blend() {
   console.log("Final blendId to use: ", blendId);
   useEffect(() => {
     console.log("Getting data for blendId (1): ", blendId);
-    const getBlendData = async () => {
+    const getCardBlendData = async () => {
       console.log("Getting data for blendId (2): ", blendId);
 
       try {
         const encodedValue = encodeURIComponent(blendId as string);
         const res = await fetch(
-          `http://localhost:3000/v1/blend/data?blendId=${encodedValue}`,
+          `http://localhost:3000/v1/blend/carddata?blendId=${encodedValue}`,
           {
             method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
             credentials: "include",
           },
         );
@@ -158,21 +175,21 @@ export function Blend() {
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           setError(data.message || "Blend ID is invalid.");
-          setLoading(false);
+          setCardLoading(false);
           return;
         }
 
         const data = await res.json();
         console.log("Blend data received:", data);
         // const userData = JSON.parse(data) as BlendApiResponse;
-        const userData = BlendApiResponseSchema.parse(data);
+        const userData = CardApiResponseSchema.parse(data);
         console.log("Parsed blend data:", userData);
-        setUserBlendData(userData);
-        setLoading(false);
+        setUserCardData(userData);
+        setCardLoading(false);
       } catch (err) {
         console.error(err);
         setError("Something went wrong. Please try again.");
-        setLoading(false);
+        setCardLoading(false);
       }
     };
 
@@ -180,14 +197,158 @@ export function Blend() {
       setError("Could not get blendid.");
       console.log("Blend ID is null, cannot get data?");
     } else {
-      getBlendData();
-      console.log("Getting blend data");
+      getCardBlendData();
+      console.log("Getting card blend data");
     }
   }, [blendId]);
 
-  // if (error != null) {
-  //   console.error(error);
-  // }
+  async function downloadCatalogueData(duration: string, category: string) {
+    const params = {
+      blendId: blendId as string,
+      duration: duration,
+      category: category,
+    };
+
+    const queryString = new URLSearchParams(params).toString();
+    const res = await fetch(
+      `http://localhost:3000/v1/blend/cataloguedata?${queryString}`,
+      {
+        method: "GET",
+        credentials: "include",
+      },
+    );
+
+    if (res.status == 401) {
+      navigate(
+        `/login?redirectTo=${encodeURIComponent(location.pathname + location.search)}`,
+      );
+      return null;
+    }
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.message || "Blend ID is invalid.");
+      // setCatalogueLoading(false);
+      return null;
+    }
+    return res;
+  }
+
+  const getCatalogueBlendData = async (
+    duration: string,
+    category: string,
+    blendId: string,
+    setData: (data: any[]) => void,
+    setLoading: (loading: boolean) => void,
+    setError: (msg: string) => void,
+  ) => {
+    console.log("Getting data for blendId:", blendId);
+
+    try {
+      setLoading(true);
+
+      const res = await downloadCatalogueData(duration, category);
+
+      if (!res) {
+        throw new Error("Catalogue data fetch returned null");
+      }
+
+      const data = await res.json();
+      console.log("Catalogue blend data received:", data);
+
+      const parsedData = data.map((item: any) =>
+        CatalogueBlendSchema.parse(item),
+      );
+
+      setData(parsedData);
+      return parsedData;
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    console.log("Loading user catalogue artist blend data:");
+
+    if (!blendId) {
+      setError("Could not get blendid.");
+      console.log("Blend ID is null, cannot get data?");
+      return;
+    }
+
+    getCatalogueBlendData(
+      "3month",
+      "artist",
+      blendId,
+      setUserCatalogueArtist3MonthData,
+      // setCatalogueLoading,
+      setCatArt3Month,
+      setError,
+    );
+  }, [blendId]);
+
+  useEffect(() => {
+    console.log("Loading user catalogue artist blend data:");
+
+    if (!blendId) {
+      setError("Could not get blendid.");
+      console.log("Blend ID is null, cannot get data?");
+      return;
+    }
+
+    getCatalogueBlendData(
+      "3month",
+      "track",
+      blendId,
+      setUserCatalogueTrack3MonthData,
+      // setCatalogueLoading,
+      setCatTrack3Month,
+      setError,
+    );
+  }, [blendId]);
+
+  useEffect(() => {
+    console.log("Loading user catalogue artist blend data:");
+
+    if (!blendId) {
+      setError("Could not get blendid.");
+      console.log("Blend ID is null, cannot get data?");
+      return;
+    }
+
+    getCatalogueBlendData(
+      "1year",
+      "artist",
+      blendId,
+      setUserCatalogueTrack1YearData,
+      // setCatalogueLoading,
+      setCatArt1Year,
+      setError,
+    );
+  }, [blendId]);
+
+  useEffect(() => {
+    console.log("Loading user catalogue artist blend data:");
+
+    if (!blendId) {
+      setError("Could not get blendid.");
+      console.log("Blend ID is null, cannot get data?");
+      return;
+    }
+
+    getCatalogueBlendData(
+      "1year",
+      "track",
+      blendId,
+      setUserCatalogueTrack1YearData,
+      // setCatalogueLoading,
+      setCatTrack1Year,
+      setError,
+    );
+  }, [blendId]);
 
   // ----- Copy button functionality -----
   const captureRef = useRef(null); //Div to be captured
@@ -250,17 +411,16 @@ export function Blend() {
     setMode,
     setUsers,
     setBlendPercent,
-    blendApiResponse: userBlendData,
+    blendApiResponse: userCardData,
   };
 
   useEffect(() => {
-    if (userBlendData != undefined && loading == false) {
-      setBlendPercent(userBlendData.OverallBlendNum);
+    if (userCardData != undefined && cardLoading == false) {
+      setBlendPercent(userCardData.OverallBlendNum);
       setMode("Default mode");
-      if (userBlendData.Usernames.length == 2)
-        setUsers(userBlendData.Usernames);
+      if (userCardData.Usernames.length == 2) setUsers(userCardData.Usernames);
     }
-  }, [userBlendData]);
+  }, [userCardData]);
   // setBlendPercent(userBlendData.OverallBlendNum);
 
   return (
@@ -305,7 +465,7 @@ export function Blend() {
                   className="mt-0 text-6xl md:text-5xl lg:text-7xl 
     leading-none font-[Filepile] font-normal -left-2 tracking-tight text-black relative inline-block"
                 >
-                  {loading ? "--" : blendPercent}
+                  {cardLoading ? "--" : blendPercent}
                   <span className="absolute bottom-1 -right-12 text-lg font-normal ">
                     /100
                   </span>
@@ -333,32 +493,38 @@ export function Blend() {
                   {mode}
                 </p>
 
-                <div className="grid grid-row-2 gap-1 text-left text-black font-[Roboto_Mono] mt-2">
+                <div className="grid grid-row-2  gap-1  text-left text-black font-[Roboto_Mono] mt-2">
                   <ul>
                     <p className="font-semibold text-base">Top Artists</p>
 
-                    <li className="text-[13px] font-medium leading-tight">
-                      - Clairo
-                    </li>
-                    <li className="text-[13px] font-medium leading-tight">
-                      - Men I Trust
-                    </li>
-                    <li className="text-[13px] font-medium leading-tight">
-                      - Bring Me The Horizon
-                    </li>
+                    {userCatalogueArtist3MonthData
+                      .slice(0, 3)
+                      .map((item, index) => {
+                        return (
+                          <li
+                            key={index}
+                            className="text-[13px] font-medium leading-tight"
+                          >
+                            - {item.Name}
+                          </li>
+                        );
+                      })}
                   </ul>
 
                   <ul>
                     <p className="font-semibold text-base">Top Songs</p>
-                    <li className="text-[13px] font-medium leading-tight">
-                      - Bababooey 2
-                    </li>
-                    <li className="text-[13px] font-medium leading-tight">
-                      - Come Down
-                    </li>
-                    <li className="text-[13px] font-medium leading-tight">
-                      - Bags
-                    </li>
+                    {userCatalogueTrack3MonthData
+                      .slice(0, 3)
+                      .map((item, index) => {
+                        return (
+                          <li
+                            key={index}
+                            className="text-[13px] font-medium leading-tight"
+                          >
+                            - {item.Name}
+                          </li>
+                        );
+                      })}
                   </ul>
                 </div>
 
@@ -384,66 +550,150 @@ export function Blend() {
         {/* RIGHT CONTENT AREA */}
         <div className=" md:w-[60%] outline-amber-600 flex flex-col flex-wrap items-center justify-baseline gap-y-5">
           {/* Top blend artists section */}
-          <section className=" w-full flex flex-col">
-            <h2 className="text-xl md:text-2xl font-semibold text-black mb-4 text-center">
-              Top blend artists
-            </h2>
-            {/* Placeholder list/cards — replace with real data */}
-            <div className="flex flex-col gap-y-4 items-center gap-4 text-zinc-950">
-              <SplitRatioBar
-                itemName="Clairo"
-                valueA={40}
-                valueB={30}
-                urlToNavigateA="https://www.last.fm/user/saflas"
-                urlToNavigateB="https://www.last.fm/user/test2002"
-              />
-              <SplitRatioBar
-                itemName="Bring Me The Horizon"
-                valueA={59}
-                valueB={20}
-                urlToNavigateA="https://www.last.fm/user/saflas"
-                urlToNavigateB="https://www.last.fm/user/test2002"
-              />
-              <SplitRatioBar
-                itemName="Linkin Park"
-                valueA={10}
-                valueB={40}
-                urlToNavigateA="https://www.last.fm/user/saflas"
-                urlToNavigateB="https://www.last.fm/user/test2002"
-              />
-            </div>
-          </section>
+          {catArt3Month ? (
+            <section className="w-full flex flex-col">
+              <h2 className="text-lg md:text-lg font-bold text-black mb-4 text-center">
+                ARTISTS - LAST 3 MONTHS
+              </h2>
+
+              <div className="flex flex-col gap-y-4 items-center">
+                {[...Array(3)].map((_, index) => (
+                  <SplitRatioBarSkeleton key={index} />
+                ))}
+              </div>
+            </section>
+          ) : userCatalogueArtist3MonthData.length != 0 ? (
+            <section className="w-full flex flex-col">
+              <h2 className="text-lg md:text-lg font-bold text-black mb-4 text-center">
+                ARTISTS - LAST 3 MONTHS
+              </h2>
+
+              <div className="w-full max-h-[280px] overflow-y-scroll">
+                <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
+                  {userCatalogueArtist3MonthData.map((item, index) => (
+                    <SplitRatioBar
+                      key={index}
+                      itemName={item.Name}
+                      Artist={item.Artist as string}
+                      valueA={item.Playcounts[0]}
+                      valueB={item.Playcounts[1]}
+                      ArtistUrl={item.ArtistUrl as string}
+                      itemUrl={item.EntryUrl as string}
+                    />
+                  ))}
+                </div>
+              </div>
+            </section>
+          ) : null}
 
           {/* Top blend songs section */}
-          <section className=" w-full">
-            <h2 className="text-xl md:text-2xl font-semibold text-black mb-4 text-center">
-              Top blend songs
-            </h2>
-            {/* Placeholder list/cards — replace with real data */}
-            <div className="flex flex-col gap-y-4 items-center gap-4  text-zinc-950">
-              <SplitRatioBar
-                itemName="Charm"
-                valueA={40}
-                valueB={30}
-                urlToNavigateA="https://www.last.fm/user/saflas"
-                urlToNavigateB="https://www.last.fm/user/test2002"
-              />
-              <SplitRatioBar
-                itemName="Sempiternal"
-                valueA={59}
-                valueB={20}
-                urlToNavigateA="https://www.last.fm/user/saflas"
-                urlToNavigateB="https://www.last.fm/user/test2002"
-              />
-              <SplitRatioBar
-                itemName="Hybrid Theory"
-                valueA={10}
-                valueB={40}
-                urlToNavigateA="https://www.last.fm/user/saflas"
-                urlToNavigateB="https://www.last.fm/user/test2002"
-              />
-            </div>
-          </section>
+          {catArt1Year ? (
+            <section className="w-full flex flex-col">
+              <h2 className="text-lg md:text-lg font-bold text-black mb-4 text-center">
+                ARTISTS - LAST 1 YEAR
+              </h2>
+
+              <div className="flex flex-col gap-y-4 items-center">
+                {[...Array(3)].map((_, index) => (
+                  <SplitRatioBarSkeleton key={index} />
+                ))}
+              </div>
+            </section>
+          ) : userCatalogueArtist1YearData.length != 0 ? (
+            <section className="w-full flex flex-col">
+              <h2 className="text-lg md:text-lg font-bold text-black mb-4 text-center">
+                ARTISTS - LAST 1 YEAR
+              </h2>
+
+              <div className="w-full max-h-[280px] overflow-y-scroll">
+                <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
+                  {userCatalogueArtist1YearData.map((item, index) => (
+                    <SplitRatioBar
+                      key={index}
+                      itemName={item.Name}
+                      Artist={item.Artist as string}
+                      valueA={item.Playcounts[0]}
+                      valueB={item.Playcounts[1]}
+                      ArtistUrl={item.ArtistUrl as string}
+                      itemUrl={item.EntryUrl as string}
+                    />
+                  ))}
+                </div>
+              </div>
+            </section>
+          ) : null}
+
+          {catTrack3Month ? (
+            <section className="w-full flex flex-col">
+              <h2 className="text-lg md:text-lg font-bold text-black mb-4 text-center">
+                TRACKS - LAST 3 MONTHS
+              </h2>
+
+              <div className="flex flex-col gap-y-4 items-center">
+                {[...Array(3)].map((_, index) => (
+                  <SplitRatioBarSkeleton key={index} />
+                ))}
+              </div>
+            </section>
+          ) : userCatalogueTrack3MonthData.length != 0 ? (
+            <section className="w-full flex flex-col">
+              <h2 className="text-lg md:text-lg font-bold text-black mb-4 text-center">
+                TRACKS - LAST 3 MONTHS
+              </h2>
+
+              <div className="w-full max-h-[280px] overflow-y-scroll">
+                <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
+                  {userCatalogueTrack3MonthData.map((item, index) => (
+                    <SplitRatioBar
+                      key={index}
+                      itemName={item.Name}
+                      Artist={item.Artist as string}
+                      valueA={item.Playcounts[0]}
+                      valueB={item.Playcounts[1]}
+                      ArtistUrl={item.ArtistUrl as string}
+                      itemUrl={item.EntryUrl as string}
+                    />
+                  ))}
+                </div>
+              </div>
+            </section>
+          ) : null}
+
+          {catTrack1Year ? (
+            <section className="w-full flex flex-col">
+              <h2 className="text-lg md:text-lg font-bold text-black mb-4 text-center">
+                TRACKS - LAST 1 YEAR
+              </h2>
+
+              <div className="flex flex-col gap-y-4 items-center">
+                {[...Array(3)].map((_, index) => (
+                  <SplitRatioBarSkeleton key={index} />
+                ))}
+              </div>
+            </section>
+          ) : userCatalogueTrack1YearData.length != 0 ? (
+            <section className="w-full flex flex-col">
+              <h2 className="text-lg md:text-lg font-bold text-black mb-4 text-center">
+                TRACKS - LAST 1 YEAR
+              </h2>
+
+              <div className="w-full max-h-[280px] overflow-y-scroll">
+                <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
+                  {userCatalogueTrack1YearData.map((item, index) => (
+                    <SplitRatioBar
+                      key={index}
+                      itemName={item.Name}
+                      Artist={item.Artist as string}
+                      valueA={item.Playcounts[0]}
+                      valueB={item.Playcounts[1]}
+                      ArtistUrl={item.ArtistUrl as string}
+                      itemUrl={item.EntryUrl as string}
+                    />
+                  ))}
+                </div>
+              </div>
+            </section>
+          ) : null}
         </div>
       </div>
     </div>

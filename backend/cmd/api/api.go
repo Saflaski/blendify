@@ -84,7 +84,7 @@ func (app *application) mount() http.Handler {
 			r.Get("/health", blendHandler.GetBlendHealth)
 			r.Post("/add", blendHandler.AddBlendFromInviteLink)
 			r.Post("/delete", blendHandler.DeleteBlend)
-			r.Get("/data", blendHandler.GetBlendPageData)
+			r.Get("/carddata", blendHandler.GetBlendPageData)
 			r.Get("/cataloguedata", blendHandler.GetBlendedEntryData)
 			r.Get("/userblends", blendHandler.GetUserBlends)
 			r.Get("/generatelink", blendHandler.GenerateNewLink)

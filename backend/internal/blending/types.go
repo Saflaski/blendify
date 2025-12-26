@@ -82,6 +82,8 @@ type IndividualUserData struct {
 
 type DuoBlend struct {
 	Users           []string   `json:"Usernames"`
+	UserURLs        []string   `json:"UserUrls"`
+	UserImageUrls   []string   `json:"UserImageUrls"`
 	OverallBlendNum int        `json:"OverallBlendNum"`
 	ArtistBlend     TypeBlend  `json:"ArtistBlend"`
 	AlbumBlend      TypeBlend  `json:"AlbumBlend"`
@@ -98,13 +100,13 @@ type TypeBlend struct {
 }
 
 type TopEntry struct {
-	Name           string `json:"name"`
-	URL            string `json:"entryurl,omitempty"`
-	ImageURL       string `json:"entryimageurl,omitempty"`
-	ArtistName     string `json:"artist,omitempty"` //Not needed when it's an artist
-	ArtistURL      string `json:"artisturl,omitempty"`
-	ArtistImageURL string `json:"artistimageurl,omitempty"`
-	Playcounts     []int  `json:"playcounts"`
+	Name           string `json:"Name"`
+	URL            string `json:"EntryUrl,omitempty"`
+	ImageURL       string `json:"ImageUrl,omitempty"`
+	ArtistName     string `json:"Artist,omitempty"` //Not needed when it's an artist
+	ArtistURL      string `json:"ArtistUrl,omitempty"`
+	ArtistImageURL string `json:"ArtistImageUrl,omitempty"`
+	Playcounts     []int  `json:"Playcounts"`
 }
 
 type CatalogueStats = musicapi.CatalogueStats
