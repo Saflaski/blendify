@@ -1,5 +1,7 @@
 package musicapi
 
+import "encoding/json"
+
 // user.getinfo
 type UserInfo struct {
 	User struct {
@@ -25,12 +27,12 @@ type UserWeeklyArtistList struct {
 }
 
 type Artist struct {
-	MBID       string         `json:"mbid"`
-	URL        string         `json:"url"`
+	MBID       string         `json:"mbid,omitempty"`
+	URL        string         `json:"url,omitempty"`
 	Name       string         `json:"name"`
-	Attributes map[string]any `json:"@attr"`
-	Playcount  string         `json:"playcount"`
-	LFMImages  []LFMImage     `json:"image"`
+	Attributes map[string]any `json:"@attr ,omitempty"`
+	Playcount  string         `json:"playcount,omitempty"`
+	LFMImages  []LFMImage     `json:"image,omitempty"`
 }
 
 type LFMImage struct {
@@ -45,7 +47,7 @@ type AlbumArtist struct {
 }
 
 type Album struct {
-	Artist     AlbumArtist    `json:"artist"`
+	Artist     Artist         `json:"artist"`
 	MBID       string         `json:"mbid"`
 	URL        string         `json:"url"`
 	Name       string         `json:"name"`
@@ -67,7 +69,7 @@ type TrackArtist struct {
 }
 
 type Track struct {
-	Artist     TrackArtist    `json:"artist"`
+	Artist     Artist         `json:"artist"`
 	MBID       string         `json:"mbid"`
 	URL        string         `json:"url"`
 	Name       string         `json:"name"`
@@ -85,14 +87,6 @@ type UserWeeklyTrackList struct {
 type ErrorResponse struct {
 	Error   int    `json:"error"`
 	Message string `json:"message"`
-}
-
-// user.getttopartists
-type UserTopArtists struct {
-	TopArtists struct {
-		Artist     []Topartist_artist `json:"artist"`
-		Attributes map[string]any     `json:"@attr"`
-	} `json:"topartists"`
 }
 
 // type TopArtists struct {
@@ -123,4 +117,26 @@ type UserTopTracks struct {
 	TopTracks struct {
 		Track []Track `json:"track"`
 	} `json:"toptracks"`
+}
+
+// user.getttopartists
+type UserTopArtists struct {
+	TopArtists struct {
+		Artist     []Artist       `json:"artist"`
+		Attributes map[string]any `json:"@attr"`
+	} `json:"topartists"`
+}
+
+type CatalogueStats struct { //A catalogue can be an album, track or artist. The following is metadata for a catalogue
+	Artist      Artist `json:"artist"`
+	Count       int    `json:"count"`
+	PlatformURL string `json:"platformurl"` //Catalogue URL
+	Image       string `json:"imageurl"`    //Image URL
+	PlatformID  string `json:"platformid"`  //Catalogue Platform ID
+}
+
+func JSONToMapCatStats(data []byte) (map[string]CatalogueStats, error) {
+	var out map[string]CatalogueStats
+	err := json.Unmarshal(data, &out)
+	return out, err
 }

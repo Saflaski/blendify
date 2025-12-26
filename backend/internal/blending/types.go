@@ -2,7 +2,6 @@ package blend
 
 import (
 	musicapi "backend-lastfm/internal/music_api/lastfm"
-	"backend-lastfm/internal/utility"
 	"time"
 )
 
@@ -104,15 +103,7 @@ type TopEntry struct {
 	Distribution []int  `json:"distribution"`
 }
 
-// type CatalogueStats struct { //A catalogue can be an album, track or artist. The following is metadata for a catalogue
-// 	Artist      string `json:"artist"`
-// 	Count       int    `json:"count"`
-// 	PlatformURL string `json:"platformurl"` //Catalogue URL
-// 	Image       string `json:"imageurl"`    //Image URL
-// 	PlatformID  string `json:"platformid"`  //Catalogue Platform ID
-// }
-
-type CatalogueStats = utility.CatalogueStats
+type CatalogueStats = musicapi.CatalogueStats
 
 type complexResponse struct {
 	user     userid

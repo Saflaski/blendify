@@ -447,14 +447,6 @@ func (s *BlendService) PopulateUserData(context context.Context, user userid) er
 
 }
 
-type response struct {
-	user     userid
-	chart    map[string]int    //We can get category of map from this
-	duration blendTimeDuration //And category of blend duration from this
-	category blendCategory
-	err      error
-}
-
 func (s *BlendService) GetNewDataForUser(ctx context.Context, user userid) error {
 
 	platformUsername, err := s.repo.GetLFMByUserId(ctx, string(user))
@@ -580,6 +572,15 @@ func (s *BlendService) GetBlend(context context.Context, userA userid, userB use
 
 }
 
+// Converts catalogueKey -> Catalogue => catalogueKey -> playcount int
+func (s *BlendService) extractPlayCount(input map[string]CatalogueStats) map[string]int {
+	output := make(map[string]int)
+	for k, v := range input {
+		output[k] = v.Count
+	}
+	return output
+}
+
 // ========== Artist Blend ==========
 func (s *BlendService) getArtistBlend(context context.Context, userA, userB userid, timeDuration blendTimeDuration) (int, error) {
 
@@ -597,7 +598,7 @@ func (s *BlendService) getArtistBlend(context context.Context, userA, userB user
 	}
 
 	//Using Log Weighted Cosine Similarity
-	blendNumber := CalculateLWCS(0.8, listenHistoryA, listenHistoryB)
+	blendNumber := CalculateLWCS(0.8, s.extractPlayCount(listenHistoryA), s.extractPlayCount(listenHistoryB))
 	return blendNumber, nil
 }
 
@@ -663,7 +664,7 @@ func (s *BlendService) downloadTopArtists(context context.Context, userName stri
 		imageURL := s.getCatalogueImageURL(v.LFMImages) //Selects a good pic out of the ones given
 
 		catStat := CatalogueStats{
-			Artist:      v.Name,
+			Artist:      v,
 			Count:       playcount,
 			PlatformURL: v.URL,
 			Image:       imageURL,
@@ -691,7 +692,7 @@ func (s *BlendService) getAlbumBlend(context context.Context, userA, userB useri
 		return 0, fmt.Errorf("inappropriate listen history ranges, userA: %d , userB: %d", len(listenHistoryA), len(listenHistoryB))
 	}
 	//Using Log Weighted Cosine Similarity
-	blendNumber := CalculateLWCS(0.8, listenHistoryA, listenHistoryB)
+	blendNumber := CalculateLWCS(0.8, s.extractPlayCount(listenHistoryA), s.extractPlayCount(listenHistoryB))
 	return blendNumber, nil
 }
 
@@ -717,7 +718,7 @@ func (s *BlendService) downloadTopAlbums(context context.Context, userName strin
 		imageURL := s.getCatalogueImageURL(v.LFMImages) //Selects a good pic out of the ones given
 
 		catStat := CatalogueStats{
-			Artist:      v.Name,
+			Artist:      v.Artist,
 			Count:       playcount,
 			PlatformURL: v.URL,
 			Image:       imageURL,
@@ -747,7 +748,7 @@ func (s *BlendService) getTrackBlend(context context.Context, userA, userB useri
 		return 0, fmt.Errorf("inappropriate listen history ranges, userA: %d , userB: %d", len(listenHistoryA), len(listenHistoryB))
 	}
 	//Using Log Weighted Cosine Similarity
-	blendNumber := CalculateLWCS(0.8, listenHistoryA, listenHistoryB)
+	blendNumber := CalculateLWCS(0.8, s.extractPlayCount(listenHistoryA), s.extractPlayCount(listenHistoryB))
 	return blendNumber, nil
 }
 
@@ -781,7 +782,7 @@ func (s *BlendService) downloadTopTracks(context context.Context, userName strin
 		imageURL := s.getCatalogueImageURL(v.LFMImages) //Selects a good pic out of the ones given
 
 		catStat := CatalogueStats{
-			Artist:      v.Name,
+			Artist:      v.Artist,
 			Count:       playcount,
 			PlatformURL: v.URL,
 			Image:       imageURL,

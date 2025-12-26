@@ -1,6 +1,7 @@
 package blend
 
 import (
+	musicapi "backend-lastfm/internal/music_api/lastfm"
 	"backend-lastfm/internal/utility"
 	"context"
 	"fmt"
@@ -48,7 +49,7 @@ func (r *RedisStateStore) GetFromCacheTopX(context context.Context, userName str
 	// 	return nil, fmt.Errorf(" during extracting cache db, error in decoding from json: %w", err)
 	// }
 
-	respMap, err := utility.JSONToMapCatStats([]byte(Result))
+	respMap, err := musicapi.JSONToMapCatStats([]byte(Result))
 	if err != nil {
 		return nil, fmt.Errorf(" during extracting cache db, error in decoding from json: %w", err)
 	}
