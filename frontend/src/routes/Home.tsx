@@ -240,7 +240,11 @@ function ListOfBlends({
                 }}
                 className="
           -transition-x-4
-          opacity-0 w-0
+          lg:translate-x-0
+          opacity-100
+          pl-1
+          w-auto
+          lg:opacity-0 lg:w-0
           transition-all duration-100 ease-in-out
           group-hover:opacity-100
           group-hover:translate-x-0
