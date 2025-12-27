@@ -371,7 +371,7 @@ function RecentOrTop() {
 
 function AddNewBlendBar({ AddBlend }) {
   const [value, setValue] = useState("");
-  var prefix = `http://localhost:5173/blend/`;
+  var prefix = `https://blendify.sabeehislam.com/blend/`;
   const isValid = (value: string) => {
     //Simple URL check for now. Change slice num and url for prod
     if (value.slice(0, prefix.length) == prefix) {
