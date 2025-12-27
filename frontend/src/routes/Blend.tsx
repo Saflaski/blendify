@@ -5,9 +5,10 @@ import React, { useRef, useState, useEffect } from "react";
 import CardBackground from "@/assets/images/topography.svg";
 import CopyIcon from "@/assets/images/copy.svg";
 import LastfmIcon from "@/assets/images/lastfm.svg";
-import "@/assets/styles/fonts.css";
 import "@/assets/styles/index.css";
 import { toBlob } from "html-to-image";
+
+import { chromium, firefox, webkit, BrowserType } from "playwright";
 import {
   ControlPanelProps,
   CardApiResponse,
@@ -444,14 +445,17 @@ export function Blend() {
                 ref={captureRef}
                 className={`shine-element relative ring-2 ring-black bg-neutral-200 
     w-58 md:w-58 lg:w-66 p-4 aspect-[2/3]
-    bg-size-[auto_120px] bg-[url(${CardBackground})]`}
+    bg-size-[auto_120px] `}
+                style={{
+                  backgroundImage: `url(${CardBackground})`,
+                }}
               >
                 {!isCapturing && (
                   <button
                     onClick={handleScreenshot}
                     className="absolute top-1 right-1 outline outline-black bg-inherit p-1"
                   >
-                    <img src={CopyIcon} className="w-4 h-4" />
+                    <img src={CopyIcon} className="w-6 h-6" />
                   </button>
                 )}
 
@@ -463,17 +467,50 @@ export function Blend() {
                     Copied!
                   </div>
                 )}
-
                 <h1
                   className="mt-0 text-6xl md:text-5xl lg:text-7xl 
-    leading-none  font-normal -left-2 tracking-tight text-black relative inline-block"
-                  style={{ fontFamily: "'Filepile', sans-serif" }}
+    leading-none   -left-2 tracking-tight text-[#000] font-extrabold relative inline-block"
+                  style={{ fontFamily: "'Roboto Mono', sans-serif" }}
                 >
                   {cardLoading ? "--" : blendPercent}
-                  <span className="absolute bottom-1 -right-12 text-lg font-normal ">
+                  <span className="absolute bottom-1 -right-10 text-lg font-normal ">
                     /100
                   </span>
                 </h1>
+                {/* <svg
+                  viewBox="0 0 260 120"
+                  width={220}
+                  height={100}
+                  className="relative top-0 left-9"
+                >
+                  <text
+                    x="0"
+                    y="96"
+                    style={{ fontFamily: "Filepile" }}
+                    fontSize="96"
+                    dominantBaseline="alphabetic"
+                  >
+                    {cardLoading ? "--" : blendPercent}
+                  </text>
+
+                  <text
+                    x={
+                      blendPercent != undefined
+                        ? blendPercent.toString().length * 56 + 35
+                        : 10
+                    }
+                    y="101"
+                    style={{ fontFamily: "Filepile" }}
+                    fontSize="23"
+                    dominantBaseline="alphabetic"
+                  >
+                    /100
+                  </text>
+                </svg> */}
+
+                {/* <span className="absolute top-21.5 right-10 -translate-0 font-[Roboto_Mono] text-lg text-black font-bold ">
+                    /100
+                  </span> */}
 
                 <div className="flex items-center font-[Roboto_Mono] gap-2 mt-2 justify-center text-gray-800">
                   <span
