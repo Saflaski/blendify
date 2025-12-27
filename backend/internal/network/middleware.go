@@ -2,6 +2,9 @@ package network
 
 import (
 	"net/http"
+	"os"
+	"strconv"
+	"strings"
 )
 
 func Cors(next http.Handler) http.Handler {
@@ -9,6 +12,15 @@ func Cors(next http.Handler) http.Handler {
 	allowed := map[string]bool{
 		"http://127.0.0.1:5173": true,
 		"http://localhost:5173": true,
+	}
+	prod, _ := strconv.ParseBool(os.Getenv("PROD"))
+	if prod {
+		for _, o := range strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",") {
+			o = strings.TrimSpace(o)
+			if o != "" {
+				allowed[o] = true
+			}
+		}
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")

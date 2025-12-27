@@ -6,6 +6,9 @@ import (
 	musicapi "backend-lastfm/internal/music_api/lastfm"
 	network "backend-lastfm/internal/network"
 	"net/http"
+	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -123,7 +126,15 @@ func (app *application) run(h http.Handler) error {
 	glog.Infof("WriteTimeout: %f", srv.WriteTimeout.Seconds())
 	glog.Infof("IdleTimeout: %f", srv.IdleTimeout.Seconds())
 	glog.Infof("Session Valid Time: %s", (time.Duration(app.config.sessionExpiry) * time.Second).String())
-
+	prod, _ := strconv.ParseBool(os.Getenv("PROD"))
+	if prod {
+		for _, o := range strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",") {
+			o = strings.TrimSpace(o)
+			if o != "" {
+				glog.Info("Allowed Origin: " + o)
+			}
+		}
+	}
 	return srv.ListenAndServe()
 }
 
