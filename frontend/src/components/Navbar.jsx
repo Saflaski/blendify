@@ -3,7 +3,8 @@ import { useState, useEffect, useRef } from "react";
 import { API_BASE_URL } from "../constants";
 import HomeIcon from "@/assets/images/home.svg";
 import MenuIcon from "@assets/images/menu.svg";
-import { set } from "zod";
+import BlendifyWhiteIcon from "@/assets/images/blendifyIconWhite.svg";
+import BlendifyIcon from "@/assets/images/blendifyIcon.svg";
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -51,6 +52,7 @@ export function Navbar() {
                 text-[#F6E8CB]
                 font-['Roboto_Mono','monospace']
                 [text-shadow:2px_2px_0_#000]
+                [drop-shadow:2px_2px_0_#000]
                 transition-all duration-75 ease-in-out
                 active:translate-x-[1px] active:translate-y-[1px]
                 active:[text-shadow:1px_1px_0_#000]
@@ -58,6 +60,18 @@ export function Navbar() {
               "
               // style={{ textShadow: "2px 2px 0 #000" }}
             >
+              <img
+                src={BlendifyWhiteIcon}
+                className="
+                w-7 h-auto
+                aspect-square
+                pr-1
+                drop-shadow-[2px_2px_0_#000] 
+                transition-all duration-75 ease-in-out
+                active:translate-x-[1px] active:translate-y-[1px]
+                active:drop-shadow-[1px_1px_0_#000]
+              "
+              />
               BLENDIFY
             </button>
           </Link>
