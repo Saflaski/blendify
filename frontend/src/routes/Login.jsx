@@ -1,5 +1,5 @@
 import "/src/assets/styles/Login.css";
-
+import { API_BASE_URL } from "../constants";
 export function Login() {
   return (
     <div className="">
@@ -79,7 +79,7 @@ function loginButton(platform) {
 
 function handleLastFMClick() {
   const returnTo = encodeURIComponent("http://localhost:5173/home");
-  window.location.href = `http://localhost:3000/v1/auth/login/lastfm?return_to=${returnTo}`;
+  window.location.href = `${API_BASE_URL}/auth/login/lastfm?return_to=${returnTo}`;
 }
 
 function Title() {

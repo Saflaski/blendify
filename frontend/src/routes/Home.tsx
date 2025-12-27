@@ -5,6 +5,7 @@ import cross from "/src/assets/images/cross.svg";
 import { useNavigate } from "react-router-dom";
 import React from "react";
 import "/src/assets/styles/home.css";
+import { API_BASE_URL } from "../constants";
 
 type Blend = {
   blendid: string;
@@ -58,7 +59,7 @@ export function Home() {
       // const baseURL = "http://localhost:3000/v1/blend/add";
       // const params = new URLSearchParams({ value: invite ?? "" });
 
-      url = new URL("http://localhost:3000/v1/blend/add");
+      url = new URL(`${API_BASE_URL}/blend/add`);
       // url.search = params.toString();
 
       const response = await fetch(url, {
@@ -98,7 +99,7 @@ export function Home() {
   useEffect(() => {
     async function fetchBlends() {
       try {
-        const url = "http://localhost:3000/v1/blend/userblends";
+        const url = `${API_BASE_URL}/v1/blend/userblends`;
         const res = await fetch(url, {
           method: "GET",
           headers: {
@@ -272,7 +273,7 @@ function ListOfBlends({
   async function handleDelete(blendIdToDelete: string) {
     try {
       const blendId = blendIdToDelete;
-      var url = new URL("http://localhost:3000/v1/blend/delete");
+      var url = new URL(`${API_BASE_URL}blend/delete`);
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -483,7 +484,7 @@ function GenerateLink() {
 async function generateNewLinkSomehow() {
   console.log("Fetching outward blend link");
   try {
-    const baseURL = "http://localhost:3000/v1/blend/generatelink";
+    const baseURL = `${API_BASE_URL}/blend/generatelink`;
     const url = new URL(baseURL);
     const response = await fetch(url, { credentials: "include" });
     if (!response.ok) {
