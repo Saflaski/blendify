@@ -1,6 +1,6 @@
 import { Link, Navigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-
+import { API_BASE_URL } from "../constants";
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -126,7 +126,7 @@ export function Navbar() {
 // ---- helpers ----
 
 async function handleLogOut() {
-  await fetch("http://localhost:3000/v1/auth/logout", {
+  await fetch(API_BASE_URL + "/auth/logout", {
     method: "POST",
     credentials: "include",
   });

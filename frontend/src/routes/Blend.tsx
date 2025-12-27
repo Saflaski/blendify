@@ -15,6 +15,7 @@ import {
   SplitRatioBar,
   SplitRatioBarSkeleton,
 } from "../components/SplitRatioBar";
+import { API_BASE_URL } from "../constants";
 
 // type ControlPanelProps = {
 //   setBlendPercent: (num: number) => void;
@@ -104,7 +105,7 @@ export function Blend() {
     //Get blendid as authenticated user.
     const requestBlendId = async () => {
       try {
-        const res = await fetch("http://localhost:3000/v1/blend/add", {
+        const res = await fetch(API_BASE_URL + "/blend/add", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -158,7 +159,7 @@ export function Blend() {
       try {
         const encodedValue = encodeURIComponent(blendId as string);
         const res = await fetch(
-          `http://localhost:3000/v1/blend/carddata?blendId=${encodedValue}`,
+          `${API_BASE_URL}/blend/carddata?blendId=${encodedValue}`,
           {
             method: "GET",
             credentials: "include",
@@ -211,7 +212,7 @@ export function Blend() {
 
     const queryString = new URLSearchParams(params).toString();
     const res = await fetch(
-      `http://localhost:3000/v1/blend/cataloguedata?${queryString}`,
+      `${API_BASE_URL}/blend/cataloguedata?${queryString}`,
       {
         method: "GET",
         credentials: "include",

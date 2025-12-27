@@ -1,9 +1,10 @@
 import { redirect } from "react-router-dom";
+import { API_BASE_URL } from "../constants";
 
 export async function authLoader() {
   console.log("Auth Loader loaded");
 
-  const res = await fetch("http://localhost:3000/v1/auth/validate", {
+  const res = await fetch(`${API_BASE_URL}/auth/validate`, {
     credentials: "include",
     headers: { Accept: "application/json" },
   });
