@@ -87,7 +87,7 @@ function loginButton(platform) {
 }
 
 function handleLastFMClick() {
-  const returnTo = encodeURIComponent("http://localhost:5173/home");
+  const returnTo = encodeURIComponent("https://blendify.sabeehislam.com/home");
   window.location.href = `${API_BASE_URL}/auth/login/lastfm?return_to=${returnTo}`;
 }
 
