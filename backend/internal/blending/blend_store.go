@@ -97,9 +97,9 @@ func (r *RedisStateStore) AssignOverallBlendToBlend(context context.Context, id 
 	// key_timestamp := fmt.Sprintf("%s:%s:%s", r.blendPrefix, string(id), "Created At")
 
 	// err := r.client.Set(context, key, blendNum, 0).Err()
-	err := r.client.HSet(context, key, "Overall", blendNum, "Created At", time.Now().Unix())
+	err := r.client.HSet(context, key, "Overall", blendNum, "Created At", time.Now().Unix()).Err()
 	if err != nil {
-		return fmt.Errorf(" could not set overallblend num to blend: %s", err)
+		return fmt.Errorf(" could not set overallblend num to blend, with blendNum %d and Created at %d : %s", blendNum, time.Now().Unix(), err)
 	}
 	return nil
 }
