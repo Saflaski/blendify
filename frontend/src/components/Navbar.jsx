@@ -35,14 +35,16 @@ export function Navbar() {
         </div>
 
         {/* CENTER: Blendify brand */}
-        <div className="flex items-center justify-center">
-          <Link to="/home" className="no-underline">
+        <div className="flex items-center  justify-center">
+          <Link to="/home" className="no-underline focus:outline-none">
             <button
               type="button"
               className="
-                bg-transparent
+                [-webkit-tap-highlight-color:transparent]
+                focus:outline-none
                 font-extrabold
                 text-2xl
+                bg-[#D84727]
                 flex items-center justify-center
                 min-h-[5px]
                 text-center
@@ -67,7 +69,7 @@ export function Navbar() {
             type="button"
             onClick={() => setOpen((prev) => !prev)}
             className="
-              bg-transparent
+            bg-inherit
               text-black
               w-7 h-7
               flex items-center justify-center
