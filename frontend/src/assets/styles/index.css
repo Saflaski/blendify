@@ -1,4 +1,13 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap");
 @import "tailwindcss";
+
+@font-face {
+  font-family: "Filepile";
+  src: url("../fonts/filepile.regular.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
 
 @font-face {
   font-family: "Uni Sans", "opentype";

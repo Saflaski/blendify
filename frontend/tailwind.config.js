@@ -6,6 +6,8 @@ export default {
       fontFamily: {
         bubble_outline: ['"Bubble Caps Outline"', "sans-serif"],
         bubble_fill: ['"Bubble Caps Fill"', "sans-serif"],
+        filepile: ["Filepile", "sans-serif"],
+        robotoMono: ["Roboto Mono", "monospace"],
       },
     },
   },

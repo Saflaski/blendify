@@ -5,6 +5,8 @@ import React, { useRef, useState, useEffect } from "react";
 import CardBackground from "@/assets/images/topography.svg";
 import CopyIcon from "@/assets/images/copy.svg";
 import LastfmIcon from "@/assets/images/lastfm.svg";
+import "@/assets/styles/fonts.css";
+import "@/assets/styles/index.css";
 import { toBlob } from "html-to-image";
 import {
   ControlPanelProps,
@@ -464,7 +466,8 @@ export function Blend() {
 
                 <h1
                   className="mt-0 text-6xl md:text-5xl lg:text-7xl 
-    leading-none font-[Filepile] font-normal -left-2 tracking-tight text-black relative inline-block"
+    leading-none  font-normal -left-2 tracking-tight text-black relative inline-block"
+                  style={{ fontFamily: "'Filepile', sans-serif" }}
                 >
                   {cardLoading ? "--" : blendPercent}
                   <span className="absolute bottom-1 -right-12 text-lg font-normal ">
