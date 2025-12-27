@@ -490,7 +490,7 @@ async function generateNewLinkSomehow() {
     const newLink = data["linkId"];
     console.log("API response data: ", data);
     console.log("Blend Link: ", newLink);
-    return "http://localhost:5173/blend/?invite=" + newLink;
+    return "https://blendify.sabeehislam.com/blend/?invite=" + newLink;
   } catch (err) {
     console.error("API erorr: ", err);
     return (
