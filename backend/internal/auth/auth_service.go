@@ -59,6 +59,7 @@ type Config struct {
 	ExpiryDuration     time.Duration
 	FrontendCookieName string
 	FrontendURL        string
+	BackendURL         string
 }
 
 type SessionID string
@@ -286,7 +287,7 @@ func (s *authService) GenerateNewStateAndSID(ctx context.Context) (string, strin
 func (s *authService) GetInitLoginURL(state string) string {
 	q := url.Values{}
 	q.Set("api_key", s.lastFMAPIKey)
-	q.Set("cb", string(LASTFM_CALLBACK+"?state="+state))
+	q.Set("cb", string(s.config.BackendURL+"/auth/callback/lastfm"+"?state="+state))
 
 	requestURL := LASTFM_BASE_AUTH_API + "?" + q.Encode()
 	// glog.Info(requestURL)

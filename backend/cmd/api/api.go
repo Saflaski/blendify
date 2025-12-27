@@ -61,7 +61,8 @@ func (app *application) mount() http.Handler {
 		ExpiryDuration: time.Duration(app.config.sessionExpiry) * time.Second,
 		// ExpiryDuration:     time.Duration(app.config.sessionExpiry) * time.Second,
 		FrontendCookieName: "sid",
-		FrontendURL:        "http://localhost:5173",
+		FrontendURL:        os.Getenv("FRONTEND_URL"),
+		BackendURL:         os.Getenv("BACKEND_URL"),
 	}
 
 	authRepo := auth.NewRedisStateStore(rdb, authCfg.ExpiryDuration) // Placeholder nil, replace with actual Redis client
