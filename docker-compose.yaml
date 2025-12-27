@@ -10,29 +10,37 @@ services:
     depends_on:
       - frontend
       - backend
-      
+    networks:
+      - web
+
   backend:
     build: ./backend
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
+    # ports:
+    #   - "3000:3000"
     restart: unless-stopped
     env_file:
       - ./backend/.env
     depends_on:
       - redis
+    networks:
+      - web
 
   frontend:
     build: ./frontend
-    ports:
-      - "80:80"
+    expose:
+      - "80"
     depends_on:
       - backend
+    networks:
+      - web
 
   redis:
     image: redis:7
-    ports:
-      - "6379:6379"
+    expose:
+      - "6379"
 
 networks:
   web:
-    external: true
+    driver: bridge
