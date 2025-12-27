@@ -1,6 +1,8 @@
 import { Link, Navigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { API_BASE_URL } from "../constants";
+import HomeIcon from "@/assets/images/home.svg";
+import MenuIcon from "@assets/images/menu.svg";
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -70,11 +72,7 @@ export function Navbar() {
               flex items-center justify-center
             "
           >
-            <img
-              src="/src/assets/images/menu.svg"
-              alt="menu"
-              className="w-full h-full"
-            />
+            <img src={MenuIcon} alt="menu" className="w-full h-full" />
           </button>
 
           {open && (
@@ -165,11 +163,7 @@ function HomeButton({ onClick }) {
         flex items-center justify-center
       "
       >
-        <img
-          src="/src/assets/images/home.svg"
-          alt="home"
-          className="w-full h-full"
-        />
+        <img src={HomeIcon} alt="home" className="w-full h-full" />
       </button>
     </Link>
   );

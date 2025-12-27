@@ -2,6 +2,9 @@
 import { ControlPanel } from "../components/blend-options/ControlPanel";
 import { useLocation, useNavigate } from "react-router-dom";
 import React, { useRef, useState, useEffect } from "react";
+import CardBackground from "@/assets/images/topography.svg";
+import CopyIcon from "@/assets/images/copy.svg";
+import LastfmIcon from "@/assets/images/lastfm.svg";
 import { toBlob } from "html-to-image";
 import {
   ControlPanelProps,
@@ -437,19 +440,16 @@ export function Blend() {
             <div className="w-full flex justify-center ">
               <div
                 ref={captureRef}
-                className="shine-element relative ring-2 ring-black bg-neutral-200 
+                className={`shine-element relative ring-2 ring-black bg-neutral-200 
     w-58 md:w-58 lg:w-66 p-4 aspect-[2/3]
-    bg-size-[auto_120px] bg-[url(/src/assets/images/topography.svg)]"
+    bg-size-[auto_120px] bg-[url(${CardBackground})]`}
               >
                 {!isCapturing && (
                   <button
                     onClick={handleScreenshot}
                     className="absolute top-1 right-1 outline outline-black bg-inherit p-1"
                   >
-                    <img
-                      src="/src/assets/images/copy.svg"
-                      className="w-4 h-4"
-                    />
+                    <img src={CopyIcon} className="w-4 h-4" />
                   </button>
                 )}
 
@@ -530,7 +530,7 @@ export function Blend() {
                 </div>
 
                 <div className="flex flex-col justify-between gap-3 absolute bottom-8 left-1/2 -translate-x-1/2 size-12 h-auto">
-                  <img src="/src/assets/images/lastfm.svg" />
+                  <img src={LastfmIcon} />
                 </div>
 
                 <p className="text-center w-full font-[toxigenesis] text-[#404040] tracking-widest font-medium absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px]  text-shadow-2xs">

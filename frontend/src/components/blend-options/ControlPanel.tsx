@@ -1,5 +1,9 @@
 import React, { useState } from "react";
 import type { ControlPanelProps, CardApiResponse } from "../prop-types";
+import ArtistIcon from "@/assets/images/artist.svg";
+import AlbumIcon from "@/assets/images/artist.svg";
+import TrackIcon from "@/assets/images/track.svg";
+
 function ControlPanelTileButton({ highlight, children, label, onClick }) {
   return (
     <button
@@ -207,7 +211,6 @@ export function ControlPanel({
               // handleGroup1Click("1month");
             }}
           >
-            {/* <img src="/src/assets/images/1month.svg" alt="1 Month" /> */}
             <p className="font-[Roboto_Mono] text-xs font-bold">1 MONTH</p>
           </ControlPanelTileButton>
           <ControlPanelTileButton
@@ -244,7 +247,7 @@ export function ControlPanel({
               // handleGroup2Click("artist");
             }}
           >
-            <img src="/src/assets/images/artist.svg" alt="Artist" />
+            <img src={ArtistIcon} alt="Artist" />
           </ControlPanelTileButton>
           <ControlPanelTileButton
             highlight={selectedGroup2 == "track"}
@@ -254,7 +257,7 @@ export function ControlPanel({
               // handleGroup2Click("track");
             }}
           >
-            <img src="/src/assets/images/track.svg" alt="Song" />
+            <img src={TrackIcon} alt="Song" />
           </ControlPanelTileButton>
           <ControlPanelTileButton
             highlight={selectedGroup2 == "album"}
@@ -264,7 +267,7 @@ export function ControlPanel({
               // handleGroup2Click("album");
             }}
           >
-            <img src="/src/assets/images/album.svg" alt="Song" />
+            <img src={AlbumIcon} alt="Song" />
           </ControlPanelTileButton>
         </div>
 
