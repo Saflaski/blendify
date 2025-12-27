@@ -1,5 +1,5 @@
 import "/src/assets/styles/Login.css";
-import { API_BASE_URL } from "../constants";
+import { API_BASE_URL, FRONTEND_URL } from "../constants";
 import LFMIcon from "@/assets/images/lastfm.svg";
 import TidalIcon from "@/assets/images/tidal.svg";
 import AppleIcon from "@/assets/images/apple2.svg";
@@ -87,7 +87,7 @@ function loginButton(platform) {
 }
 
 function handleLastFMClick() {
-  const returnTo = encodeURIComponent("https://blendify.sabeehislam.com/home");
+  const returnTo = encodeURIComponent(`${FRONTEND_URL}}/home`);
   window.location.href = `${API_BASE_URL}/auth/login/lastfm?return_to=${returnTo}`;
 }
 
@@ -98,7 +98,7 @@ function Title() {
         Blendify
       </h2>
       <p className=" font-mono px-5 mt-4 text-black text-2xl text-center break-words">
-        Blend your music tastes and more
+        Make a blend, compare and share
       </p>
     </div>
   );

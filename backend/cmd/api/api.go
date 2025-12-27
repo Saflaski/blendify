@@ -75,7 +75,7 @@ func (app *application) mount() http.Handler {
 	blendRepo := blend.NewRedisStateStore(rdb)
 	blendService := blend.NewBlendService(*blendRepo, *LastFMExternal)
 	blendHandler := blend.NewBlendHandler(
-		"https://blendify.sabeehislam.com",
+		os.Getenv("FRONTEND_URL"),
 		"sid",
 		*blendService,
 		string(auth.UserKey),

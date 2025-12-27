@@ -5,7 +5,7 @@ import cross from "@/assets/images/cross.svg";
 import { useNavigate } from "react-router-dom";
 import React from "react";
 import "/src/assets/styles/home.css";
-import { API_BASE_URL } from "../constants";
+import { API_BASE_URL, FRONTEND_URL } from "../constants";
 import Delete from "@/assets/images/delete.svg";
 import Copy from "@/assets/images/copy.svg";
 
@@ -371,7 +371,7 @@ function RecentOrTop() {
 
 function AddNewBlendBar({ AddBlend }) {
   const [value, setValue] = useState("");
-  var prefix = `https://blendify.sabeehislam.com/blend/`;
+  var prefix = `${FRONTEND_URL}/blend/`;
   const isValid = (value: string) => {
     //Simple URL check for now. Change slice num and url for prod
     if (value.slice(0, prefix.length) == prefix) {
@@ -490,11 +490,9 @@ async function generateNewLinkSomehow() {
     const newLink = data["linkId"];
     console.log("API response data: ", data);
     console.log("Blend Link: ", newLink);
-    return "https://blendify.sabeehislam.com/blend/?invite=" + newLink;
+    return `${FRONTEND_URL}/blend/?invite=` + newLink;
   } catch (err) {
     console.error("API erorr: ", err);
-    return (
-      "http://localhost:5173/blend/?invite=" + Math.floor(Math.random() * 1000)
-    );
+    return "Error no API connection";
   }
 }
