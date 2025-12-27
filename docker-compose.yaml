@@ -29,8 +29,9 @@ services:
 
   frontend:
     build: ./frontend
-    expose:
-      - "80"
+    ports:
+      - "8080:80"
+      - "443:443"
     depends_on:
       - backend
     networks:
@@ -40,6 +41,8 @@ services:
     image: redis:7
     expose:
       - "6379"
+    networks:
+      - web
 
 networks:
   web:
