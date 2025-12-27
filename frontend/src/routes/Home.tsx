@@ -271,7 +271,7 @@ function ListOfBlends({
   async function handleDelete(blendIdToDelete: string) {
     try {
       const blendId = blendIdToDelete;
-      var url = new URL(`${API_BASE_URL}blend/delete`);
+      var url = new URL(`${API_BASE_URL}/blend/delete`);
       const response = await fetch(url, {
         method: "POST",
         headers: {
