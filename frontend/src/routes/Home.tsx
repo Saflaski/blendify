@@ -1,11 +1,13 @@
 import { BlendsButton } from "../components/BlendsButton";
 import { useState, useEffect, useMemo, useRef } from "react";
-import tick from "/src/assets/images/tick.svg";
-import cross from "/src/assets/images/cross.svg";
+import tick from "@/assets/images/tick.svg";
+import cross from "@/assets/images/cross.svg";
 import { useNavigate } from "react-router-dom";
 import React from "react";
 import "/src/assets/styles/home.css";
 import { API_BASE_URL } from "../constants";
+import Delete from "@/assets/images/delete.svg";
+import Copy from "@/assets/images/copy.svg";
 
 type Blend = {
   blendid: string;
@@ -257,11 +259,7 @@ function ListOfBlends({
          text-white
         "
               >
-                <img
-                  src="src/assets/images/delete.svg"
-                  className="bg-inherit"
-                  alt="Go to blend"
-                />
+                <img src={Delete} className="bg-inherit" alt="Go to blend" />
               </button>
             </div>
           ))}
@@ -464,11 +462,7 @@ function GenerateLink() {
           onClick={handleCopy}
           className={`flex items-center justify-center border border-slate-900 home-slate-button px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide  focus:outline-none focus:border-black`}
         >
-          <img
-            className="size-4"
-            src="src/assets/images/copy.svg"
-            alt="Copy URL"
-          />
+          <img className="size-4" src={Copy} alt="Copy URL" />
         </button>
       </div>
       <button

@@ -1,5 +1,9 @@
 import "/src/assets/styles/Login.css";
 import { API_BASE_URL } from "../constants";
+import LFMIcon from "@/assets/images/lastfm.svg";
+import TidalIcon from "@/assets/images/tidal.svg";
+import AppleIcon from "@/assets/images/apple2.svg";
+import UnderConstruction from "@/assets/images/underConstruction.jpg";
 export function Login() {
   return (
     <div className="">
@@ -14,8 +18,8 @@ export function Login() {
             {" "}
             {/* Using flex-wrap and gap for responsiveness and spacing */}
             {loginButton("lastfm")}
-            {loginButton("apple")}
-            {loginButton("tidal")}
+            {loginButton("construction")}
+            {/* {loginButton("tidal")} */}
           </div>
         </div>
       </div>
@@ -26,19 +30,24 @@ export function Login() {
 function loginButton(platform) {
   const platforms = {
     lastfm: {
-      src: "/src//assets/images/lastfm.svg",
+      src: LFMIcon,
       alt: "LastFM Logo",
       wrapperClass: "mx-8",
       handleFunc: handleLastFMClick,
     },
     apple: {
-      src: "/src//assets/images/apple2.svg",
+      src: { AppleIcon },
       alt: "Apple Logo",
       wrapperClass: "mx-3",
     },
     tidal: {
-      src: "/src//assets/images/tidal.svg",
+      src: { TidalIcon },
       alt: "Tidal Logo",
+      wrapperClass: "mx-3",
+    },
+    construction: {
+      src: UnderConstruction,
+      alt: "Construction Logo",
       wrapperClass: "mx-3",
     },
   };
