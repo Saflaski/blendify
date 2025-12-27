@@ -101,7 +101,7 @@ export function Home() {
   useEffect(() => {
     async function fetchBlends() {
       try {
-        const url = `${API_BASE_URL}/v1/blend/userblends`;
+        const url = `${API_BASE_URL}/blend/userblends`;
         const res = await fetch(url, {
           method: "GET",
           headers: {
