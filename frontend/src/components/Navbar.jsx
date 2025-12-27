@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { API_BASE_URL } from "../constants";
 import HomeIcon from "@/assets/images/home.svg";
 import MenuIcon from "@assets/images/menu.svg";
+import { set } from "zod";
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -104,12 +105,28 @@ export function Navbar() {
             >
               <ul className="list-none m-0 p-0 space-y-1">
                 {/* <DropDownItem page="/" funcName={null} text="Home" /> */}
-                <DropDownItem page="/home" funcName={null} text="Blends" />
-                <DropDownItem page="/about" funcName={null} text="About" />
-                <DropDownItem page="/privacy" funcName={null} text="Privacy" />
+                <DropDownItem
+                  page="/home"
+                  setOpen={setOpen}
+                  funcName={null}
+                  text="Blends"
+                />
+                <DropDownItem
+                  page="/about"
+                  setOpen={setOpen}
+                  funcName={null}
+                  text="About"
+                />
+                <DropDownItem
+                  page="/privacy"
+                  setOpen={setOpen}
+                  funcName={null}
+                  text="Privacy"
+                />
                 <DropDownItem
                   page="/login"
                   funcName={handleLogOut}
+                  setOpen={setOpen}
                   text="Log Out"
                 />
               </ul>
@@ -132,13 +149,16 @@ async function handleLogOut() {
   window.location.href = "/login";
 }
 
-function DropDownItem({ page, funcName, text }) {
+function DropDownItem({ page, funcName, setOpen, text }) {
   return (
     <li className="font-['Roboto_Mono','monospace'] font-medium text-base bg-white">
       <Link to={page || "/"} className="no-underline">
         <button
           type="button"
-          onClick={funcName || undefined}
+          onClick={() => {
+            funcName ? funcName() : null;
+            setOpen(false);
+          }}
           className={`bg-inherit ${
             text === "Log Out" ? "text-red-500" : "text-black"
           }`}
