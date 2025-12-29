@@ -47,7 +47,7 @@ export function Blend() {
   // ------ If user is from invite link and not Add button -------
   const [error, setError] = useState<string | null>(null);
   const [cardLoading, setCardLoading] = useState(true);
-  const [catalogueLoading, setCatalogueLoading] = useState(0);
+  const [catalogueLoading, setCatalogueLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -75,13 +75,6 @@ export function Blend() {
     id?: string;
     value?: string;
   };
-
-  useEffect(() => {
-    console.log(catalogueLoading);
-    if (catalogueLoading == 4) {
-      console.log("Loaded");
-    }
-  }, [catalogueLoading]);
 
   console.log(location.state);
 
@@ -165,62 +158,113 @@ export function Blend() {
     }
   }, []);
 
-  //
-
-  console.log("Final blendId to use: ", blendId);
   useEffect(() => {
-    // console.log("Getting data for blendId (1): ", blendId);
-    const getCardBlendData = async () => {
-      console.log("Getting data for blendId (2): ", blendId);
+    if (!blendId) return;
 
+    const loadAllCatalogueData = async () => {
       try {
-        const encodedValue = encodeURIComponent(blendId as string);
-        const res = await fetch(
-          `${API_BASE_URL}/blend/carddata?blendId=${encodedValue}`,
-          {
-            method: "GET",
-            credentials: "include",
-          },
-        );
+        setCardLoading(true);
+        setCatalogueLoading(true);
 
-        if (res.status == 401) {
-          navigate(
-            `/login?redirectTo=${encodeURIComponent(location.pathname + location.search)}`,
-          );
-          return;
-        }
-
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          setError(data.message || "Blend ID is invalid.");
-          setCardLoading(false);
-          return;
-        }
-
-        const data = await res.json();
-        console.log("Blend data received:", data);
-        // const userData = JSON.parse(data) as BlendApiResponse;
-        const userData = CardApiResponseSchema.parse(data);
-        console.log("Parsed blend data:", userData);
-        setUserCardData(userData);
-        setCardLoading(false);
-      } catch (err) {
-        console.error(err);
-        setError("Something went wrong. Please try again.");
+        await Promise.all([
+          getCatalogueBlendData(
+            "3month",
+            "artist",
+            blendId,
+            setUserCatalogueArtist3MonthData,
+            setCatArt3Month,
+            setError,
+          ),
+          getCatalogueBlendData(
+            "3month",
+            "track",
+            blendId,
+            setUserCatalogueTrack3MonthData,
+            setCatTrack3Month,
+            setError,
+          ),
+          getCatalogueBlendData(
+            "12month",
+            "artist",
+            blendId,
+            setUserCatalogueArtist1YearData,
+            setCatArt1Year,
+            setError,
+          ),
+          getCatalogueBlendData(
+            "12month",
+            "track",
+            blendId,
+            setUserCatalogueTrack1YearData,
+            setCatTrack1Year,
+            setError,
+          ),
+        ]);
+        setCatalogueLoading(false);
+        setCatArt1Year(false);
+        setCatArt3Month(false);
+        setCatTrack1Year(false);
+        setCatTrack3Month(false);
+        await getCardBlendData(); // runs AFTER all catalogue calls
+      } finally {
         setCardLoading(false);
       }
     };
 
-    if (blendId == null) {
-      setError("Could not get blendid.");
-      console.log("Blend ID is null, cannot get data?");
-    } else {
-      if (catalogueLoading == 4) {
-        getCardBlendData();
+    loadAllCatalogueData();
+  }, [blendId]);
+
+  // console.log("Getting data for blendId (1): ", blendId);
+  const getCardBlendData = async () => {
+    console.log("Getting data for blendId (2): ", blendId);
+
+    try {
+      const encodedValue = encodeURIComponent(blendId as string);
+      const res = await fetch(
+        `${API_BASE_URL}/blend/carddata?blendId=${encodedValue}`,
+        {
+          method: "GET",
+          credentials: "include",
+        },
+      );
+
+      if (res.status == 401) {
+        navigate(
+          `/login?redirectTo=${encodeURIComponent(location.pathname + location.search)}`,
+        );
+        return;
       }
-      console.log("Getting card blend data");
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.message || "Blend ID is invalid.");
+        setCardLoading(false);
+        return;
+      }
+
+      const data = await res.json();
+      console.log("Blend data received:", data);
+      // const userData = JSON.parse(data) as BlendApiResponse;
+      const userData = CardApiResponseSchema.parse(data);
+      console.log("Parsed blend data:", userData);
+      setUserCardData(userData);
+      setCardLoading(false);
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong. Please try again.");
+      setCardLoading(false);
     }
-  }, [catalogueLoading]);
+  };
+
+  // if (blendId == null) {
+  //   setError("Could not get blendid.");
+  //   console.log("Blend ID is null, cannot get data?");
+  // } else {
+  //   if (catalogueLoading == 4) {
+  //     getCardBlendData();
+  //   }
+  //   console.log("Getting card blend data");
+  // }
 
   async function downloadCatalogueData(duration: string, category: string) {
     const params = {
@@ -259,16 +303,13 @@ export function Blend() {
     category: string,
     blendId: string,
     setData: (data: any[]) => void,
-    setCatalogueLoading: (prev: any) => void,
-    setLoading: (loading: boolean) => void,
-
+    setCatalogueLoading: (loading: boolean) => void,
+    // setLoading: (loading: boolean) => void,
     setError: (msg: string) => void,
   ) => {
     console.log("Getting data for blendId:", blendId);
 
     try {
-      setLoading(true);
-
       const res = await downloadCatalogueData(duration, category);
 
       if (!res) {
@@ -288,100 +329,95 @@ export function Blend() {
       console.error(err);
       setError("Something went wrong. Please try again.");
     } finally {
-      setLoading(false);
       // setCatalogueLoading(catalogueLoading + 1);
-      setCatalogueLoading((prev: number) => prev + 1);
+      setCatalogueLoading(false);
       // console.log("+1");
     }
   };
 
-  useEffect(() => {
-    console.log("Loading user catalogue artist blend data:");
+  // useEffect(() => {
+  //   console.log("Loading user catalogue artist blend data:");
 
-    if (!blendId) {
-      setError("Could not get blendid.");
-      console.log("Blend ID is null, cannot get data?");
-      return;
-    }
+  //   if (!blendId) {
+  //     setError("Could not get blendid.");
+  //     console.log("Blend ID is null, cannot get data?");
+  //     return;
+  //   }
 
-    cardLoading
-      ? getCatalogueBlendData(
-          "3month",
-          "artist",
-          blendId,
-          setUserCatalogueArtist3MonthData,
-          setCatalogueLoading,
-          setCatArt3Month,
-          setError,
-        )
-      : null;
-  }, [blendId]);
+  //   cardLoading
+  //     ? getCatalogueBlendData(
+  //         "3month",
+  //         "artist",
+  //         blendId,
+  //         setUserCatalogueArtist3MonthData,
+  //         setCatArt3Month,
+  //         setError,
+  //       )
+  //     : null;
+  // }, [blendId]);
 
-  useEffect(() => {
-    console.log("Loading user catalogue artist blend data:");
+  // useEffect(() => {
+  //   console.log("Loading user catalogue artist blend data:");
 
-    if (!blendId) {
-      setError("Could not get blendid.");
-      console.log("Blend ID is null, cannot get data?");
-      return;
-    }
+  //   if (!blendId) {
+  //     setError("Could not get blendid.");
+  //     console.log("Blend ID is null, cannot get data?");
+  //     return;
+  //   }
 
-    cardLoading
-      ? getCatalogueBlendData(
-          "3month",
-          "track",
-          blendId,
-          setUserCatalogueTrack3MonthData,
-          setCatalogueLoading,
-          setCatTrack3Month,
-          setError,
-        )
-      : null;
-  }, [blendId]);
+  //   cardLoading
+  //     ? getCatalogueBlendData(
+  //         "3month",
+  //         "track",
+  //         blendId,
+  //         setUserCatalogueTrack3MonthData,
+  //         setCatTrack3Month,
+  //         setError,
+  //       )
+  //     : null;
+  // }, [blendId]);
 
-  useEffect(() => {
-    console.log("Loading user catalogue artist blend data:");
+  // useEffect(() => {
+  //   console.log("Loading user catalogue artist blend data:");
 
-    if (!blendId) {
-      setError("Could not get blendid.");
-      console.log("Blend ID is null, cannot get data?");
-      return;
-    }
+  //   if (!blendId) {
+  //     setError("Could not get blendid.");
+  //     console.log("Blend ID is null, cannot get data?");
+  //     return;
+  //   }
 
-    cardLoading
-      ? getCatalogueBlendData(
-          "12month",
-          "artist",
-          blendId,
-          setUserCatalogueArtist1YearData,
-          setCatalogueLoading,
-          setCatArt1Year,
-          setError,
-        )
-      : null;
-  }, [blendId]);
+  //   cardLoading
+  //     ? getCatalogueBlendData(
+  //         "12month",
+  //         "artist",
+  //         blendId,
+  //         setUserCatalogueArtist1YearData,
+  //         setCatArt1Year,
+  //         setError,
+  //       )
+  //     : null;
+  // }, [blendId]);
 
-  useEffect(() => {
-    console.log("Loading user catalogue artist blend data:");
+  // useEffect(() => {
+  //   console.log("Loading user catalogue artist blend data:");
 
-    if (!blendId) {
-      setError("Could not get blendid.");
-      console.log("Blend ID is null, cannot get data?");
-      return;
-    }
+  //   if (!blendId) {
+  //     setError("Could not get blendid.");
+  //     console.log("Blend ID is null, cannot get data?");
+  //     return;
+  //   }
 
-    cardLoading
-      ? getCatalogueBlendData(
-          "12month",
-          "track",
-          blendId,
-          setUserCatalogueTrack1YearData,
-          setCatalogueLoading,
-          setCatTrack1Year,
-          setError,
-        )
-      : null;
-  }, [blendId]);
+  //   cardLoading
+  //     ? getCatalogueBlendData(
+  //         "12month",
+  //         "track",
+  //         blendId,
+  //         setUserCatalogueTrack1YearData,
+  //         setCatTrack1Year,
+  //         setError,
+  //       )
+  //     : null;
+  // }, [blendId]);
 
   // useEffect(() => {
   //   if catalogueLoading
@@ -475,11 +511,9 @@ export function Blend() {
         {/* LEFT CONTENT AREA */}
         <div className="  md:w-[40%] flex flex-col flex-wrap items-center justify-baseline gap-y-5">
           <div
-            className={`text-black font-[Roboto_Mono] italic    ${catalogueLoading == 4 && !cardLoading ? "hidden" : "lg:hidden block"} `}
+            className={`text-black font-[Roboto_Mono] italic    ${!catalogueLoading && !cardLoading ? "hidden" : "lg:hidden block"} `}
           >
-            <p className="text-lg font-semibold">
-              Loading data {catalogueLoading}/5
-            </p>
+            <p className="text-lg font-semibold">Loading data</p>
             <p
               className={`${showHint ? "hidden" : "block"} text-sm transition ease-in`}
             >
@@ -640,11 +674,9 @@ export function Blend() {
         {/* RIGHT CONTENT AREA */}
         <div className=" md:w-[60%] outline-amber-600 flex flex-col flex-wrap items-center justify-baseline gap-y-5">
           <div
-            className={`text-black font-[Roboto_Mono] italic   ${catalogueLoading == 4 && !cardLoading ? "hidden" : "hidden lg:block"} `}
+            className={`text-black font-[Roboto_Mono] italic   ${!catalogueLoading && !cardLoading ? "hidden" : "hidden lg:block"} `}
           >
-            <p className="text-lg font-semibold">
-              Loading data {catalogueLoading}/5
-            </p>
+            <p className="text-lg font-semibold">Loading data</p>
             <p
               className={`${showHint ? "hidden" : "block"} text-sm transition ease-in`}
             >
