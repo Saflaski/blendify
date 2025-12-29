@@ -2,8 +2,8 @@
 	<style>
 		.s0 { fill: none;stroke: #F6E8CB;stroke-miterlimit:100;stroke-width: 30 } 
 	</style>
-	<path id="Shape 1" fill-rule="evenodd" class="s0" d="m234 111v189h-189v-189z"/>
-	<path id="Shape 1 copy" fill-rule="evenodd" class="s0" d="m302 45v189h-189v-189z"/>
-	<path id="Shape 2" fill-rule="evenodd" class="s0" d="m125.88 186.46l-2.77-2.77 60.91-60.9 2.77 2.77z"/>
-	<path id="Shape 2 copy" fill-rule="evenodd" class="s0" d="m161.06 224.46l-2.95-2.94 64.74-64.73 2.94 2.94z"/>
+	<path id="Shape 1" fill-rule="evenodd" class="s0" d="m245 100v189h-189v-189z"/>
+	<path id="Shape 1 copy" fill-rule="evenodd" class="s0" d="m296 51v189h-189v-189z"/>
+	<path id="Shape 2" fill-rule="evenodd" class="s0" d="m120.26 186.71l-3.4-3.4 74.78-74.77 3.4 3.4z"/>
+	<path id="Shape 2 copy" fill-rule="evenodd" class="s0" d="m165.95 227.81l-3.18-3.18 69.84-69.84 3.18 3.17z"/>
 </svg>

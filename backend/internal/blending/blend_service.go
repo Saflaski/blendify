@@ -22,10 +22,18 @@ type BlendService struct {
 // Deletes blend on backend for all users
 func (s *BlendService) DeleteBlend(context context.Context, user userid, blendId blendId) error {
 
-	err := s.repo.DeleteBlendByBlendId(context, user, blendId)
+	blendUsers, err := s.repo.GetUsersFromBlend(context, blendId)
 	if err != nil {
-		return fmt.Errorf(" could not delete blend: %w", err)
+		return fmt.Errorf(" could not find blendusers from blendid %s : %w", blendId, err)
 	}
+
+	for _, userFromBlend := range blendUsers {
+		err := s.repo.DeleteBlendByBlendId(context, userFromBlend, blendId)
+		if err != nil {
+			return fmt.Errorf(" could not delete blend: %w", err)
+		}
+	}
+
 	return nil
 }
 

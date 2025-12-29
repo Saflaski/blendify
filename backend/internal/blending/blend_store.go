@@ -30,6 +30,7 @@ func (r *RedisStateStore) DeleteBlendByBlendId(context context.Context, user use
 	pipe := r.client.TxPipeline()
 	pipe.SRem(context, keyByUser, string(blendId)).Err()
 	pipe.Del(context, keyByBlend).Err()
+
 	_, err := pipe.Exec(context)
 	return err
 }
