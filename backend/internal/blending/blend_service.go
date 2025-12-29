@@ -728,7 +728,7 @@ func (s *BlendService) downloadTopArtists(context context.Context, userName stri
 		context,
 		userName,
 		string(timeDuration),
-		1,
+		6,
 		50,
 	)
 
@@ -790,7 +790,7 @@ func (s *BlendService) downloadTopAlbums(context context.Context, userName strin
 		context,
 		userName,
 		string(timeDuration),
-		1,
+		3,
 		50,
 	)
 
@@ -849,7 +849,7 @@ func (s *BlendService) downloadTopTracks(context context.Context, userName strin
 		context,
 		userName,
 		string(timeDuration),
-		1,
+		10,
 		50,
 	)
 

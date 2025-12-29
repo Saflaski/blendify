@@ -107,7 +107,8 @@ type Topartist_artist struct {
 
 // user.gettopalbums
 type UserTopAlbums struct {
-	TopAlbums TopAlbums `json:"topalbums"`
+	TopAlbums  TopAlbums      `json:"topalbums"`
+	Attributes map[string]any `json:"@attr"`
 }
 
 // user.gettoptracks

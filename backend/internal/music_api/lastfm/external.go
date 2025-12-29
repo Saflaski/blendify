@@ -138,66 +138,98 @@ func (h *LastFMAPIExternal) GetUserWeeklyTracks(context context.Context, userNam
 	return weeklyTracks, nil
 }
 
-func (h *LastFMAPIExternal) GetUserTopArtists(context context.Context, userName string, period string, page int, limit int) (topArtists UserTopArtists, err error) {
+func (h *LastFMAPIExternal) GetUserTopArtists(context context.Context, userName string, period string, maxPages int, limit int) (UserTopArtists, error) {
 
-	if page == 0 {
-		page = 1
+	if maxPages == 0 {
+		maxPages = 1
 	}
 	if limit == 0 {
 		limit = 50
 	}
+	topArtists := make([]UserTopArtists, 0, maxPages)
+	completeArtists := make([]Artist, 0, maxPages*limit)
 
-	extraURLParams := map[string]string{
-		"method": "user.gettopartists",
-		"user":   userName,
-		"period": string(period),
-		"page":   strconv.Itoa(page),
-		"limit":  strconv.Itoa(limit),
+	for page := 1; page <= maxPages; page++ {
+		//Default LFM API limit per page
+		extraURLParams := map[string]string{
+			"method": "user.gettopartists",
+			"user":   userName,
+			"period": string(period),
+			"page":   strconv.Itoa(page),
+			"limit":  strconv.Itoa(limit),
+		}
+
+		resp, err := h.MakeRequest(context, extraURLParams)
+		if err != nil {
+			return UserTopArtists{}, fmt.Errorf("UserTopArtists makeRequest Error: %v", err)
+		}
+
+		nextTopArtists, err := utility.Decode[UserTopArtists](resp)
+		if err != nil {
+			return UserTopArtists{}, fmt.Errorf("UserTopArtists decode Error: %v", err)
+		}
+		topArtists = append(topArtists, nextTopArtists)
+		artists := nextTopArtists.TopArtists.Artist
+		if len(artists) == 0 {
+			break
+		}
+		completeArtists = append(completeArtists, artists...)
+
+		resp.Body.Close()
+
 	}
-
-	resp, err := h.MakeRequest(context, extraURLParams)
-	if err != nil {
-		return UserTopArtists{}, fmt.Errorf("GetUserTopArtists makeRequest Error: %v", err)
-	}
-	defer resp.Body.Close()
-
-	topArtists, err = utility.Decode[UserTopArtists](resp)
-	if err != nil {
-		return topArtists, fmt.Errorf("GetUserTopArtists decode Error: %v", err)
-	}
-
-	return topArtists, nil
+	return UserTopArtists{
+		TopArtists: TopArtists{
+			Artist: completeArtists,
+		},
+	}, nil
 }
 
-func (h *LastFMAPIExternal) GetUserTopAlbums(context context.Context, userName string, period string, page int, limit int) (topAlbums UserTopAlbums, err error) {
+func (h *LastFMAPIExternal) GetUserTopAlbums(context context.Context, userName string, period string, maxPages int, limit int) (UserTopAlbums, error) {
 
-	if page == 0 {
-		page = 1
+	if maxPages == 0 {
+		maxPages = 1
 	}
 	if limit == 0 {
 		limit = 50
 	}
+	topAlbums := make([]UserTopAlbums, 0, maxPages)
+	completeAlbums := make([]Album, 0, maxPages*limit)
 
-	extraURLParams := map[string]string{
-		"method": "user.gettopalbums",
-		"user":   userName,
-		"period": string(period),
-		"page":   strconv.Itoa(page),
-		"limit":  strconv.Itoa(limit),
+	for page := 1; page <= maxPages; page++ {
+		//Default LFM API limit per page
+		extraURLParams := map[string]string{
+			"method": "user.gettopalbums",
+			"user":   userName,
+			"period": string(period),
+			"page":   strconv.Itoa(page),
+			"limit":  strconv.Itoa(limit),
+		}
+
+		resp, err := h.MakeRequest(context, extraURLParams)
+		if err != nil {
+			return UserTopAlbums{}, fmt.Errorf("UserTopAlbums makeRequest Error: %v", err)
+		}
+
+		nextTopAlbums, err := utility.Decode[UserTopAlbums](resp)
+		if err != nil {
+			return UserTopAlbums{}, fmt.Errorf("UserTopAlbums decode Error: %v", err)
+		}
+		topAlbums = append(topAlbums, nextTopAlbums)
+		albums := nextTopAlbums.TopAlbums.Album
+		if len(albums) == 0 {
+			break
+		}
+		completeAlbums = append(completeAlbums, albums...)
+
+		resp.Body.Close()
+
 	}
-
-	resp, err := h.MakeRequest(context, extraURLParams)
-	if err != nil {
-		return UserTopAlbums{}, fmt.Errorf("UserTopAlbums makeRequest Error: %v", err)
-	}
-	defer resp.Body.Close()
-
-	topAlbums, err = utility.Decode[UserTopAlbums](resp)
-	if err != nil {
-		return topAlbums, fmt.Errorf("UserTopAlbums decode Error: %v", err)
-	}
-
-	return topAlbums, nil
+	return UserTopAlbums{
+		TopAlbums: TopAlbums{
+			Album: completeAlbums,
+		},
+	}, nil
 }
 
 func (h *LastFMAPIExternal) GetUserTopTracks(context context.Context, userName string, period string, maxPages int, limit int) (UserTopTracks, error) {

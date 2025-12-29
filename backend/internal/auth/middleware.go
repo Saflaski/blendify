@@ -32,7 +32,7 @@ func ValidateCookie(h AuthHandler, s AuthService) func(next http.Handler) http.H
 				// 	return
 				// }
 				ctx := context.WithValue(r.Context(), h.UserKey, userid)
-				glog.Infof("Validated req from userid: %s", userid)
+				// glog.Infof("Validated req from userid: %s", userid)
 				next.ServeHTTP(w, r.WithContext(ctx))
 
 			}
