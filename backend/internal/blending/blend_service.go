@@ -541,7 +541,7 @@ func (s *BlendService) GetNewDataForUser(ctx context.Context, user userid) error
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				respData, err := s.downloadLFMData(ctx, platformUsername, d, c)
+				respData, err := s.downloadTopX(ctx, platformUsername, d, c)
 				if len(respData) == 0 {
 					//wrap the error regardless of it is nil/not nil
 					err = fmt.Errorf(" downloaded empty map from platform: %w", err)
@@ -565,7 +565,7 @@ func (s *BlendService) GetNewDataForUser(ctx context.Context, user userid) error
 	for resp := range respc {
 		// resp := <-respc
 		if resp.err != nil {
-			return fmt.Errorf("error in downloading data asynchronously: %w", resp.err)
+			return fmt.Errorf("error in downloading data asynchronously for duration %s and category %s : %w", resp.duration, resp.category, resp.err)
 		}
 		if err := s.cacheLFMData(ctx, resp); err != nil {
 			return fmt.Errorf("could not cache data: %w", err)
@@ -677,19 +677,33 @@ func (s *BlendService) getArtistBlend(context context.Context, userA, userB user
 }
 
 func (s *BlendService) getTopX(context context.Context, userid userid, timeDuration blendTimeDuration, category blendCategory) (map[string]CatalogueStats, error) {
+	// totalEntries := 250
 	dbResp, err := s.repo.GetFromCacheTopX(context, string(userid), timeDuration, category)
 	if err != nil {
 		glog.Errorf(" Cache error during getting topX for user %s with duration %s and category %s that needs to be checked: %w", userid, timeDuration, category, err)
 	}
 
-	if dbResp != nil { //Cache hit
+	if len(dbResp) != 0 { //Cache hit
+		// if len(dbResp) >= totalEntries {
+		// 	return dbResp, nil
+		// }
 		return dbResp, nil
 	} else { //Cache miss
 		platformUsername, err := s.getLFM(context, string(userid))
 		if err != nil {
 			return nil, fmt.Errorf(" could get platform username from given userid:%s with err: %w", userid, err)
 		}
-		return s.downloadTopX(context, platformUsername, timeDuration, category)
+		glog.Info("Cache miss, so returning downloadTopX")
+		lfmResp, err := s.downloadTopX(context, platformUsername, timeDuration, category)
+		if err != nil {
+			return nil, fmt.Errorf(" did not download %s %s properly: %w", timeDuration, category, err)
+		}
+
+		if len(lfmResp) == 0 {
+			return nil, fmt.Errorf(" downloaded empty map for %s %s : %w", timeDuration, category, err)
+		}
+
+		return lfmResp, nil
 
 	}
 }
@@ -713,7 +727,7 @@ func (s *BlendService) downloadTopArtists(context context.Context, userName stri
 	topArtist, err := s.LastFMExternal.GetUserTopArtists(
 		context,
 		userName,
-		durationMap[timeDuration],
+		string(timeDuration),
 		1,
 		50,
 	)
@@ -775,7 +789,7 @@ func (s *BlendService) downloadTopAlbums(context context.Context, userName strin
 	topAlbums, err := s.LastFMExternal.GetUserTopAlbums(
 		context,
 		userName,
-		durationMap[timeDuration],
+		string(timeDuration),
 		1,
 		50,
 	)
@@ -828,13 +842,20 @@ func (s *BlendService) getTrackBlend(context context.Context, userA, userB useri
 
 func (s *BlendService) downloadTopTracks(context context.Context, userName string, timeDuration blendTimeDuration) (map[string]CatalogueStats, error) {
 	trackToPlays := make(map[string]CatalogueStats)
+
+	// TIMEDURATION DOESNT WORK
+	// ------------------------
 	topTracks, err := s.LastFMExternal.GetUserTopTracks(
 		context,
 		userName,
-		durationMap[timeDuration],
+		string(timeDuration),
 		1,
 		50,
 	)
+
+	if len(topTracks.TopTracks.Track) == 0 {
+		return trackToPlays, fmt.Errorf("downloaded empty toptrack, %w", err)
+	}
 
 	if err != nil {
 		return trackToPlays, fmt.Errorf("could not extract TopTracks object from lastfm adapter, %w", err)

@@ -55,6 +55,7 @@ func (app *application) mount() http.Handler {
 		apiKey,
 		lastFMURL,
 		true,
+		200,
 	)
 
 	authCfg := auth.Config{

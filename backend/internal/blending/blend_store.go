@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang/glog"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -33,11 +34,13 @@ func (r *RedisStateStore) DeleteBlendByBlendId(context context.Context, user use
 	return err
 }
 
+// Returns nil, nil for cache miss, else MapCatStats, nil or nil, error for error
 func (r *RedisStateStore) GetFromCacheTopX(context context.Context, userName string, timeDuration blendTimeDuration, category blendCategory) (map[string]CatalogueStats, error) {
 	key := fmt.Sprintf("%s:%s:%s:%s", r.musicPrefix, userName, categoryPrefix[category], durationPrefix[timeDuration])
 
 	Result, err := r.client.Get(context, key).Result()
 	if err == redis.Nil {
+		glog.Infof("Cache Miss: %s - %s", timeDuration, category)
 		return nil, nil
 	}
 	if err != nil {
@@ -51,8 +54,10 @@ func (r *RedisStateStore) GetFromCacheTopX(context context.Context, userName str
 
 	respMap, err := musicapi.JSONToMapCatStats([]byte(Result))
 	if err != nil {
+
 		return nil, fmt.Errorf(" during extracting cache db, error in decoding from json: %w", err)
 	}
+	glog.Infof("Cache Hit: %s - %s", timeDuration, category)
 
 	return respMap, nil
 

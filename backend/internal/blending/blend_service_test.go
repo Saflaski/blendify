@@ -41,6 +41,7 @@ func TestGetBlend(t *testing.T) {
 		LASTFM_API_KEY,
 		"https://ws.audioscrobbler.com/2.0/",
 		true,
+		200,
 	)
 	blendService := NewBlendService(*redisStore, *lfm_adapter)
 	_ = blendService
@@ -116,6 +117,7 @@ func TestDownloadAndCache(t *testing.T) {
 		LASTFM_API_KEY,
 		"https://ws.audioscrobbler.com/2.0/",
 		true,
+		200,
 	)
 
 	blendService := NewBlendService(*redisStore, *lfm_adapter)

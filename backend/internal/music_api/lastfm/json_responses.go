@@ -107,24 +107,32 @@ type Topartist_artist struct {
 
 // user.gettopalbums
 type UserTopAlbums struct {
-	TopAlbums struct {
-		Album []Album `json:"album"`
-	} `json:"topalbums"`
+	TopAlbums TopAlbums `json:"topalbums"`
 }
 
 // user.gettoptracks
+type TopTracks struct {
+	Track []Track `json:"track"`
+}
+
+type TopArtists struct {
+	Artist     []Artist       `json:"artist"`
+	Attributes map[string]any `json:"@attr"`
+}
+
+type TopAlbums struct {
+	Album      []Album        `json:"album"`
+	Attributes map[string]any `json:"@attr"`
+}
+
 type UserTopTracks struct {
-	TopTracks struct {
-		Track []Track `json:"track"`
-	} `json:"toptracks"`
+	TopTracks  TopTracks      `json:"toptracks"`
+	Attributes map[string]any `json:"@attr"`
 }
 
 // user.getttopartists
 type UserTopArtists struct {
-	TopArtists struct {
-		Artist     []Artist       `json:"artist"`
-		Attributes map[string]any `json:"@attr"`
-	} `json:"topartists"`
+	TopArtists TopArtists `json:"topartists"`
 }
 
 type CatalogueStats struct { //A catalogue can be an album, track or artist. The following is metadata for a catalogue

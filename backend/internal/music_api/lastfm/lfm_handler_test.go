@@ -23,6 +23,7 @@ func TestEndpoints(t *testing.T) {
 		apiKey,
 		lastFMURL,
 		true,
+		200,
 	)
 
 	t.Run("Get User Weekly Chart List", func(t *testing.T) {

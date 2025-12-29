@@ -115,7 +115,7 @@ func (h *BlendHandler) GetBlendedEntryData(w http.ResponseWriter, r *http.Reques
 
 	blendId := blendId(response.Get("blendId"))
 	category := blendCategory(response.Get("category"))
-	timeDuration := blendTimeDuration(response.Get("timeDuration"))
+	timeDuration := blendTimeDuration(response.Get("duration"))
 
 	id, err := h.GetUserIdFromContext(r.Context())
 	if err != nil {

@@ -286,16 +286,18 @@ export function Blend() {
       return;
     }
 
-    getCatalogueBlendData(
-      "3month",
-      "artist",
-      blendId,
-      setUserCatalogueArtist3MonthData,
-      // setCatalogueLoading,
-      setCatArt3Month,
-      setError,
-    );
-  }, [blendId]);
+    cardLoading
+      ? getCatalogueBlendData(
+          "3month",
+          "artist",
+          blendId,
+          setUserCatalogueArtist3MonthData,
+          // setCatalogueLoading,
+          setCatArt3Month,
+          setError,
+        )
+      : null;
+  }, [blendId, cardLoading]);
 
   useEffect(() => {
     console.log("Loading user catalogue artist blend data:");
@@ -306,16 +308,18 @@ export function Blend() {
       return;
     }
 
-    getCatalogueBlendData(
-      "3month",
-      "track",
-      blendId,
-      setUserCatalogueTrack3MonthData,
-      // setCatalogueLoading,
-      setCatTrack3Month,
-      setError,
-    );
-  }, [blendId]);
+    cardLoading
+      ? getCatalogueBlendData(
+          "3month",
+          "track",
+          blendId,
+          setUserCatalogueTrack3MonthData,
+          // setCatalogueLoading,
+          setCatTrack3Month,
+          setError,
+        )
+      : null;
+  }, [blendId, cardLoading]);
 
   useEffect(() => {
     console.log("Loading user catalogue artist blend data:");
@@ -326,16 +330,18 @@ export function Blend() {
       return;
     }
 
-    getCatalogueBlendData(
-      "1year",
-      "artist",
-      blendId,
-      setUserCatalogueTrack1YearData,
-      // setCatalogueLoading,
-      setCatArt1Year,
-      setError,
-    );
-  }, [blendId]);
+    cardLoading
+      ? getCatalogueBlendData(
+          "12month",
+          "artist",
+          blendId,
+          setUserCatalogueArtist1YearData,
+          // setCatalogueLoading,
+          setCatArt1Year,
+          setError,
+        )
+      : null;
+  }, [blendId, cardLoading]);
 
   useEffect(() => {
     console.log("Loading user catalogue artist blend data:");
@@ -346,16 +352,18 @@ export function Blend() {
       return;
     }
 
-    getCatalogueBlendData(
-      "1year",
-      "track",
-      blendId,
-      setUserCatalogueTrack1YearData,
-      // setCatalogueLoading,
-      setCatTrack1Year,
-      setError,
-    );
-  }, [blendId]);
+    cardLoading
+      ? getCatalogueBlendData(
+          "12month",
+          "track",
+          blendId,
+          setUserCatalogueTrack1YearData,
+          // setCatalogueLoading,
+          setCatTrack1Year,
+          setError,
+        )
+      : null;
+  }, [blendId, cardLoading]);
 
   // ----- Copy button functionality -----
   const captureRef = useRef(null); //Div to be captured
@@ -631,7 +639,7 @@ export function Blend() {
           {catArt1Year ? (
             <section className="w-full flex flex-col">
               <h2 className="text-lg md:text-lg font-bold text-black mb-4 text-center">
-                ARTISTS - LAST 1 YEAR
+                ARTISTS - LAST 12 MONTHS
               </h2>
 
               <div className="flex flex-col gap-y-4 items-center">
@@ -643,7 +651,7 @@ export function Blend() {
           ) : userCatalogueArtist1YearData.length != 0 ? (
             <section className="w-full flex flex-col">
               <h2 className="text-lg md:text-lg font-bold text-black mb-4 text-center">
-                ARTISTS - LAST 1 YEAR
+                ARTISTS - LAST 12 MONTHS
               </h2>
 
               <div className="w-full max-h-[280px] overflow-y-scroll">

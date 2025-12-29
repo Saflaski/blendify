@@ -8,9 +8,21 @@ import (
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/golang/glog"
+	"golang.org/x/time/rate"
 )
 
+type LastFMAPIExternal struct {
+	apiKey               string
+	lastFMURL            string
+	setJson              bool
+	rateLimitMinimumTime int
+}
+
 type Period string
+
+var requestLimiter = rate.NewLimiter(rate.Every(200*time.Millisecond), 1)
 
 const (
 	YEAR         Period = "12month"
@@ -20,17 +32,12 @@ const (
 	WEEK         Period = "7day"
 )
 
-type LastFMAPIExternal struct {
-	apiKey    string
-	lastFMURL string
-	setJson   bool
-}
-
 type websessionKey string
 
-func NewLastFMExternalAdapter(apiKey, lastFMURL string, setJson bool) *LastFMAPIExternal {
+func NewLastFMExternalAdapter(apiKey, lastFMURL string, setJson bool, rateLimitMinimumTime int) *LastFMAPIExternal {
+
 	return &LastFMAPIExternal{
-		apiKey, lastFMURL, setJson,
+		apiKey, lastFMURL, setJson, rateLimitMinimumTime,
 	}
 }
 
@@ -46,6 +53,7 @@ func (h *LastFMAPIExternal) GetUserInfo(ctx context.Context, userName string) (u
 	if userName != "" {
 		extraURLParams["user"] = userName
 	}
+
 	resp, err := h.MakeRequest(ctx, extraURLParams)
 	if err != nil {
 		return userInfo, fmt.Errorf("GetUserInfo makeRequest Error: %v", err)
@@ -130,7 +138,7 @@ func (h *LastFMAPIExternal) GetUserWeeklyTracks(context context.Context, userNam
 	return weeklyTracks, nil
 }
 
-func (h *LastFMAPIExternal) GetUserTopArtists(context context.Context, userName string, period Period, page int, limit int) (topArtists UserTopArtists, err error) {
+func (h *LastFMAPIExternal) GetUserTopArtists(context context.Context, userName string, period string, page int, limit int) (topArtists UserTopArtists, err error) {
 
 	if page == 0 {
 		page = 1
@@ -161,7 +169,7 @@ func (h *LastFMAPIExternal) GetUserTopArtists(context context.Context, userName 
 	return topArtists, nil
 }
 
-func (h *LastFMAPIExternal) GetUserTopAlbums(context context.Context, userName string, period Period, page int, limit int) (topAlbums UserTopAlbums, err error) {
+func (h *LastFMAPIExternal) GetUserTopAlbums(context context.Context, userName string, period string, page int, limit int) (topAlbums UserTopAlbums, err error) {
 
 	if page == 0 {
 		page = 1
@@ -192,35 +200,67 @@ func (h *LastFMAPIExternal) GetUserTopAlbums(context context.Context, userName s
 	return topAlbums, nil
 }
 
-func (h *LastFMAPIExternal) GetUserTopTracks(context context.Context, userName string, period Period, page int, limit int) (topTracks UserTopTracks, err error) {
-
-	if page == 0 {
-		page = 1
+func (h *LastFMAPIExternal) GetUserTopTracks(context context.Context, userName string, period string, maxPages int, limit int) (UserTopTracks, error) {
+	if maxPages == 0 {
+		maxPages = 1
 	}
 	if limit == 0 {
 		limit = 50
 	}
+	topTracks := make([]UserTopTracks, 0, maxPages)
+	completeTracks := make([]Track, 0, maxPages*limit)
 
-	extraURLParams := map[string]string{
-		"method": "user.gettoptracks",
-		"user":   userName,
-		"period": string(period),
-		"page":   strconv.Itoa(page),
-		"limit":  strconv.Itoa(limit),
+	for page := 1; page <= maxPages; page++ {
+		//Default LFM API limit per page
+		extraURLParams := map[string]string{
+			"method": "user.gettoptracks",
+			"user":   userName,
+			"period": string(period),
+			"page":   strconv.Itoa(page),
+			"limit":  strconv.Itoa(limit),
+		}
+
+		resp, err := h.MakeRequest(context, extraURLParams)
+		if err != nil {
+			return UserTopTracks{}, fmt.Errorf("UserTopTracks makeRequest Error: %v", err)
+		}
+
+		nextTopTracks, err := utility.Decode[UserTopTracks](resp)
+		if err != nil {
+			return UserTopTracks{}, fmt.Errorf("UserTopTracks decode Error: %v", err)
+		}
+		topTracks = append(topTracks, nextTopTracks)
+		tracks := nextTopTracks.TopTracks.Track
+		if len(tracks) == 0 {
+			break
+		}
+		completeTracks = append(completeTracks, tracks...)
+
+		resp.Body.Close()
+
+		// if len(topTracks[i].TopTracks.Track) == 0 {
+		// 	break
+		// }
+
 	}
 
-	resp, err := h.MakeRequest(context, extraURLParams)
-	if err != nil {
-		return UserTopTracks{}, fmt.Errorf("UserTopTracks makeRequest Error: %v", err)
-	}
-	defer resp.Body.Close()
+	// completeUserTopTracks := make([]Track, 0)
+	// for _, val := range topTracks {
+	// 	completeUserTopTracks = append(completeUserTopTracks, val.TopTracks.Track...)
+	// }
+	// FinalUserTopTracks := UserTopTracks{
+	// 	TopTracks: TopTracks{
+	// 		Track: completeUserTopTracks, //dc: why is this empty?
+	// 	},
+	// }
 
-	topTracks, err = utility.Decode[UserTopTracks](resp)
-	if err != nil {
-		return topTracks, fmt.Errorf("UserTopTracks decode Error: %v", err)
-	}
+	// return FinalUserTopTracks, nil
 
-	return topTracks, nil
+	return UserTopTracks{
+		TopTracks: TopTracks{
+			Track: completeTracks,
+		},
+	}, nil
 }
 
 func (h *LastFMAPIExternal) MakeRequest(ctx context.Context, extraURLParams map[string]string) (*http.Response, error) {
@@ -230,6 +270,8 @@ func (h *LastFMAPIExternal) MakeRequest(ctx context.Context, extraURLParams map[
 	// }
 	// q.Set("api_key", string(h.apiKey))
 
+	requestLimiter.Wait(context.Background()) //For delaying every request made by the backend at minimum 200ms from each other.
+	glog.Infof("Making LFM API Request: %s", extraURLParams)
 	u, err := url.Parse(h.lastFMURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid base URL: %w", err)
@@ -271,6 +313,7 @@ func (h *LastFMAPIExternal) MakeRequest(ctx context.Context, extraURLParams map[
 	// if err != nil {
 	// 	return nil, fmt.Errorf("makeRequest Post Error: %w", err)
 	// }
+
 	return resp, err
 
 }
