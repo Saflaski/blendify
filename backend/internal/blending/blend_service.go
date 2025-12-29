@@ -2,8 +2,10 @@ package blend
 
 import (
 	musicapi "backend-lastfm/internal/music_api/lastfm"
+	"cmp"
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
 	"sync"
 
@@ -232,8 +234,25 @@ func (s *BlendService) ConvertCatalogueStatsToEntry(aStat CatalogueStats, name s
 }
 
 func (s *BlendService) GetCommonAndSortedEntries(aEntries map[string]CatalogueStats, bEntries map[string]CatalogueStats) []string {
-	commonKeys := FindIntersectKeys[CatalogueStats](aEntries, bEntries)
-	//No sorting for now
+	commonKeys := FindIntersectKeys(aEntries, bEntries)
+
+	// sortedCommonKeys := make([]string, len(commonKeys))
+	// scoreMap := make(map[string]float64)
+	// for _, commonKey := range commonKeys {
+	// 	left := aEntries[commonKey].Count
+	// 	right := aEntries[commonKey].Count
+	// 	scoreMap[commonKey] = GetLogCombinedScore(left, right)
+	// }
+
+	//Generate a score for each item in commonKeys (itemA and itemB) using GetLogCombineScore
+	//Which is essentially (log(X) + log(Y)) * log(Y)/log(X) iff Y > X
+	//Then sort list in descending order, i.e higher score at the top
+	sortFunc := func(itemA, itemB string) int {
+		itemAScore := GetLogCombinedScore(aEntries[itemA].Count, bEntries[itemA].Count)
+		itemBScore := GetLogCombinedScore(aEntries[itemB].Count, bEntries[itemB].Count)
+		return -cmp.Compare(itemAScore, itemBScore)
+	}
+	slices.SortFunc(commonKeys, sortFunc)
 
 	return commonKeys
 }

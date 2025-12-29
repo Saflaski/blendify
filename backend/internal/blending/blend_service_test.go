@@ -54,7 +54,7 @@ func TestGetBlend(t *testing.T) {
 		TopArtistResponse, err := lfm_adapter.GetUserTopArtists(
 			t.Context(),
 			userName,
-			durationMap[BlendTimeDurationThreeMonth],
+			string(BlendTimeDurationThreeMonth),
 			1,
 			50,
 		)

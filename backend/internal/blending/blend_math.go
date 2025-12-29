@@ -7,6 +7,19 @@ import (
 	"slices"
 )
 
+func GetLogCombinedScore(a, b int) float64 {
+	left, right := float64(a), float64(b)
+	logSum := math.Log(left) + math.Log(right)
+	var diffFactor float64
+	if left > right {
+		diffFactor = math.Log(right) / math.Log(left)
+	} else {
+		diffFactor = math.Log(left) / math.Log(right)
+	}
+
+	return logSum * diffFactor
+}
+
 func FindIntersectKeys[T any](m1, m2 map[string]T) []string {
 	//Smaller map on outside loop leads to better stack order
 
