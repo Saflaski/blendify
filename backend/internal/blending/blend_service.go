@@ -868,7 +868,7 @@ func (s *BlendService) downloadTopTracks(context context.Context, userName strin
 		context,
 		userName,
 		string(timeDuration),
-		10,
+		5,
 		50,
 	)
 

@@ -47,7 +47,7 @@ export function Blend() {
   // ------ If user is from invite link and not Add button -------
   const [error, setError] = useState<string | null>(null);
   const [cardLoading, setCardLoading] = useState(true);
-  const [catalogueLoading, setCatalogueLoading] = useState(true);
+  const [catalogueLoading, setCatalogueLoading] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -70,10 +70,18 @@ export function Blend() {
   const [catTrack1Year, setCatTrack1Year] = useState(true);
   const [catTrack3Month, setCatTrack3Month] = useState(true);
 
+  const currentTime = new Date().getTime();
   type LocationState = {
     id?: string;
     value?: string;
   };
+
+  useEffect(() => {
+    console.log(catalogueLoading);
+    if (catalogueLoading == 4) {
+      console.log("Loaded");
+    }
+  }, [catalogueLoading]);
 
   console.log(location.state);
 
@@ -158,7 +166,7 @@ export function Blend() {
 
   console.log("Final blendId to use: ", blendId);
   useEffect(() => {
-    console.log("Getting data for blendId (1): ", blendId);
+    // console.log("Getting data for blendId (1): ", blendId);
     const getCardBlendData = async () => {
       console.log("Getting data for blendId (2): ", blendId);
 
@@ -204,10 +212,12 @@ export function Blend() {
       setError("Could not get blendid.");
       console.log("Blend ID is null, cannot get data?");
     } else {
-      getCardBlendData();
+      if (catalogueLoading == 4) {
+        getCardBlendData();
+      }
       console.log("Getting card blend data");
     }
-  }, [blendId]);
+  }, [catalogueLoading]);
 
   async function downloadCatalogueData(duration: string, category: string) {
     const params = {
@@ -246,7 +256,9 @@ export function Blend() {
     category: string,
     blendId: string,
     setData: (data: any[]) => void,
+    setCatalogueLoading: (prev: any) => void,
     setLoading: (loading: boolean) => void,
+
     setError: (msg: string) => void,
   ) => {
     console.log("Getting data for blendId:", blendId);
@@ -274,6 +286,9 @@ export function Blend() {
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
+      // setCatalogueLoading(catalogueLoading + 1);
+      setCatalogueLoading((prev: number) => prev + 1);
+      // console.log("+1");
     }
   };
 
@@ -292,12 +307,12 @@ export function Blend() {
           "artist",
           blendId,
           setUserCatalogueArtist3MonthData,
-          // setCatalogueLoading,
+          setCatalogueLoading,
           setCatArt3Month,
           setError,
         )
       : null;
-  }, [blendId, cardLoading]);
+  }, [blendId]);
 
   useEffect(() => {
     console.log("Loading user catalogue artist blend data:");
@@ -314,12 +329,12 @@ export function Blend() {
           "track",
           blendId,
           setUserCatalogueTrack3MonthData,
-          // setCatalogueLoading,
+          setCatalogueLoading,
           setCatTrack3Month,
           setError,
         )
       : null;
-  }, [blendId, cardLoading]);
+  }, [blendId]);
 
   useEffect(() => {
     console.log("Loading user catalogue artist blend data:");
@@ -336,12 +351,12 @@ export function Blend() {
           "artist",
           blendId,
           setUserCatalogueArtist1YearData,
-          // setCatalogueLoading,
+          setCatalogueLoading,
           setCatArt1Year,
           setError,
         )
       : null;
-  }, [blendId, cardLoading]);
+  }, [blendId]);
 
   useEffect(() => {
     console.log("Loading user catalogue artist blend data:");
@@ -358,12 +373,16 @@ export function Blend() {
           "track",
           blendId,
           setUserCatalogueTrack1YearData,
-          // setCatalogueLoading,
+          setCatalogueLoading,
           setCatTrack1Year,
           setError,
         )
       : null;
-  }, [blendId, cardLoading]);
+  }, [blendId]);
+
+  // useEffect(() => {
+  //   if catalogueLoading
+  // }, [catalogueLoading])
 
   // ----- Copy button functionality -----
   const captureRef = useRef(null); //Div to be captured
@@ -437,6 +456,12 @@ export function Blend() {
     }
   }, [userCardData]);
   // setBlendPercent(userBlendData.OverallBlendNum);
+  const [showHint, setShowHint] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowHint(false), 4000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="w-full ">
@@ -446,6 +471,19 @@ export function Blend() {
         {/* <div className="md:flex md:flex-wrap pr-2 mt-8 lg:grid lg:grid-cols-2 "> Old*/}
         {/* LEFT CONTENT AREA */}
         <div className="  md:w-[40%] flex flex-col flex-wrap items-center justify-baseline gap-y-5">
+          <div
+            className={`text-black font-[Roboto_Mono] italic    ${catalogueLoading == 4 && !cardLoading ? "hidden" : "lg:hidden block"} `}
+          >
+            <p className="text-lg font-semibold">
+              Loading data {catalogueLoading}/5
+            </p>
+            <p
+              className={`${showHint ? "hidden" : "block"} text-sm transition ease-in`}
+            >
+              First blend? This might take a bit while we fetch all your music
+              data (and stay nice to the Last.fm API).
+            </p>
+          </div>
           {/* Player card */}
           <div className="w-full flex justify-center  ">
             <div className="w-full flex justify-center ">
@@ -598,6 +636,19 @@ export function Blend() {
 
         {/* RIGHT CONTENT AREA */}
         <div className=" md:w-[60%] outline-amber-600 flex flex-col flex-wrap items-center justify-baseline gap-y-5">
+          <div
+            className={`text-black font-[Roboto_Mono] italic   ${catalogueLoading == 4 && !cardLoading ? "hidden" : "hidden lg:block"} `}
+          >
+            <p className="text-lg font-semibold">
+              Loading data {catalogueLoading}/5
+            </p>
+            <p
+              className={`${showHint ? "hidden" : "block"} text-sm transition ease-in`}
+            >
+              First blend? This might take a bit while we fetch all your music
+              data (and stay nice to the Last.fm API).
+            </p>
+          </div>
           {/* Top blend artists section */}
           {catArt3Month ? (
             <section className="w-full flex flex-col">

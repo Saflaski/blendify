@@ -118,7 +118,7 @@ func (app *application) run(h http.Handler) error {
 		Addr:         app.config.addr,
 		Handler:      h,
 		ReadTimeout:  time.Second * 10, //Blanket Read, Write, Idle Timeouts as safety net.
-		WriteTimeout: time.Second * 30,
+		WriteTimeout: time.Second * 120,
 		IdleTimeout:  time.Minute * 1,
 	}
 
