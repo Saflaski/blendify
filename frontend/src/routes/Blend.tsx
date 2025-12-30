@@ -200,12 +200,13 @@ export function Blend() {
             setError,
           ),
         ]);
-        setCatalogueLoading(false);
+
+        await getCardBlendData(); // runs AFTER all catalogue calls
         setCatArt1Year(false);
         setCatArt3Month(false);
         setCatTrack1Year(false);
         setCatTrack3Month(false);
-        await getCardBlendData(); // runs AFTER all catalogue calls
+        setCatalogueLoading(false);
       } finally {
         setCardLoading(false);
       }
