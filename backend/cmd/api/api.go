@@ -5,6 +5,7 @@ import (
 	blend "backend-lastfm/internal/blending"
 	musicapi "backend-lastfm/internal/music_api/lastfm"
 	network "backend-lastfm/internal/network"
+	shared "backend-lastfm/internal/shared"
 	"net/http"
 	"os"
 	"strconv"
@@ -69,7 +70,7 @@ func (app *application) mount() http.Handler {
 	authRepo := auth.NewRedisStateStore(rdb, authCfg.ExpiryDuration) // Placeholder nil, replace with actual Redis client
 	authService := auth.NewAuthService(authRepo, authCfg)
 	authHandler := auth.NewAuthHandler(
-		authService,
+		*authService,
 		authCfg,
 	)
 
@@ -82,9 +83,11 @@ func (app *application) mount() http.Handler {
 		string(auth.UserKey),
 	)
 
+	sharedService := shared.NewSharedService(authService, blendService)
+	sharedHandler := shared.NewSharedHandler(*sharedService)
 	r.Route("/v1", func(r chi.Router) {
 		r.Route("/blend", func(r chi.Router) {
-			r.Use(auth.ValidateCookie(*authHandler, authService))
+			r.Use(auth.ValidateCookie(*authHandler, *authService))
 			// r.Get("/new", blendHandler.GetBlendPercentage)
 			r.Get("/health", blendHandler.GetBlendHealth)
 			r.Post("/add", blendHandler.AddBlendFromInviteLink)
@@ -100,8 +103,9 @@ func (app *application) mount() http.Handler {
 			r.Post("/logout", authHandler.HandleLastFMLogOut)
 			r.Get("/validate", authHandler.HandleAPIValidation)
 			r.Get("/callback/{platform}", authHandler.HandleLastFMCallbackFlow)
-
+			r.Get("/delete", sharedHandler.DeleteAllData)
 		})
+
 	})
 
 	glog.Info("Mounted Handlers:")

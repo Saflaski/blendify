@@ -48,7 +48,7 @@ type Tx struct {
 	IP             string
 }
 
-type authService struct {
+type AuthService struct {
 	repo         AuthRepository
 	lastFMAPIKey string
 	lfmapi       musicapi.LastFMAPIExternal
@@ -64,15 +64,15 @@ type Config struct {
 
 type SessionID string
 
-func NewAuthService(repo AuthRepository, cfg Config) AuthService {
-	return &authService{
+func NewAuthService(repo AuthRepository, cfg Config) *AuthService {
+	return &AuthService{
 		repo:         repo,
 		lastFMAPIKey: os.Getenv("LASTFM_API_KEY"),
 		config:       cfg,
 	}
 }
 
-type AuthService interface {
+type authService interface {
 	GetDeletedCookie(cookieName string) *http.Cookie
 	CheckCookieValidity(ctx context.Context, cookieValue string) (bool, error)
 	GenerateNewTx(userIP string) *Tx
@@ -92,7 +92,7 @@ type AuthService interface {
 	GetUserByLFMUsername(context context.Context, lfmName string) (string, error)
 }
 
-func (s *authService) MakeNewUser(context context.Context, validationSid string, userName string) (uuid.UUID, error) {
+func (s *AuthService) MakeNewUser(context context.Context, validationSid string, userName string) (uuid.UUID, error) {
 
 	res, err := s.CheckIfExistingUserFromLFM(context, userName)
 	if err != nil {
@@ -122,7 +122,7 @@ func (s *authService) MakeNewUser(context context.Context, validationSid string,
 
 // This will return err if and only if there is an error with checking the userName
 // If it does not find an existing user, it will return an empty UUID value
-func (s *authService) CheckIfExistingUserFromLFM(context context.Context, userName string) (uuid.UUID, error) {
+func (s *AuthService) CheckIfExistingUserFromLFM(context context.Context, userName string) (uuid.UUID, error) {
 
 	res, err := s.repo.GetUserIdByLFM(context, userName)
 	if err != redis.Nil && err != nil {
@@ -142,11 +142,11 @@ func (s *authService) CheckIfExistingUserFromLFM(context context.Context, userNa
 	}
 }
 
-func (s *authService) GetUserByAnySessionID(context context.Context, sid string) (string, error) {
+func (s *AuthService) GetUserByAnySessionID(context context.Context, sid string) (string, error) {
 	return s.repo.GetUserByAnySessionID(context, sid)
 }
 
-func (s *authService) GetUserByLFMUsername(context context.Context, lfmName string) (string, error) {
+func (s *AuthService) GetUserByLFMUsername(context context.Context, lfmName string) (string, error) {
 	return s.repo.GetUserIdByLFM(context, lfmName)
 	// if err != nil {
 	// 	glog.Errorf("error during getting userid by lfmName sec index, %w", err)
@@ -157,37 +157,37 @@ func (s *authService) GetUserByLFMUsername(context context.Context, lfmName stri
 	// return res, err
 }
 
-func (s *authService) AddUserIdToLFMIndex(context context.Context, userid, lfmName string) {
+func (s *AuthService) AddUserIdToLFMIndex(context context.Context, userid, lfmName string) {
 	err := s.repo.AddUserIdToLFMIndex(context, userid, lfmName)
 	if err != nil {
 		glog.Errorf("Could not add user to LFM-User index in repo, %w", err)
 	}
 }
 
-func (s *authService) GetUserByValidSessionID(context context.Context, sid string) (string, error) {
+func (s *AuthService) GetUserByValidSessionID(context context.Context, sid string) (string, error) {
 	return s.repo.GetUserByValidSessionID(context, sid, s.config.ExpiryDuration)
 }
 
-func (s *authService) IsSIDValid(context context.Context, sid string) (bool, error) {
+func (s *AuthService) IsSIDValid(context context.Context, sid string) (bool, error) {
 	u, err := s.repo.GetUserByValidSessionID(context, sid, s.config.ExpiryDuration)
 	return u != "", err
 }
 
-func (s *authService) DeleteSessionID(context context.Context, sid string) error {
+func (s *AuthService) DeleteSessionID(context context.Context, sid string) error {
 
 	return s.repo.DeleteSingularSessionID(context, sid)
 
 }
 
-func (s *authService) DeleteUser(context context.Context, userid string) error {
+func (s *AuthService) DeleteUser(context context.Context, userid string) error {
 	return s.repo.DeleteUser(context, userid)
 }
 
-func (s *authService) NewSid() SessionID {
+func (s *AuthService) NewSid() SessionID {
 	return SessionID(uuid.New().String())
 }
 
-// func (s *authService) SetSessionKey(ctx context.Context, sessionID, userKey string) error {
+// func (s *AuthService) SetSessionKey(ctx context.Context, sessionID, userKey string) error {
 
 // 	err := s.repo.SetSidWebSesssionKey(ctx, sessionID, userKey, time.Hour*24*10) //Set for 10 days
 // 	if err != nil {
@@ -196,7 +196,7 @@ func (s *authService) NewSid() SessionID {
 // 	return nil
 // }
 
-func (s *authService) GetDeletedCookie(cookieName string) *http.Cookie {
+func (s *AuthService) GetDeletedCookie(cookieName string) *http.Cookie {
 
 	secure := false //TODO Set true for PROD
 	cookieReturn := http.Cookie{
@@ -216,7 +216,7 @@ func (s *authService) GetDeletedCookie(cookieName string) *http.Cookie {
 // string: Cookie value if success, error message if not
 // bool: success value of operation
 
-func (s *authService) CheckCookieValidity(ctx context.Context, sidValue string) (bool, error) {
+func (s *AuthService) CheckCookieValidity(ctx context.Context, sidValue string) (bool, error) {
 
 	found, err := s.repo.GetSidKey(ctx, sidValue)
 	if err != nil { //Err checking
@@ -228,7 +228,7 @@ func (s *authService) CheckCookieValidity(ctx context.Context, sidValue string) 
 	}
 }
 
-func (s *authService) DelSidKey(ctx context.Context, sessionID string) error {
+func (s *AuthService) DelSidKey(ctx context.Context, sessionID string) error {
 	err := s.repo.DelSidKey(ctx, sessionID)
 	if err != nil {
 		return fmt.Errorf("Cannot delete SID key from repository: %v", err)
@@ -236,7 +236,7 @@ func (s *authService) DelSidKey(ctx context.Context, sessionID string) error {
 	return nil
 }
 
-func (s *authService) ConsumeStateAndReturnSID(ctx context.Context, state string) (string, error) {
+func (s *AuthService) ConsumeStateAndReturnSID(ctx context.Context, state string) (string, error) {
 	sid, err := s.repo.ConsumeStateSID(ctx, state)
 	if err != nil {
 		glog.Warning("Cannot consume state token from repository: %v", err)
@@ -263,7 +263,7 @@ func makeNewSID() string {
 	return sessIDVerifier
 }
 
-func (s *authService) GenerateNewStateAndSID(ctx context.Context) (string, string, error) {
+func (s *AuthService) GenerateNewStateAndSID(ctx context.Context) (string, string, error) {
 
 	//Make new state and SID
 	newState, err := makeNewState()
@@ -284,7 +284,7 @@ func (s *authService) GenerateNewStateAndSID(ctx context.Context) (string, strin
 	return sessID, newState, nil
 }
 
-func (s *authService) GetInitLoginURL(state string) string {
+func (s *AuthService) GetInitLoginURL(state string) string {
 	q := url.Values{}
 	q.Set("api_key", s.lastFMAPIKey)
 	q.Set("cb", string(s.config.BackendURL+"/auth/callback/lastfm"+"?state="+state))
@@ -312,7 +312,7 @@ func getSessionAPISignature(api_key string, token string) string {
 
 }
 
-func (s *authService) GetNewWebSessionURL(token string) (string, url.Values) {
+func (s *AuthService) GetNewWebSessionURL(token string) (string, url.Values) {
 
 	q := url.Values{}
 	q.Set("method", "auth.getSession")
@@ -324,7 +324,7 @@ func (s *authService) GetNewWebSessionURL(token string) (string, url.Values) {
 	return LASTFM_ROOT_API, q //Didn't realise POST would require them as different //TODO Make this cleaner
 }
 
-func (s *authService) GenerateNewTx(userIP string) *Tx {
+func (s *AuthService) GenerateNewTx(userIP string) *Tx {
 	sessIDVerifier := uuid.New().String()
 	tx := Tx{
 		SessIDVerifier: sessIDVerifier,

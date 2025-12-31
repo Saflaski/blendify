@@ -45,10 +45,16 @@ func TestAuthService(t *testing.T) {
 	_ = DB_NUM
 
 	// lfmApi := musicapi.NewLastFMExternalAdapter(LASTFM_API_KEY, LAST_FM_URL, true)
-	authService := authService{
+	authService := AuthService{
 		repo:         redisStore,
 		lastFMAPIKey: LASTFM_API_KEY,
-		// lfmapi:       *lfmApi,
+		// config: auth.Config{
+		// 	ExpiryDuration: time.Duration(app.config.sessionExpiry) * time.Second,
+		// 	// ExpiryDuration:     time.Duration(app.config.sessionExpiry) * time.Second,
+		// 	FrontendCookieName: "sid",
+		// 	FrontendURL:        os.Getenv("FRONTEND_URL"),
+		// 	BackendURL:         os.Getenv("BACKEND_URL"),
+		// },
 	}
 
 	ctx := context.Background()
