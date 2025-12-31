@@ -11,8 +11,8 @@ type SharedService struct {
 	blendService *blend.BlendService
 }
 
-func (s *SharedService) DeleteAllUserData(context context.Context, userid string) (any, error) {
-	return nil, nil
+func (s *SharedService) DeleteAllUserData(context context.Context, userid string) error {
+	return nil
 }
 
 func NewSharedService(auth *auth.AuthService, blend *blend.BlendService) *SharedService {

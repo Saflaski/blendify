@@ -120,6 +120,14 @@ func (s *AuthService) MakeNewUser(context context.Context, validationSid string,
 
 }
 
+func GetUserIDFromContext(ctx context.Context) (string, error) {
+	user, ok := ctx.Value(UserKey).(string)
+	if !ok {
+		return "", fmt.Errorf(" did not find userid in context")
+	}
+	return user, nil
+}
+
 // This will return err if and only if there is an error with checking the userName
 // If it does not find an existing user, it will return an empty UUID value
 func (s *AuthService) CheckIfExistingUserFromLFM(context context.Context, userName string) (uuid.UUID, error) {
