@@ -1,0 +1,14 @@
+<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 347 345" width="347" height="345">
+	<defs>
+		<image  width="347" height="345" id="img1" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAVsAAAFZAQMAAAAMyR6lAAAAAXNSR0IB2cksfwAAAANQTFRF2EcnPtI1+wAAAEdJREFUeJztyjEBAAAMAqDZv/QyeAs3uUJkWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZZlWZ7PDzqNAVrTujc9AAAAAElFTkSuQmCC"/>
+	</defs>
+	<style>
+		.s0 { fill: none;stroke: #ffffff;stroke-miterlimit:100;stroke-width: 30 } 
+		.s1 { fill: #000000;stroke: #ffffff;stroke-miterlimit:100;stroke-width: 30 } 
+	</style>
+	<use id="Layer 2" href="#img1" x="0" y="0"/>
+	<path id="Shape 1" fill-rule="evenodd" class="s0" d="m238 106v189h-189v-189z"/>
+	<path id="Shape 1 copy" fill-rule="evenodd" class="s0" d="m299 48v189h-189v-189z"/>
+	<path id="Shape 2" fill-rule="evenodd" class="s0" d="m119.41 185.29l-3.12-3.12 68.63-68.63 3.12 3.12z"/>
+	<path id="Shape 2 copy" fill-rule="evenodd" class="s1" d="m161.95 230.81l-3.18-3.18 69.84-69.84 3.18 3.17z"/>
+</svg>
