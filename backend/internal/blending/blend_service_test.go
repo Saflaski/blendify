@@ -14,7 +14,7 @@ import (
 type StubBlendService struct {
 }
 
-func TestGetBlend(t *testing.T) {
+func TestBlend(t *testing.T) {
 	godotenv.Load("../../.env")
 	if err := godotenv.Load("../../.env"); err != nil {
 		t.Fatal("godotenv.Load failed")
@@ -22,7 +22,7 @@ func TestGetBlend(t *testing.T) {
 
 	DB_ADDR := os.Getenv("DB_ADDR")
 	DB_PASS := os.Getenv("DB_PASS")
-	DB_NUM, _ := strconv.Atoi(os.Getenv("DB_NUM"))
+	// DB_NUM, _ := strconv.Atoi(os.Getenv("DB_NUM"))
 	DB_PROTOCOL, _ := strconv.Atoi(os.Getenv("DB_PROTOCOL"))
 	LASTFM_API_KEY := os.Getenv("LASTFM_API_KEY")
 
@@ -33,7 +33,7 @@ func TestGetBlend(t *testing.T) {
 	redisStore := NewRedisStateStore(redis.NewClient(&redis.Options{
 		Addr:     DB_ADDR,
 		Password: DB_PASS,
-		DB:       DB_NUM,
+		DB:       2,
 		Protocol: DB_PROTOCOL,
 	}))
 
@@ -87,6 +87,106 @@ func TestGetBlend(t *testing.T) {
 	// 		t.Errorf("Number is not within acceptable range: %d", blendNumber)
 	// 	}
 	// })
+
+	t.Run("Create and Delete all blends by user", func(t *testing.T) {
+		// userName := "internaltesting"
+		// response, err := blendService.getTopArists(userName, BlendTimeDurationThreeMonth)
+		ctx := t.Context()
+		ctx = context.WithValue(ctx, "user", "saflas")
+		ctx2 := t.Context()
+		ctx = context.WithValue(ctx, "user", "other")
+		user := userid("123-123-123-123-123")
+		user2 := userid("456-456-456-456-456")
+
+		blendService.repo.client.HSet(ctx2, "user:", "LFM Username", string(user2))
+
+		link, err := blendService.GenerateNewLinkAndAssignToUser(ctx, user)
+		if err != nil {
+			t.Fatalf("Generating new link and assigning to userid: %s", err)
+		}
+
+		blendid, err := blendService.AddOrMakeBlendFromLink(ctx2, user2, link)
+		if err != nil || blendid == "" {
+			t.Fatalf("Making Blend from invite : %s", err)
+		}
+		t.Log("blendid")
+		t.Log(blendid)
+		// _, err = blendService.GetDuoBlendData(ctx, blendid)
+		// if err != nil {
+		// 	t.Fatalf("Duo Blend: %s", err)
+		// }
+
+		t.Log("Making sure user blends were deleted")
+
+		blendids, err := blendService.repo.GetBlendsByUser(ctx2, user2)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(blendids) == 0 {
+			t.Fatalf("Could not make blends %s", err)
+		}
+
+		err = blendService.DeleteUserBlends(ctx2, string(user2))
+		if err != nil {
+			t.Fatalf(" Couldnt delete: %s", err)
+		}
+
+		blendids, err = blendService.repo.GetBlendsByUser(ctx2, user2)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(blendids) != 0 {
+			t.Fatalf("Could not delete blends %s", err)
+		}
+
+		blendService.repo.client.HDel(ctx2, "user:", "LFM Username", string(user2))
+		blendService.repo.client.HDel(ctx2, "user:", "LFM Username", string(user))
+
+	})
+
+	t.Run("Create and Delete user and try deleting 0 blends", func(t *testing.T) {
+		// userName := "internaltesting"
+		// response, err := blendService.getTopArists(userName, BlendTimeDurationThreeMonth)
+		ctx := t.Context()
+		ctx = context.WithValue(ctx, "user", "saflas")
+		ctx2 := t.Context()
+		ctx = context.WithValue(ctx, "user", "other")
+		user := userid("123-123-123-123-123")
+		user2 := userid("456-456-456-456-456")
+
+		blendService.repo.client.HSet(ctx2, "user:", "LFM Username", string(user2))
+
+		t.Log("Making sure user blends were deleted")
+
+		blendids, err := blendService.repo.GetBlendsByUser(ctx2, user2)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(blendids) != 0 {
+			t.Fatalf("Blends already exist for user? %s", err)
+		}
+
+		err = blendService.DeleteUserBlends(ctx2, string(user2))
+		if err != nil {
+			t.Fatalf(" Couldnt delete: %s", err)
+		}
+
+		blendids, err = blendService.repo.GetBlendsByUser(ctx2, user2)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(blendids) != 0 {
+			t.Fatalf("Could not delete blends %s", err)
+		}
+
+		blendService.repo.client.HDel(ctx2, "user:", "LFM Username", string(user2))
+		blendService.repo.client.HDel(ctx2, "user:", "LFM Username", string(user))
+
+	})
 
 }
 
