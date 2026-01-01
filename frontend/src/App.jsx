@@ -8,6 +8,7 @@ import { Privacy } from "./routes/Privacy";
 import { Layout } from "./Layout";
 import { authLoader } from "./utils/authLoader";
 import { Home } from "./routes/Home";
+import { Account } from "./routes/Account";
 
 const router = createBrowserRouter([
   {
@@ -21,6 +22,7 @@ const router = createBrowserRouter([
       // { path: "/home/", element: <Home /> },
       { path: "/blend", element: <Blend /> },
       { path: "/home", element: <Home />, loader: authLoader },
+      { path: "/account", element: <Account />, loader: authLoader },
       { path: "*", element: <NotFound /> },
     ],
   },
