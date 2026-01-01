@@ -23,6 +23,25 @@ type RedisStateStore struct {
 	blendIndexPrefix string
 }
 
+func (r *RedisStateStore) DeleteMusicData(context context.Context, user string) error {
+	pattern := fmt.Sprintf("%s:%s:*", r.musicPrefix, user)
+	// r.client.Unlink(context, )
+	keys, err := r.client.Keys(context, pattern).Result()
+	if err != nil {
+		return fmt.Errorf("could not get keys for deletion: %w", err)
+	}
+	if len(keys) == 0 {
+		//No music_data to delete
+		return nil
+	}
+
+	err = r.client.Unlink(context, keys...).Err()
+	if err != nil {
+		return fmt.Errorf("could not unlink keys during deleting music data: %w", err)
+	}
+	return nil
+}
+
 func (r *RedisStateStore) DeleteBlendByBlendId(context context.Context, user userid, blendId blendId) error {
 	keyByUser := fmt.Sprintf("%s:%s:%s", r.userPrefix, "blends", string(user))
 	keyByBlend := fmt.Sprintf("%s:%s:%s", r.blendPrefix, string(blendId), "users")
@@ -159,11 +178,16 @@ func (r *RedisStateStore) GetUsersFromBlend(context context.Context, id blendId)
 	if err != nil {
 		return nil, fmt.Errorf(" could not get Members of users for users from blend id %s: and err %w", id, err)
 	}
-	users := make([]userid, len(res))
-	for i, v := range res {
-		users[i] = userid(v)
+	if len(res) != 0 {
+		users := make([]userid, len(res))
+		for i, v := range res {
+			users[i] = userid(v)
+		}
+		return users, nil
+	} else {
+		return nil, nil
 	}
-	return users, nil
+
 }
 
 func (r *RedisStateStore) IsUserInBlend(context context.Context, user userid, id blendId) (bool, error) {

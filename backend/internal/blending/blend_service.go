@@ -19,6 +19,29 @@ type BlendService struct {
 	// authRepo       *auth.AuthStateStore
 }
 
+func (s *BlendService) DeleteUserBlends(context context.Context, user string) error {
+	blendIds, err := s.repo.GetBlendsByUser(context, userid(user))
+	if err != nil {
+		glog.Info("USER DELETE REQUEST FAILED")
+		return fmt.Errorf(" could not find blends from userid %s : %w", user, err)
+	}
+	for _, v := range blendIds {
+		err = s.DeleteBlend(context, userid(user), v)
+		if err != nil {
+			glog.Info("USER DELETE REQUEST FAILED")
+			return fmt.Errorf(" could not delete blend %s for user: %s -- %w ", v, user, err)
+		}
+	}
+	err = s.repo.DeleteMusicData(context, user)
+	if err != nil {
+		glog.Info("USER DELETE REQUEST FAILED")
+		return fmt.Errorf("could not delete music data for user %s: %w", user, err)
+	}
+	glog.Info("USER DELETE REQUEST SUCCESSFUL")
+	return nil
+
+}
+
 // Deletes blend on backend for all users
 func (s *BlendService) DeleteBlend(context context.Context, user userid, blendId blendId) error {
 
@@ -95,6 +118,9 @@ func (s *BlendService) GetDuoBlendData(context context.Context, blendId blendId)
 	userids, err := s.repo.GetUsersFromBlend(context, blendId)
 	if err != nil {
 		return DuoBlend{}, fmt.Errorf(" error getting users from blend id: %s, err: %w", blendId, err)
+	}
+	if len(userids) == 0 {
+		return DuoBlend{}, nil
 	}
 
 	err = s.PopulateUsersByBlend(context, blendId)
@@ -637,11 +663,6 @@ func (s *BlendService) GenerateNewLinkAndAssignToUser(context context.Context, u
 	}
 
 	return newInviteValue, nil
-}
-
-func (s *BlendService) AddBlendFromInvite(context context.Context, userA userid, blendLinkValue string) error {
-
-	return nil
 }
 
 func NewBlendService(blendStore RedisStateStore, lfmAdapter musicapi.LastFMAPIExternal) *BlendService {

@@ -103,7 +103,7 @@ func (app *application) mount() http.Handler {
 			r.Post("/logout", authHandler.HandleLastFMLogOut)
 			r.Get("/validate", authHandler.HandleAPIValidation)
 			r.Get("/callback/{platform}", authHandler.HandleLastFMCallbackFlow)
-			r.Get("/delete", sharedHandler.DeleteAllData)
+			r.Get("/delete", sharedHandler.DeleteAllData) //Goes to shared package
 		})
 
 	})

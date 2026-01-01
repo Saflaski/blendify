@@ -33,8 +33,7 @@ func (h *SharedHandler) DeleteAllData(w http.ResponseWriter, r *http.Request) {
 		glog.Errorf("Could not delete all user data:, %s", err)
 		return
 	}
-
-	defer r.Body.Close()
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "Deleted all user data")
 	glog.Infof("Deleted all user data:, %s", err)

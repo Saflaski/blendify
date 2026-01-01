@@ -163,9 +163,9 @@ func (r *AuthStateStore) DeleteUser(ctx context.Context, userid string) error {
 	//Delete User
 	userKey := fmt.Sprintf("%s:%s", r.prefixUser, userid)
 	val, err = r.client.Del(commandContext, userKey).Result()
-	if val == 0 {
-		return err
-	}
+	// if val == 0 {
+	// 	return err //Commented due to need to return success even if none exist for gdpr
+	// }
 	// _, err = pipe.Exec(ctx)
 	return err
 }
