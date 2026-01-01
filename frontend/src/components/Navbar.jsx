@@ -128,17 +128,25 @@ export function Navbar() {
                   text="Blends"
                 />
                 <DropDownItem
+                  page="/account"
+                  funcName={null}
+                  setOpen={setOpen}
+                  text="Account"
+                />
+                <DropDownItem
                   page="/about"
                   setOpen={setOpen}
                   funcName={null}
                   text="About"
                 />
+
                 <DropDownItem
                   page="/privacy"
                   setOpen={setOpen}
                   funcName={null}
                   text="Privacy"
                 />
+
                 <DropDownItem
                   page="/login"
                   funcName={handleLogOut}

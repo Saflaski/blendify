@@ -4,7 +4,10 @@ import LFMIcon from "@/assets/images/lastfm.svg";
 import TidalIcon from "@/assets/images/tidal.svg";
 import AppleIcon from "@/assets/images/apple2.svg";
 import UnderConstruction from "@/assets/images/underConstruction.jpg";
+import { useLocation } from "react-router-dom";
 export function Login() {
+  const { state } = useLocation();
+  const previousPageMessage = state?.message;
   return (
     <div className="">
       {/* <Navbar /> */}
@@ -21,6 +24,13 @@ export function Login() {
             {loginButton("construction")}
             {/* {loginButton("tidal")} */}
           </div>
+          {previousPageMessage ? (
+            <p className="font-[Roboto_Mono] text-black">
+              {previousPageMessage}
+            </p>
+          ) : (
+            ""
+          )}
         </div>
       </div>
     </div>

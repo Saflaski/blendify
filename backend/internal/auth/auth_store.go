@@ -55,15 +55,28 @@ func (r *AuthStateStore) MakeNewUser(ctx context.Context, validationSid string, 
 
 	key := fmt.Sprintf("%s:%s", r.prefixUser, userid.String())
 
-	pipe := r.client.TxPipeline() //Execute redis commands with atomicity
+	err := r.client.Watch(ctx, func(tx *redis.Tx) error {
+		pipe := tx.TxPipeline()
 
-	pipe.HSet(context.Background(), key, "LFM Username", userName, "Created At", time.Now().UTC())
-	r.queueAddNewSid(pipe, userid.String(), validationSid)
-	r.queueAddLFMUserIndex(pipe, userid.String(), userName)
+		pipe.HSet(ctx, key,
+			"LFM Username", userName,
+			"Created At", time.Now().UTC(),
+		)
 
-	_, err := pipe.Exec(ctx)
+		r.queueAddNewSid(pipe, userid.String(), validationSid)
+		r.queueAddLFMUserIndex(pipe, ctx, userid.String(), userName)
+
+		_, err := pipe.Exec(ctx)
+		return err
+	}, key)
+
+	if err == redis.TxFailedErr {
+		// retry logic
+		return r.MakeNewUser(ctx, validationSid, userName, userid)
+	}
 
 	return err
+
 }
 
 func (r *AuthStateStore) AddNewSidToExistingUser(ctx context.Context, userid uuid.UUID, validationSid string) error {
@@ -128,6 +141,17 @@ func (r *AuthStateStore) DeleteUser(ctx context.Context, userid string) error {
 
 	// pipe := r.client.TxPipeline()
 	commandContext := context.Background()
+	pipe := r.client.Pipeline()
+
+	//Delete LFM connection
+	platform_name, err := r.GetLFMByUserId(ctx, userid)
+	glog.Info(userid)
+	if err != nil {
+		glog.Errorf(" during deletion of user auth level, could not find lfm by userid")
+	}
+	lfmDelKey := fmt.Sprintf("%s:%s", r.prefixLFMToUser, platform_name)
+
+	r.client.Del(ctx, lfmDelKey)
 
 	//Get key to sid list of user
 	keyToSidList := fmt.Sprintf("%s:%s", r.prefixSidList, userid)
@@ -139,34 +163,32 @@ func (r *AuthStateStore) DeleteUser(ctx context.Context, userid string) error {
 	}
 
 	//Delete all the sid->user index
-	deleted := 0
-	for _, sid := range sids {
-		keySidUser := fmt.Sprintf("%s:%s", r.prefixSidToUser, sid)
-		val, err := r.client.Del(commandContext, keySidUser).Result()
-		if err != nil {
-			return err
-		}
-		deleted += int(val)
-	}
 
-	if deleted != len(sids) {
-		return fmt.Errorf("could not delete all sids, operation cancelled")
+	for _, sid := range sids {
+		pipe.Del(ctx, fmt.Sprintf("%s:%s", r.prefixSidToUser, sid))
 	}
+	pipe.Del(ctx, keyToSidList)
+
+	_, err = pipe.Exec(ctx)
+	if err != nil {
+		return err
+	}
+	r.client.Del(commandContext, keyToSidList)
+
+	// if deleted != len(sids) && len(sids) != 0 {
+	// 	return fmt.Errorf("could not delete all sids, operation cancelled")
+	// }
 
 	//Delete sidlist
-	val, err := r.client.Del(commandContext, keyToSidList).Result()
-	fmt.Println("Deleted: ", val)
-	if val > 1 || err != nil {
-		return fmt.Errorf("illegal remove or invalid op. Removed %d and error: %w", val, err)
+	if _, err := r.client.Del(ctx, keyToSidList).Result(); err != nil {
+		return err
 	}
 
 	//Delete User
 	userKey := fmt.Sprintf("%s:%s", r.prefixUser, userid)
-	val, err = r.client.Del(commandContext, userKey).Result()
-	// if val == 0 {
-	// 	return err //Commented due to need to return success even if none exist for gdpr
-	// }
-	// _, err = pipe.Exec(ctx)
+	_, err = r.client.Del(commandContext, userKey).Result()
+	glog.Infof("GDPR Auth level erasure complete: \nuser_id: %s \nsid_count: %d\ntimestamp (UTC): %s", userid, len(sids), time.Now().UTC())
+
 	return err
 }
 
@@ -237,12 +259,13 @@ func (r *AuthStateStore) queueAddNewSidListWithScoreCmd(pipe redis.Pipeliner, us
 
 func (r *AuthStateStore) AddUserIdToLFMIndex(context context.Context, userid, lfmName string) error {
 	key := fmt.Sprintf("%s:%s", r.prefixLFMToUser, lfmName)
+	glog.Info("Set lfm username")
 	return r.client.Set(context, key, userid, 0).Err()
 }
 
-func (r *AuthStateStore) queueAddLFMUserIndex(pipe redis.Pipeliner, userid, lfmName string) error {
+func (r *AuthStateStore) queueAddLFMUserIndex(pipe redis.Pipeliner, context context.Context, userid, lfmName string) error {
 	key := fmt.Sprintf("%s:%s", r.prefixLFMToUser, lfmName)
-	return pipe.Set(context.Background(), key, userid, 0).Err()
+	return pipe.Set(context, key, userid, 0).Err()
 }
 
 func (r *AuthStateStore) GetUserIdByLFM(context context.Context, lfmName string) (string, error) {

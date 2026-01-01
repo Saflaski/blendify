@@ -100,10 +100,15 @@ func (app *application) mount() http.Handler {
 
 		r.Route("/auth", func(r chi.Router) {
 			r.Get("/login/{platform}", authHandler.HandleLastFMLoginFlow)
-			r.Post("/logout", authHandler.HandleLastFMLogOut)
-			r.Get("/validate", authHandler.HandleAPIValidation)
 			r.Get("/callback/{platform}", authHandler.HandleLastFMCallbackFlow)
-			r.Get("/delete", sharedHandler.DeleteAllData) //Goes to shared package
+			r.Get("/validate", authHandler.HandleAPIValidation)
+
+			r.Group(func(r chi.Router) {
+				r.Use(auth.ValidateCookie(*authHandler, *authService))
+				r.Post("/delete", sharedHandler.DeleteAllData)
+				r.Post("/logout", authHandler.HandleLastFMLogOut)
+
+			})
 		})
 
 	})

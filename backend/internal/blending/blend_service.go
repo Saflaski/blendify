@@ -37,7 +37,6 @@ func (s *BlendService) DeleteUserBlends(context context.Context, user string) er
 		glog.Info("USER DELETE REQUEST FAILED")
 		return fmt.Errorf("could not delete music data for user %s: %w", user, err)
 	}
-	glog.Info("USER DELETE REQUEST SUCCESSFUL")
 	return nil
 
 }
