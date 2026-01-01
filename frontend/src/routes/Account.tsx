@@ -74,7 +74,7 @@ export function Account() {
           </p>
 
           <p className="text-black font-bold">
-            accounts@blendify.sabeehislam.com
+            blendify@sabeehislam.com
           </p>
 
           <p className="text-black">
