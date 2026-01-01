@@ -5,31 +5,25 @@ import TidalIcon from "@/assets/images/tidal.svg";
 import AppleIcon from "@/assets/images/apple2.svg";
 import UnderConstruction from "@/assets/images/underConstruction.jpg";
 import { useLocation } from "react-router-dom";
+import { useState } from "react";
 export function Login() {
   const { state } = useLocation();
-  const previousPageMessage = state?.message;
+  const [message] = useState(state?.message);
+  console.log("Message: ", message);
   return (
     <div className="">
-      {/* <Navbar /> */}
       <div className=" w-full justify-center min-h-screen flex flex-row">
         <div className=" flex flex-col p-2 w-full items-center pt-10">
           {" "}
-          {/* Added flex-col and items-center for vertical centering */}
           <Title />
-          {/* New section for login buttons */}
           <div className="mt-1 flex flex-wrap justify-center w-1/2 gap-4 ">
             {" "}
-            {/* Using flex-wrap and gap for responsiveness and spacing */}
             {loginButton("lastfm")}
             {loginButton("construction")}
             {/* {loginButton("tidal")} */}
           </div>
-          {previousPageMessage ? (
-            <p className="font-[Roboto_Mono] text-black">
-              {previousPageMessage}
-            </p>
-          ) : (
-            ""
+          {message && (
+            <div className="font-[Roboto_Mono] text-red-500">{message}</div>
           )}
         </div>
       </div>
