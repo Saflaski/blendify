@@ -1,6 +1,6 @@
 # Blendify
 
-**Blendify** is a work-in-progress web app that combines people’s music tastes from Last.FM into a single, shared catalogue. Like Spotify blend, blendify uses its own taste match formula as well as combines your top shared artists and songs and presents them to you and your friend(s).
+[**Blendify**](blendify.sabeehislam.com) is a work-in-progress web app that combines people’s music tastes from Last.FM into a single, shared catalogue. Like Spotify blend, blendify uses its own taste match formula as well as combines your top shared artists and songs and presents them to you and your friend(s).
 
 ---
 
@@ -32,7 +32,7 @@
 
 ## Tech Stack
 
-- **Frontend:** React, Javascript, Typescript and TailwindCSS
+- **Frontend:** React, Typescript and TailwindCSS
 - **Backend:** Golang
 - **Storage:** Redis with persistence
 - **APIs:** Last.FM
