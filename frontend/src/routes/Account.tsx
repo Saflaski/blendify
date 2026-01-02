@@ -42,18 +42,21 @@ export function Account() {
   };
 
   return (
-    <div className="w-full flex justify-center py-10">
-      <div className="w-[50%] ring-2 ring-black px-6 py-8 space-y-10">
-        <div className="flex flex-col items-center text-center space-y-4">
+    <div className="w-full flex justify-center py-12 px-4">
+      <div className="w-full max-w-3xl ring-2 ring-black  px-8 py-10">
+        <h2 className="text-center font-[Roboto_Mono] text-black text-3xl font-semibold">
+          Account
+        </h2>
+        <div className="flex flex-col items-center text-center space-y-4 pt-5">
           <p className="text-black font-bold">Delete Account Data</p>
           <p className="text-black">
             Use the button to permanently delete everything regarding your
             account automatically.
             <br />
-            This is an irreversible action.
+            This is an <b>irreversible action.</b>
           </p>
           <button
-            className="p-2 bg-red-600 text-black font-bold font-[Roboto_Mono]"
+            className="p-2 bg-red-600 ring-1 hover:bg-red-500 active:bg-red-700 text-black font-bold font-[Roboto_Mono]"
             onClick={DeleteAccount}
           >
             Delete Account
@@ -65,7 +68,7 @@ export function Account() {
 
         <div className="border-t border-black" />
 
-        <div className="flex flex-col items-center text-center space-y-3">
+        <div className="flex flex-col items-center text-center space-y-3 pt-4">
           <p className="text-black font-bold">Account Data Request</p>
 
           <p className="text-black">
@@ -73,9 +76,7 @@ export function Account() {
             account by contacting us at:
           </p>
 
-          <p className="text-black font-bold">
-            blendify@sabeehislam.com
-          </p>
+          <p className="text-black font-bold">blendify@sabeehislam.com</p>
 
           <p className="text-black">
             According to GDPR regulations, this request must be completed within
