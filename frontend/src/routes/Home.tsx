@@ -297,11 +297,11 @@ function ListOfBlends({
             justify-between border border-slate-200 px-3 py-2 hover:bg-slate-50"
                 onClick={() => funcNav(blend.blendid)}
               >
-                <span className="truncate font-['Roboto_Mono'] text-xs">
+                <span className="truncate font-['Roboto_Mono'] text-sm">
                   {blend.user.join(" + ")} // {blend.value}%
                 </span>
 
-                <span className="text-[10px] text-right text-slate-400 ml-2 shrink-0">
+                <span className="text-[12px] text-right text-slate-400 ml-2 shrink-0">
                   {daysAgo(blend.timestamp) === 0
                     ? "added today"
                     : `added ${daysAgo(blend.timestamp)}d ago`}
@@ -313,28 +313,35 @@ function ListOfBlends({
                   handleDelete(blend.blendid);
                 }}
                 className="
-          -transition-x-4
-          lg:translate-x-0
-          opacity-100
-          pl-1
-          w-auto
-          lg:opacity-0 lg:w-0
-          transition-all duration-100 ease-in-out
-          group-hover:opacity-100
-          group-hover:translate-x-0
-          group-hover:pointer-events-auto
-          group-hover:w-auto
-          group-focus-within:opacity-100
-          group-focus-within:translate-x-0
-          group-focus-within:pointer-events-auto
-          group-focus:w-auto
-          pointer-events-none
-          group-hover:px-1
-          hover:bg-red-100
-          hover:border-1
-          focus:border-1
-          text-xs 
-         text-white
+                        translate-x-0
+                opacity-100
+                w-auto
+                pl-1
+                pointer-events-auto
+                text-xs
+                text-white
+                transition-all duration-100 ease-in-out
+
+                lg:-translate-x-4
+                lg:opacity-0
+                lg:w-0
+                lg:pointer-events-none
+
+                lg:group-hover:opacity-100
+                lg:group-hover:translate-x-0
+                lg:group-hover:pointer-events-auto
+                lg:group-hover:w-auto
+                lg:group-hover:px-1
+
+                lg:group-focus-within:opacity-100
+                lg:group-focus-within:translate-x-0
+                lg:group-focus-within:pointer-events-auto
+                lg:group-focus-within:w-auto
+
+                lg:hover:bg-red-100
+                lg:hover:border
+                lg:focus:border
+
         "
               >
                 <img src={Delete} className="bg-inherit" alt="Go to blend" />
