@@ -5,17 +5,16 @@ import "encoding/json"
 // user.getinfo
 type UserInfo struct {
 	User struct {
-		Name            string `json:"name"`
-		Age             string `json:"age"`
-		Subscribers     string `json:"subscriber"`
-		RealName        string `json:"realname"`
-		Bootstraped     string `json:"bootstrap"`
-		Playcount       string `json:"playcount"`
-		Artist_count    string `json:"artist_count"`
-		Track_count     string `json:"track_count"`
-		Album_count     string `json:"album_count"`
-		Registered_unix string `json:"registered"`
-		URL             string `json:"url"`
+		Name         string `json:"name"`
+		Age          string `json:"age"`
+		Subscribers  string `json:"subscriber"`
+		RealName     string `json:"realname"`
+		Bootstraped  string `json:"bootstrap"`
+		Playcount    string `json:"playcount"`
+		Artist_count string `json:"artist_count"`
+		Track_count  string `json:"track_count"`
+		Album_count  string `json:"album_count"`
+		URL          string `json:"url"`
 	} `json:"user"`
 }
 

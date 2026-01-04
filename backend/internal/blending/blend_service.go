@@ -19,6 +19,25 @@ type BlendService struct {
 	// authRepo       *auth.AuthStateStore
 }
 
+func (s *BlendService) GetUserInfo(context context.Context, userid userid) (any, error) {
+	username, err := s.repo.GetLFMByUserId(context, string(userid))
+	if err != nil {
+		return nil, fmt.Errorf(" could not get username from userid %s : %w", userid, err)
+	}
+
+	mapToReturn := make(map[string]string)
+	mapToReturn["username"] = username
+	userinfo, err := s.LastFMExternal.GetUserInfo(context, username)
+	if err != nil {
+		return nil, fmt.Errorf(" could not get userinfo from username %s : %w", username, err)
+	}
+	mapToReturn["playcount"] = userinfo.User.Playcount
+	mapToReturn["artist"] = userinfo.User.Artist_count
+	mapToReturn["track"] = userinfo.User.Track_count
+
+	return mapToReturn, nil
+}
+
 func (s *BlendService) DeleteUserBlends(context context.Context, user string) error {
 	blendIds, err := s.repo.GetBlendsByUser(context, userid(user))
 	if err != nil {

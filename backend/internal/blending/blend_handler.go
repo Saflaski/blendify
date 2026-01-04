@@ -288,6 +288,30 @@ func (h *BlendHandler) AddBlendFromInviteLink(w http.ResponseWriter, r *http.Req
 	json.NewEncoder(w).Encode(resp)
 }
 
+func (h *BlendHandler) GetUserInfo(w http.ResponseWriter, r *http.Request) {
+	glog.Info("Entered GetUserInfo")
+
+	userid, err := h.GetUserIdFromContext(r.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, " Could not find user")
+		glog.Errorf(" Could not find userinfo due to cannot find userid: %s and error: %s", userid, err)
+		return
+	}
+
+	userInfo, err := h.svc.GetUserInfo(r.Context(), userid)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, " Could not get user info")
+		glog.Errorf(" Could not get user info for userid: %s and error: %s", userid, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(userInfo)
+
+}
+
 func (h *BlendHandler) DeleteBlend(w http.ResponseWriter, r *http.Request) {
 
 	glog.Info("Entered DeleteBlend")
