@@ -52,6 +52,8 @@ func (h *LastFMAPIExternal) GetUserInfo(ctx context.Context, userName string) (u
 	}
 	if userName != "" {
 		extraURLParams["user"] = userName
+	} else {
+		return userInfo, fmt.Errorf("GetUserInfo Error: username is empty")
 	}
 
 	resp, err := h.MakeRequest(ctx, extraURLParams)

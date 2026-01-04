@@ -120,6 +120,34 @@ export function Home() {
     }
 
     fetchBlends();
+
+    async function fetchUserInfo() {
+      console.log("Fetching user info");
+      try {
+        const url = `${API_BASE_URL}/blend/userinfo`;
+        const res = await fetch(url, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+        const json = await res.json();
+        setStats({
+          plays: json.playcount,
+          artists: json.artist,
+          tracks: json.track,
+        });
+        setUsername(json.username);
+      } catch (err) {
+        console.error("Error fetching userinfo:", err);
+      } finally {
+        setStatLoading(false);
+      }
+    }
+
+    fetchUserInfo();
   }, []);
 
   function navToBlendPage(blendid: string) {
@@ -132,12 +160,62 @@ export function Home() {
     });
   }
 
+  const [userName, setUsername] = useState("XYZ");
+  const [statLoading, setStatLoading] = useState(true);
+  const [stats, setStats] = useState({
+    plays: 0,
+    artists: 0,
+    tracks: 0,
+  });
   return (
     <div className="min-h-screen w-full flex items-start justify-center py-5 font-[Roboto_Mono]">
       <div
         className={`w-full max-w-xl slate-bg  border border-slate-300 px-5 py-6 flex flex-col gap-y-4 text-slate-900`}
       >
         <header className="w-full flex flex-col gap-1">
+          {!statLoading ? (
+            <section className="w-full flex flex-col gap-4 mb-6">
+              <h1 className="text-3xl font-bold tracking-tight">
+                Hi, <span className="text-slate-600">{userName}</span>
+              </h1>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="flex flex-col">
+                  <span className="text-2xl font-semibold">{stats.plays}</span>
+                  <span className="text-xs uppercase tracking-wide text-slate-500">
+                    Plays
+                  </span>
+                </div>
+
+                <div className="flex flex-col">
+                  <span className="text-2xl font-semibold">
+                    {stats.artists}
+                  </span>
+                  <span className="text-xs uppercase tracking-wide text-slate-500">
+                    Artists
+                  </span>
+                </div>
+
+                <div className="flex flex-col">
+                  <span className="text-2xl font-semibold">{stats.tracks}</span>
+                  <span className="text-xs uppercase tracking-wide text-slate-500">
+                    Tracks
+                  </span>
+                </div>
+
+                <div className="flex flex-col">
+                  <span className="text-2xl font-semibold">
+                    {blends.length}
+                  </span>
+                  <span className="text-xs uppercase tracking-wide text-slate-500">
+                    Blends
+                  </span>
+                </div>
+              </div>
+            </section>
+          ) : (
+            <TopUserInfoSectionSkeleton />
+          )}
           <h1 className="text-xl font-semibold tracking-tight">Your blends</h1>
 
           <p className="text-sm text-slate-500">
@@ -155,10 +233,6 @@ export function Home() {
             <GenerateLink />
           </section>
         </header>
-
-        <div className="text-xs text-slate-500">
-          {blends.length} {blends.length == 1 ? "blend" : "blends"}
-        </div>
 
         <section className="w-full flex flex-col gap-3">
           <RecentOrTop />
@@ -370,6 +444,23 @@ function RecentOrTop() {
         </button> */}
       </div>
     </div>
+  );
+}
+
+function TopUserInfoSectionSkeleton() {
+  return (
+    <section className="w-full flex flex-col gap-4 mb-6 animate-pulse">
+      <div className="h-8 w-48 bg-slate-200 rounded-md" />
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="flex flex-col gap-2">
+            <div className="h-7 w-20 bg-slate-200 rounded-md" />
+            <div className="h-3 w-14 bg-slate-200 rounded-md" />
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 

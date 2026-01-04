@@ -96,6 +96,7 @@ func (app *application) mount() http.Handler {
 			r.Get("/cataloguedata", blendHandler.GetBlendedEntryData)
 			r.Get("/userblends", blendHandler.GetUserBlends)
 			r.Get("/generatelink", blendHandler.GenerateNewLink)
+			r.Get("/userinfo", blendHandler.GetUserInfo)
 		})
 
 		r.Route("/auth", func(r chi.Router) {
