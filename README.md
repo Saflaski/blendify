@@ -15,7 +15,7 @@
 ---
 ## Screenshots
 ### Home page
-<img width="1302" height="790" alt="blendify_home_page2" src="https://github.com/user-attachments/assets/ec111fcf-c992-437f-a2d6-76bd1c514c82" />
+<img width="1466" height="798" alt="blendify_home_page" src="https://github.com/user-attachments/assets/52c97608-550d-4213-8a92-2fe1b2bbc305" />
 
 ### Blend page
 
