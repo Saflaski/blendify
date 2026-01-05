@@ -43,6 +43,34 @@ import { API_BASE_URL } from "../constants";
 //   OneYear: number;
 // };
 
+function useLocalStorageState<T>(key: string, initialValue: T) {
+  const [state, setState] = useState<T>(() => {
+    try {
+      const stored = localStorage.getItem(key);
+      if (!stored) return initialValue;
+
+      const parsed: unknown = JSON.parse(stored);
+      return parsed as T;
+    } catch {
+      return initialValue;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(key, JSON.stringify(state));
+  }, [key, state]);
+
+  return [state, setState] as const;
+}
+
+const ARTIST_3_MONTH_KEY = "ARTIST_3_MONTH_KEY";
+const TRACK_3_MONTH_KEY = "TRACK_3_MONTH_KEY";
+const ARTIST_12_MONTH_KEY = "ARTIST_12_MONTH_KEY";
+const TRACK_12_MONTH_KEY = "TRACK_12_MONTH_KEY";
+const ARTIST_1_MONTH_KEY = "ARTIST_1_MONTH_KEY";
+const TRACK_1_MONTH_KEY = "TRACK_1_MONTH_KEY";
+const BLEND_ID_KEY = "blend_id";
+
 export function Blend() {
   // ------ If user is from invite link and not Add button -------
   const [error, setError] = useState<string | null>(null);
@@ -51,19 +79,23 @@ export function Blend() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [blendId, setBlendId] = useState<string | null>(null);
+  const [blendId, setBlendId] = useLocalStorageState<string | null>(
+    BLEND_ID_KEY,
+    null,
+  );
   const [navLinkId, setNavLinkId] = useState<string | null>(null);
   const [userCardData, setUserCardData] = useState<CardApiResponse>(
     {} as CardApiResponse,
   );
+
   const [userCatalogueArtist3MonthData, setUserCatalogueArtist3MonthData] =
-    useState<CatalogueBlendResponse[]>([]);
+    useLocalStorageState<CatalogueBlendResponse[]>(ARTIST_3_MONTH_KEY, []);
   const [userCatalogueArtist1YearData, setUserCatalogueArtist1YearData] =
-    useState<CatalogueBlendResponse[]>([]);
+    useLocalStorageState<CatalogueBlendResponse[]>(ARTIST_12_MONTH_KEY, []);
   const [userCatalogueTrack1YearData, setUserCatalogueTrack1YearData] =
-    useState<CatalogueBlendResponse[]>([]);
+    useLocalStorageState<CatalogueBlendResponse[]>(TRACK_12_MONTH_KEY, []);
   const [userCatalogueTrack3MonthData, setUserCatalogueTrack3MonthData] =
-    useState<CatalogueBlendResponse[]>([]);
+    useLocalStorageState<CatalogueBlendResponse[]>(TRACK_3_MONTH_KEY, []);
 
   const [catArt1Year, setCatArt1Year] = useState(true);
   const [catArt3Month, setCatArt3Month] = useState(true);
@@ -171,6 +203,7 @@ export function Blend() {
             "3month",
             "artist",
             blendId,
+            userCatalogueArtist3MonthData,
             setUserCatalogueArtist3MonthData,
             setCatArt3Month,
             setError,
@@ -179,6 +212,7 @@ export function Blend() {
             "3month",
             "track",
             blendId,
+            userCatalogueTrack3MonthData,
             setUserCatalogueTrack3MonthData,
             setCatTrack3Month,
             setError,
@@ -187,6 +221,7 @@ export function Blend() {
             "12month",
             "artist",
             blendId,
+            userCatalogueArtist1YearData,
             setUserCatalogueArtist1YearData,
             setCatArt1Year,
             setError,
@@ -195,6 +230,7 @@ export function Blend() {
             "12month",
             "track",
             blendId,
+            userCatalogueTrack1YearData,
             setUserCatalogueTrack1YearData,
             setCatTrack1Year,
             setError,
@@ -303,6 +339,7 @@ export function Blend() {
     duration: string,
     category: string,
     blendId: string,
+    data: any[],
     setData: (data: any[]) => void,
     setCatalogueLoading: (loading: boolean) => void,
     // setLoading: (loading: boolean) => void,
@@ -310,29 +347,34 @@ export function Blend() {
   ) => {
     console.log("Getting data for blendId:", blendId);
 
-    try {
-      const res = await downloadCatalogueData(duration, category);
-
-      if (!res) {
-        throw new Error("Catalogue data fetch returned null");
-      }
-
-      const data = await res.json();
-      console.log("Catalogue blend data received:", data);
-
-      const parsedData = data.map((item: any) =>
-        CatalogueBlendSchema.parse(item),
-      );
-
-      setData(parsedData);
-      return parsedData;
-    } catch (err) {
-      console.error(err);
-      setError("Something went wrong. Please try again.");
-    } finally {
-      // setCatalogueLoading(catalogueLoading + 1);
+    if (data.length > 0) {
       setCatalogueLoading(false);
-      // console.log("+1");
+      return data;
+    } else {
+      try {
+        const res = await downloadCatalogueData(duration, category);
+
+        if (!res) {
+          throw new Error("Catalogue data fetch returned null");
+        }
+
+        const data = await res.json();
+        console.log("Catalogue blend data received:", data);
+
+        const parsedData = data.map((item: any) =>
+          CatalogueBlendSchema.parse(item),
+        );
+
+        setData(parsedData);
+        return parsedData;
+      } catch (err) {
+        console.error(err);
+        setError("Something went wrong. Please try again.");
+      } finally {
+        // setCatalogueLoading(catalogueLoading + 1);
+        setCatalogueLoading(false);
+        // console.log("+1");
+      }
     }
   };
 
