@@ -5,6 +5,8 @@ import (
 	"maps"
 	"math"
 	"slices"
+
+	"github.com/golang/glog"
 )
 
 func GetLogCombinedScore(a, b int) float64 {
@@ -108,14 +110,24 @@ func combineNumbersWithWeights(inputsAndWeights ...int) (int, error) {
 		if v > max {
 			max = v
 		}
+		glog.Info(v)
 	}
+	weightSum := 0
+	for _, w := range inputsAndWeights[numInputs:] {
+		if w < 0 || w > 10 {
+			return 0, fmt.Errorf("abnormal weight values, need to be between 0 and 10: %d", w)
+		}
+
+		weightSum += w
+	}
+	weightSum = weightSum / len(inputsAndWeights[numInputs:])
 	for i := 0; i <= numInputs-1; i++ {
 		weight := inputsAndWeights[i+numInputs]
 
 		if weight < 0 || weight > 10 {
 			return 0, fmt.Errorf(" abnormal weight values, need to be between 0 and 10:%d", weight)
 		}
-		weightFloat := (float64(weight) / float64(max))
+		weightFloat := (float64(weight) / float64(weightSum))
 		runningSum += float64(inputsAndWeights[i]) * weightFloat
 		// fmt.Println("i:", i)
 		// fmt.Println("input:", inputsAndWeights[i])
@@ -128,6 +140,6 @@ func combineNumbersWithWeights(inputsAndWeights ...int) (int, error) {
 	if finalSum > 100.0 || finalSum < 0.0 {
 		return 0, fmt.Errorf(" abnormal sum of modalities:%d", finalSum)
 	}
-	// fmt.Println("Final sum: ", finalSum)
+	fmt.Println("Final sum: ", finalSum)
 	return finalSum, nil
 }
