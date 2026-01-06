@@ -81,10 +81,12 @@ export function Blend() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [blendId, setBlendId] = useLocalStorageState<string | null>(
-    BLEND_ID_KEY,
-    null,
+  const locationState = location.state as LocationState | null;
+
+  const [blendId, setBlendId] = useState<string | null>(() =>
+    getInitialBlendId(locationState),
   );
+
   const [navLinkId, setNavLinkId] = useState<string | null>(null);
   const [userCardData, setUserCardData] = useState<CardApiResponse>(
     {} as CardApiResponse,
@@ -116,23 +118,79 @@ export function Blend() {
     value?: string;
   };
 
-  console.log(location.state);
+  function getInitialBlendId(
+    locationState: LocationState | null,
+  ): string | null {
+    if (locationState?.id === "blendid" && locationState.value) {
+      return locationState.value;
+    }
 
+    return localStorage.getItem(BLEND_ID_KEY);
+  }
+
+  console.log(location.state);
   useEffect(() => {
     const state = location.state as LocationState | null;
-    if (state?.id == "blendid") {
-      state?.value != null
-        ? setBlendId(state?.value)
-        : console.log("undefined blendid given");
-    } else if (state?.id == "linkid") {
-      state?.value != null
-        ? setNavLinkId(state?.value)
-        : console.log("undefined navlinkid given");
+
+    if (state?.id === "blendid" && state.value) {
+      setBlendId(state.value);
+      navigate(location.pathname, { replace: true });
+      return;
     }
-  }, [location.state]);
+
+    if (state?.id === "linkid" && state.value) {
+      setNavLinkId(state.value);
+      setBlendId(null);
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state, navigate, location.pathname]);
+
+  // useEffect(() => {
+  //   const state = location.state as LocationState | null;
+
+  //   // 1. Consume navigation state
+  //   if (state?.id === "blendid" && state.value) {
+  //     const newBlendId = state.value;
+
+  //     console.log("Setting blendId from location state:", newBlendId);
+  //     setBlendId(newBlendId);
+
+  //     // 🔥 IMPORTANT: clear location.state so it doesn't re-run
+  //     navigate(location.pathname, { replace: true });
+
+  //     return;
+  //   }
+
+  //   if (state?.id === "linkid" && state.value) {
+  //     const newLinkId = state.value;
+
+  //     console.log("Setting navLinkId from location state:", newLinkId);
+  //     setNavLinkId(newLinkId);
+  //     setBlendId(null);
+
+  //     // 🔥 clear navigation state here too
+  //     navigate(location.pathname, { replace: true });
+
+  //     return;
+  //   }
+
+  //   // 2. Fallback to localStorage
+  //   const storedBlendId = localStorage.getItem(BLEND_ID_KEY);
+  //   if (storedBlendId) {
+  //     console.log("Setting blendId from localStorage:", storedBlendId);
+  //     setBlendId(storedBlendId);
+  //     return;
+  //   }
+
+  //   // 3. Final fallback
+  //   console.log("No blendId found, setting null");
+  //   setBlendId(null);
+  // }, [location.state, navigate, location.pathname]);
 
   console.log("NavLinkId state: ", navLinkId);
-
+  useEffect(() => {
+    console.log("BlendId after checking 3 places: ", blendId);
+  }, [blendId]);
   useEffect(() => {
     const getBlendIdFromInviteLink = async () => {
       //From URL Paste
@@ -180,6 +238,7 @@ export function Blend() {
           const data = await res.json();
           const blendIdFromAPI = data["blendId"];
           setBlendId(blendIdFromAPI);
+          localStorage.setItem(BLEND_ID_KEY, blendIdFromAPI);
 
           // setLoading(false);
         } catch (err) {
@@ -192,7 +251,7 @@ export function Blend() {
 
       // If user clicked on existing blend from homepage
     };
-    if (blendId === null) {
+    if (blendId == null) {
       console.log("Getting blendid from API");
       getBlendIdFromInviteLink();
     }
