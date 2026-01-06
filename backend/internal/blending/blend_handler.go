@@ -165,7 +165,7 @@ func (h *BlendHandler) GetBlendPageData(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	blendData, err := h.svc.GetDuoBlendData(r.Context(), blendId)
+	blendData, err := h.svc.GetBlendAndRefreshCache(r.Context(), blendId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "could not get blend data ")

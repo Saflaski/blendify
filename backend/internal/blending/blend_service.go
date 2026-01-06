@@ -128,6 +128,21 @@ func (s *BlendService) GetUserBlends(context context.Context, user userid) (Blen
 
 const BLEND_USER_LIMIT = 2
 
+func (s *BlendService) GetBlendAndRefreshCache(context context.Context, blendId blendId) (DuoBlend, error) {
+	duoBlend, err := s.GetDuoBlendData(context, blendId)
+	if err != nil {
+		return DuoBlend{}, fmt.Errorf(" could not get duoblend data: %w", err)
+	}
+
+	//Refresh cache after getting data
+	err = s.RefreshOverallBlendInCache(context, blendId)
+	if err != nil {
+		glog.Infof(" could not refresh overall blend in cache: %w", err)
+		//Not a fatal error
+	}
+
+	return duoBlend, nil
+}
 func (s *BlendService) GetDuoBlendData(context context.Context, blendId blendId) (DuoBlend, error) {
 
 	//Get json data for percentage data of 3x3 data
@@ -320,7 +335,7 @@ func (s *BlendService) buildOverallBlend(artistBlend, albumBlend, trackBlend Typ
 		artistBlend.OneMonth,
 		artistBlend.ThreeMonth,
 		artistBlend.OneYear,
-		10, 10, 10)
+		10, 7, 5)
 
 	if err != nil {
 		return 0, fmt.Errorf(" could not calc over artist: %w", err)
@@ -329,7 +344,7 @@ func (s *BlendService) buildOverallBlend(artistBlend, albumBlend, trackBlend Typ
 		albumBlend.OneMonth,
 		albumBlend.ThreeMonth,
 		albumBlend.OneYear,
-		10, 10, 10)
+		10, 7, 5)
 	if err != nil {
 		return 0, fmt.Errorf(" could not calc over artist: %w", err)
 	}
@@ -338,12 +353,12 @@ func (s *BlendService) buildOverallBlend(artistBlend, albumBlend, trackBlend Typ
 		trackBlend.OneMonth,
 		trackBlend.ThreeMonth,
 		trackBlend.OneYear,
-		10, 10, 10)
+		10, 7, 5)
 	if err != nil {
 		return 0, fmt.Errorf(" could not calc over tracks: %w", err)
 	}
 
-	overallBlend, err := combineNumbersWithWeights(artistOverall, albumOverall, trackOverall, 10, 10, 10)
+	overallBlend, err := combineNumbersWithWeights(artistOverall, albumOverall, trackOverall, 10, 6, 8)
 	if err != nil {
 		return 0, fmt.Errorf("could not combine overall blend: %w", err)
 	}
