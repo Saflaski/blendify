@@ -181,7 +181,9 @@ export function Home() {
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="flex flex-col">
-                  <span className="text-2xl font-semibold">{stats.plays}</span>
+                  <span className="text-2xl font-semibold">
+                    {Number(stats.plays).toLocaleString()}
+                  </span>
                   <span className="text-xs uppercase tracking-wide text-slate-500">
                     Plays
                   </span>
@@ -189,7 +191,7 @@ export function Home() {
 
                 <div className="flex flex-col">
                   <span className="text-2xl font-semibold">
-                    {stats.artists}
+                    {Number(stats.artists).toLocaleString()}
                   </span>
                   <span className="text-xs uppercase tracking-wide text-slate-500">
                     Artists
@@ -197,7 +199,9 @@ export function Home() {
                 </div>
 
                 <div className="flex flex-col">
-                  <span className="text-2xl font-semibold">{stats.tracks}</span>
+                  <span className="text-2xl font-semibold">
+                    {Number(stats.tracks).toLocaleString()}
+                  </span>
                   <span className="text-xs uppercase tracking-wide text-slate-500">
                     Tracks
                   </span>
@@ -205,7 +209,7 @@ export function Home() {
 
                 <div className="flex flex-col">
                   <span className="text-2xl font-semibold">
-                    {blends.length}
+                    {Number(blends.length).toLocaleString()}
                   </span>
                   <span className="text-xs uppercase tracking-wide text-slate-500">
                     Blends
@@ -496,9 +500,9 @@ function AddNewBlendBar({ AddBlend }) {
          
           "
         ></textarea>
-        {value.length > 0 && (
+        {value.length > 0 && !isValid(value) && (
           <img
-            src={isValid(value) ? tick : cross}
+            src={cross}
             alt={isValid(value) ? "Valid" : "Invalid"}
             className="justify-end relative w-6 h-4 pl-1 align-middle content-center"
           />
@@ -564,7 +568,15 @@ function GenerateLink() {
           onClick={handleCopy}
           className={`flex items-center justify-center border border-slate-900 home-slate-button px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide  focus:outline-none focus:border-black`}
         >
-          <img className="size-4" src={Copy} alt="Copy URL" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            height="18px"
+            viewBox="0 -960 960 960"
+            width="24px"
+            fill="#F6E8CB"
+          >
+            <path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z" />
+          </svg>
         </button>
       </div>
       <button
