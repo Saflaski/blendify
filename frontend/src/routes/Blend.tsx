@@ -5,6 +5,8 @@ import React, { useRef, useState, useEffect } from "react";
 import CardBackground from "@/assets/images/topography.svg";
 import CopyIcon from "@/assets/images/copy.svg";
 import LastfmIcon from "@/assets/images/lastfm.svg";
+import BackArrow from "@/assets/images/arrow_back.svg";
+import FrontArrow from "@/assets/images/arrow_front.svg";
 import "@/assets/styles/index.css";
 import { toBlob } from "html-to-image";
 
@@ -545,6 +547,35 @@ export function Blend() {
     return () => clearTimeout(timer);
   }, []);
 
+  type OpenSection = "3months" | "12months" | null;
+
+  const [openSection, setOpenSection] = useState<OpenSection>("3months");
+
+  const toggleSection = (section: OpenSection) => {
+    setOpenSection((prev) => (prev === section ? null : section));
+  };
+
+  type ArtistRange = "3months" | "12months";
+  type TrackRange = "3months" | "12months";
+  const ranges: ArtistRange[] = ["3months", "12months"];
+  const trackRanges: TrackRange[] = ["3months", "12months"];
+  const [currentArtistRangeIndex, setCurrentArtistRangeIndex] = useState(0);
+  const [currentTrackRangeIndex, setCurrentTrackRangeIndex] = useState(0);
+
+  const currentArtistRange = ranges[currentArtistRangeIndex];
+  const currentTrackRange = ranges[currentTrackRangeIndex];
+  const goPrev = (
+    setCurrentRangeIndex: (value: React.SetStateAction<number>) => void,
+  ) => {
+    setCurrentRangeIndex((prev) => (prev === 0 ? ranges.length - 1 : prev - 1));
+  };
+
+  const goNext = (
+    setCurrentRangeIndex: (value: React.SetStateAction<number>) => void,
+  ) => {
+    setCurrentRangeIndex((prev) => (prev === ranges.length - 1 ? 0 : prev + 1));
+  };
+
   return (
     <div className="w-full ">
       <div className="w-full md:w-[60%] flex pt-4 flex-col md:flex-row gap-x-5 mx-auto text-center px-4 gap-y-4 md:px-0 py-0 md:py-5">
@@ -727,151 +758,185 @@ export function Blend() {
               data (and stay nice to the Last.fm API).
             </p>
           </div>
-          {/* Top blend artists section */}
-          {catArt3Month ? (
-            <section className="w-full flex flex-col">
-              <h2 className="text-lg md:text-lg font-bold text-black mb-4 text-center">
-                ARTISTS - LAST 3 MONTHS
+
+          {/* New experimental dropdown bit */}
+          <section className="w-full flex flex-col">
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <button
+                onClick={() => goPrev(setCurrentArtistRangeIndex)}
+                className="text-xl font-bold text-black hover:opacity-70"
+                aria-label="Previous range"
+              >
+                <img
+                  src={BackArrow}
+                  className="ring-2 pr-1.5 bg-white px-1"
+                  alt="Previous"
+                ></img>
+              </button>
+
+              <h2 className="text-lg font-bold text-black text-center min-w-[220px]">
+                {currentArtistRange === "3months"
+                  ? "ARTISTS - LAST 3 MONTHS"
+                  : "ARTISTS - LAST 12 MONTHS"}
               </h2>
 
-              <div className="flex flex-col gap-y-4 items-center">
-                {[...Array(3)].map((_, index) => (
-                  <SplitRatioBarSkeleton key={index} />
-                ))}
-              </div>
-            </section>
-          ) : userCatalogueArtist3MonthData.length != 0 ? (
-            <section className="w-full flex flex-col">
-              <h2 className="text-lg md:text-lg font-bold text-black mb-4 text-center">
-                ARTISTS - LAST 3 MONTHS
+              <button
+                onClick={() => goNext(setCurrentArtistRangeIndex)}
+                className="text-xl font-bold text-black hover:opacity-70"
+                aria-label="Next range"
+              >
+                <img
+                  src={FrontArrow}
+                  className="ring-2 px-1 bg-white pl-1.5"
+                  alt="Next"
+                />
+              </button>
+            </div>
+            {currentArtistRange === "3months" && (
+              <>
+                {catArt3Month ? (
+                  <div className="flex flex-col gap-y-4 items-center">
+                    {[...Array(3)].map((_, index) => (
+                      <SplitRatioBarSkeleton key={index} />
+                    ))}
+                  </div>
+                ) : userCatalogueArtist3MonthData.length !== 0 ? (
+                  <div className="w-full max-h-[280px] overflow-y-scroll">
+                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
+                      {userCatalogueArtist3MonthData.map((item, index) => (
+                        <SplitRatioBar
+                          key={index}
+                          itemName={item.Name}
+                          Artist={item.Artist as string}
+                          valueA={item.Playcounts[0]}
+                          valueB={item.Playcounts[1]}
+                          ArtistUrl={item.ArtistUrl as string}
+                          itemUrl={item.EntryUrl as string}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </>
+            )}
+
+            {currentArtistRange === "12months" && (
+              <>
+                {catArt1Year ? (
+                  <div className="flex flex-col gap-y-4 items-center">
+                    {[...Array(3)].map((_, index) => (
+                      <SplitRatioBarSkeleton key={index} />
+                    ))}
+                  </div>
+                ) : userCatalogueArtist1YearData.length !== 0 ? (
+                  <div className="w-full max-h-[280px] overflow-y-scroll">
+                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
+                      {userCatalogueArtist1YearData.map((item, index) => (
+                        <SplitRatioBar
+                          key={index}
+                          itemName={item.Name}
+                          Artist={item.Artist as string}
+                          valueA={item.Playcounts[0]}
+                          valueB={item.Playcounts[1]}
+                          ArtistUrl={item.ArtistUrl as string}
+                          itemUrl={item.EntryUrl as string}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </>
+            )}
+          </section>
+
+          <section className="w-full flex flex-col">
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <button
+                onClick={() => goPrev(setCurrentTrackRangeIndex)}
+                className="text-xl font-bold text-black hover:opacity-70"
+                aria-label="Previous range"
+              >
+                <img
+                  src={BackArrow}
+                  className="ring-2 pr-1.5 bg-white px-1"
+                  alt="Previous"
+                ></img>
+              </button>
+
+              <h2 className="text-lg font-bold text-black text-center min-w-[220px]">
+                {currentTrackRange === "3months"
+                  ? "TRACK - LAST 3 MONTHS"
+                  : "TRACK - LAST 12 MONTHS"}
               </h2>
 
-              <div className="w-full max-h-[280px] overflow-y-scroll">
-                <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
-                  {userCatalogueArtist3MonthData.map((item, index) => (
-                    <SplitRatioBar
-                      key={index}
-                      itemName={item.Name}
-                      Artist={item.Artist as string}
-                      valueA={item.Playcounts[0]}
-                      valueB={item.Playcounts[1]}
-                      ArtistUrl={item.ArtistUrl as string}
-                      itemUrl={item.EntryUrl as string}
-                    />
-                  ))}
-                </div>
-              </div>
-            </section>
-          ) : null}
+              <button
+                onClick={() => goNext(setCurrentTrackRangeIndex)}
+                className="text-xl font-bold text-black hover:opacity-70"
+                aria-label="Next range"
+              >
+                <img
+                  src={FrontArrow}
+                  className="ring-2 px-1 bg-white pl-1.5"
+                  alt="Next"
+                ></img>
+              </button>
+            </div>
+            {currentTrackRange === "3months" && (
+              <>
+                {catTrack3Month ? (
+                  <div className="flex flex-col gap-y-4 items-center">
+                    {[...Array(3)].map((_, index) => (
+                      <SplitRatioBarSkeleton key={index} />
+                    ))}
+                  </div>
+                ) : userCatalogueTrack3MonthData.length !== 0 ? (
+                  <div className="w-full max-h-[280px] overflow-y-scroll">
+                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
+                      {userCatalogueTrack3MonthData.map((item, index) => (
+                        <SplitRatioBar
+                          key={index}
+                          itemName={item.Name}
+                          Artist={item.Artist as string}
+                          valueA={item.Playcounts[0]}
+                          valueB={item.Playcounts[1]}
+                          ArtistUrl={item.ArtistUrl as string}
+                          itemUrl={item.EntryUrl as string}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </>
+            )}
 
-          {/* Top blend songs section */}
-          {catArt1Year ? (
-            <section className="w-full flex flex-col">
-              <h2 className="text-lg md:text-lg font-bold text-black mb-4 text-center">
-                ARTISTS - LAST 12 MONTHS
-              </h2>
-
-              <div className="flex flex-col gap-y-4 items-center">
-                {[...Array(3)].map((_, index) => (
-                  <SplitRatioBarSkeleton key={index} />
-                ))}
-              </div>
-            </section>
-          ) : userCatalogueArtist1YearData.length != 0 ? (
-            <section className="w-full flex flex-col">
-              <h2 className="text-lg md:text-lg font-bold text-black mb-4 text-center">
-                ARTISTS - LAST 12 MONTHS
-              </h2>
-
-              <div className="w-full max-h-[280px] overflow-y-scroll">
-                <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
-                  {userCatalogueArtist1YearData.map((item, index) => (
-                    <SplitRatioBar
-                      key={index}
-                      itemName={item.Name}
-                      Artist={item.Artist as string}
-                      valueA={item.Playcounts[0]}
-                      valueB={item.Playcounts[1]}
-                      ArtistUrl={item.ArtistUrl as string}
-                      itemUrl={item.EntryUrl as string}
-                    />
-                  ))}
-                </div>
-              </div>
-            </section>
-          ) : null}
-
-          {catTrack3Month ? (
-            <section className="w-full flex flex-col">
-              <h2 className="text-lg md:text-lg font-bold text-black mb-4 text-center">
-                TRACKS - LAST 3 MONTHS
-              </h2>
-
-              <div className="flex flex-col gap-y-4 items-center">
-                {[...Array(3)].map((_, index) => (
-                  <SplitRatioBarSkeleton key={index} />
-                ))}
-              </div>
-            </section>
-          ) : userCatalogueTrack3MonthData.length != 0 ? (
-            <section className="w-full flex flex-col">
-              <h2 className="text-lg md:text-lg font-bold text-black mb-4 text-center">
-                TRACKS - LAST 3 MONTHS
-              </h2>
-
-              <div className="w-full max-h-[280px] overflow-y-scroll">
-                <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
-                  {userCatalogueTrack3MonthData.map((item, index) => (
-                    <SplitRatioBar
-                      key={index}
-                      itemName={item.Name}
-                      Artist={item.Artist as string}
-                      valueA={item.Playcounts[0]}
-                      valueB={item.Playcounts[1]}
-                      ArtistUrl={item.ArtistUrl as string}
-                      itemUrl={item.EntryUrl as string}
-                    />
-                  ))}
-                </div>
-              </div>
-            </section>
-          ) : null}
-
-          {catTrack1Year ? (
-            <section className="w-full flex flex-col">
-              <h2 className="text-lg md:text-lg font-bold text-black mb-4 text-center">
-                TRACKS - LAST 1 YEAR
-              </h2>
-
-              <div className="flex flex-col gap-y-4 items-center">
-                {[...Array(3)].map((_, index) => (
-                  <SplitRatioBarSkeleton key={index} />
-                ))}
-              </div>
-            </section>
-          ) : userCatalogueTrack1YearData.length != 0 ? (
-            <section className="w-full flex flex-col">
-              <h2 className="text-lg md:text-lg font-bold text-black mb-4 text-center">
-                TRACKS - LAST 1 YEAR
-              </h2>
-
-              <div className="w-full max-h-[280px] overflow-y-scroll">
-                <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
-                  {userCatalogueTrack1YearData.map((item, index) => (
-                    <SplitRatioBar
-                      key={index}
-                      itemName={item.Name}
-                      Artist={item.Artist as string}
-                      valueA={item.Playcounts[0]}
-                      valueB={item.Playcounts[1]}
-                      ArtistUrl={item.ArtistUrl as string}
-                      itemUrl={item.EntryUrl as string}
-                    />
-                  ))}
-                </div>
-              </div>
-            </section>
-          ) : null}
+            {currentTrackRange === "12months" && (
+              <>
+                {catTrack1Year ? (
+                  <div className="flex flex-col gap-y-4 items-center">
+                    {[...Array(3)].map((_, index) => (
+                      <SplitRatioBarSkeleton key={index} />
+                    ))}
+                  </div>
+                ) : userCatalogueTrack1YearData.length !== 0 ? (
+                  <div className="w-full max-h-[280px] overflow-y-scroll">
+                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
+                      {userCatalogueTrack1YearData.map((item, index) => (
+                        <SplitRatioBar
+                          key={index}
+                          itemName={item.Name}
+                          Artist={item.Artist as string}
+                          valueA={item.Playcounts[0]}
+                          valueB={item.Playcounts[1]}
+                          ArtistUrl={item.ArtistUrl as string}
+                          itemUrl={item.EntryUrl as string}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </>
+            )}
+          </section>
         </div>
       </div>
     </div>
