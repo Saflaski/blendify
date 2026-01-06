@@ -9,6 +9,8 @@ import { API_BASE_URL, FRONTEND_URL } from "../constants";
 import Delete from "@/assets/images/delete.svg";
 import Copy from "@/assets/images/copy.svg";
 
+const BLEND_ID_KEY = "blend_id";
+
 type Blend = {
   blendid: string;
   value: number;
@@ -49,6 +51,7 @@ var sampleJson = `{
 }`;
 
 export function Home() {
+  localStorage.clear();
   const navigate = useNavigate();
   async function AddBlend(givenURL: URL) {
     let url: URL | RequestInfo;
@@ -79,20 +82,18 @@ export function Home() {
         throw new Error(`Backend request error: ${response.status}`);
 
       const data = await response.json();
-      console.log("API response data:", data);
-      value = data["blendId"];
+      console.log("API Home response data:", data);
+      const blendId = data["blendId"];
+
+      console.log("Adding new blend from Blend Add URL Value:", blendId);
+      localStorage.setItem(BLEND_ID_KEY, blendId);
+      navigate("/blend");
+      return;
     } catch (err) {
       console.error("API error:", err);
       return;
+    } finally {
     }
-
-    console.log("Adding new blend from Blend Add URL Value:", value);
-    navigate("/blend", {
-      state: {
-        id: "blendid",
-        value: value,
-      },
-    });
   }
 
   const [blends, setBlends] = useState<Blend[]>([]);
@@ -152,11 +153,16 @@ export function Home() {
 
   function navToBlendPage(blendid: string) {
     // const navigate = useNavigate();
+    console.log(
+      "func: navToBlendPage - Navigating to blend page with blendid:",
+      blendid,
+    );
+    localStorage.setItem(BLEND_ID_KEY, blendid);
     navigate("/blend", {
-      state: {
-        id: "blendid",
-        value: blendid,
-      },
+      // state: {
+      //   id: "blendid",
+      //   value: blendid,
+      // },
     });
   }
 
