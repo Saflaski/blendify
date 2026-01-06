@@ -92,17 +92,23 @@ export function Blend() {
 
   const [userCatalogueArtist3MonthData, setUserCatalogueArtist3MonthData] =
     useLocalStorageState<CatalogueBlendResponse[]>(ARTIST_3_MONTH_KEY, []);
+  const [userCatalogueArtist1MonthData, setUserCatalogueArtist1MonthData] =
+    useLocalStorageState<CatalogueBlendResponse[]>(ARTIST_1_MONTH_KEY, []);
   const [userCatalogueArtist1YearData, setUserCatalogueArtist1YearData] =
     useLocalStorageState<CatalogueBlendResponse[]>(ARTIST_12_MONTH_KEY, []);
   const [userCatalogueTrack1YearData, setUserCatalogueTrack1YearData] =
     useLocalStorageState<CatalogueBlendResponse[]>(TRACK_12_MONTH_KEY, []);
   const [userCatalogueTrack3MonthData, setUserCatalogueTrack3MonthData] =
     useLocalStorageState<CatalogueBlendResponse[]>(TRACK_3_MONTH_KEY, []);
+  const [userCatalogueTrack1MonthData, setUserCatalogueTrack1MonthData] =
+    useLocalStorageState<CatalogueBlendResponse[]>(TRACK_1_MONTH_KEY, []);
 
   const [catArt1Year, setCatArt1Year] = useState(true);
   const [catArt3Month, setCatArt3Month] = useState(true);
+  const [catArt1Month, setCatArt1Month] = useState(true);
   const [catTrack1Year, setCatTrack1Year] = useState(true);
   const [catTrack3Month, setCatTrack3Month] = useState(true);
+  const [catTrack1Month, setCatTrack1Month] = useState(true);
 
   const currentTime = new Date().getTime();
   type LocationState = {
@@ -237,6 +243,24 @@ export function Blend() {
             setCatTrack1Year,
             setError,
           ),
+          getCatalogueBlendData(
+            "1month",
+            "track",
+            blendId,
+            userCatalogueTrack1MonthData,
+            setUserCatalogueTrack1MonthData,
+            setCatArt1Month,
+            setError,
+          ),
+          getCatalogueBlendData(
+            "1month",
+            "artist",
+            blendId,
+            userCatalogueArtist1MonthData,
+            setUserCatalogueArtist1MonthData,
+            setCatArt1Month,
+            setError,
+          ),
         ]);
 
         await getCardBlendData(); // runs AFTER all catalogue calls
@@ -244,6 +268,8 @@ export function Blend() {
         setCatArt3Month(false);
         setCatTrack1Year(false);
         setCatTrack3Month(false);
+        setCatTrack1Month(false);
+        setCatArt1Month(false);
         setCatalogueLoading(false);
       } finally {
         setCardLoading(false);
@@ -555,12 +581,24 @@ export function Blend() {
     setOpenSection((prev) => (prev === section ? null : section));
   };
 
-  type ArtistRange = "3months" | "12months";
-  type TrackRange = "3months" | "12months";
-  const ranges: ArtistRange[] = ["3months", "12months"];
-  const trackRanges: TrackRange[] = ["3months", "12months"];
+  type ArtistRange = "1months" | "3months" | "12months";
+  type TrackRange = "1months" | "3months" | "12months";
+  const ranges: ArtistRange[] = ["1months", "3months", "12months"];
+  const trackRanges: TrackRange[] = ["1months", "3months", "12months"];
   const [currentArtistRangeIndex, setCurrentArtistRangeIndex] = useState(0);
   const [currentTrackRangeIndex, setCurrentTrackRangeIndex] = useState(0);
+
+  const artistRangeLabel = {
+    "1months": "ARTIST - LAST 1 MONTH",
+    "3months": "ARTIST - LAST 3 MONTHS",
+    "12months": "ARTIST - LAST 12 MONTHS",
+  };
+
+  const trackRangeLabel = {
+    "1months": "TRACK - LAST 1 MONTH",
+    "3months": "TRACK - LAST 3 MONTHS",
+    "12months": "TRACK - LAST 12 MONTHS",
+  };
 
   const currentArtistRange = ranges[currentArtistRangeIndex];
   const currentTrackRange = ranges[currentTrackRangeIndex];
@@ -775,9 +813,7 @@ export function Blend() {
               </button>
 
               <h2 className="text-lg font-bold text-black text-center min-w-[220px]">
-                {currentArtistRange === "3months"
-                  ? "ARTISTS - LAST 3 MONTHS"
-                  : "ARTISTS - LAST 12 MONTHS"}
+                {artistRangeLabel[currentArtistRange]}
               </h2>
 
               <button
@@ -847,6 +883,34 @@ export function Blend() {
                 ) : null}
               </>
             )}
+
+            {currentArtistRange === "1months" && (
+              <>
+                {catArt1Month ? (
+                  <div className="flex flex-col gap-y-4 items-center">
+                    {[...Array(3)].map((_, index) => (
+                      <SplitRatioBarSkeleton key={index} />
+                    ))}
+                  </div>
+                ) : userCatalogueArtist1MonthData.length !== 0 ? (
+                  <div className="w-full max-h-[280px] overflow-y-scroll">
+                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
+                      {userCatalogueArtist1MonthData.map((item, index) => (
+                        <SplitRatioBar
+                          key={index}
+                          itemName={item.Name}
+                          Artist={item.Artist as string}
+                          valueA={item.Playcounts[0]}
+                          valueB={item.Playcounts[1]}
+                          ArtistUrl={item.ArtistUrl as string}
+                          itemUrl={item.EntryUrl as string}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </>
+            )}
           </section>
 
           <section className="w-full flex flex-col">
@@ -864,9 +928,7 @@ export function Blend() {
               </button>
 
               <h2 className="text-lg font-bold text-black text-center min-w-[220px]">
-                {currentTrackRange === "3months"
-                  ? "TRACK - LAST 3 MONTHS"
-                  : "TRACK - LAST 12 MONTHS"}
+                {trackRangeLabel[currentTrackRange]}
               </h2>
 
               <button
@@ -921,6 +983,33 @@ export function Blend() {
                   <div className="w-full max-h-[280px] overflow-y-scroll">
                     <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
                       {userCatalogueTrack1YearData.map((item, index) => (
+                        <SplitRatioBar
+                          key={index}
+                          itemName={item.Name}
+                          Artist={item.Artist as string}
+                          valueA={item.Playcounts[0]}
+                          valueB={item.Playcounts[1]}
+                          ArtistUrl={item.ArtistUrl as string}
+                          itemUrl={item.EntryUrl as string}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </>
+            )}
+            {currentTrackRange === "1months" && (
+              <>
+                {catTrack1Month ? (
+                  <div className="flex flex-col gap-y-4 items-center">
+                    {[...Array(3)].map((_, index) => (
+                      <SplitRatioBarSkeleton key={index} />
+                    ))}
+                  </div>
+                ) : userCatalogueTrack1MonthData.length !== 0 ? (
+                  <div className="w-full max-h-[280px] overflow-y-scroll">
+                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
+                      {userCatalogueTrack1MonthData.map((item, index) => (
                         <SplitRatioBar
                           key={index}
                           itemName={item.Name}

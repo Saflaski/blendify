@@ -110,7 +110,7 @@ func (h *BlendHandler) GetBlendHealth(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *BlendHandler) GetBlendedEntryData(w http.ResponseWriter, r *http.Request) {
-	// /dataentry?blendId=&category=&timeDuration=&type=
+	// /?blendId=&category=&timeDuration=&type=
 	response := r.URL.Query()
 
 	blendId := blendId(response.Get("blendId"))
