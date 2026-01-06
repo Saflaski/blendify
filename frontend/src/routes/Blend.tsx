@@ -730,8 +730,8 @@ export function Blend() {
                   <img src={LastfmIcon} />
                 </div>
 
-                <p className="text-center w-full font-[toxigenesis] text-[#404040] tracking-widest font-medium absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px]  text-shadow-2xs">
-                  BLENDIFY.FM
+                <p className="text-center w-full font-[Quantico] font-bold text-[#404040] tracking-widest absolute bottom-2 left-1/2 -translate-x-1/2 text-[12px]  text-shadow-2xs">
+                  BLENDIFY
                 </p>
               </div>
             </div>
@@ -769,7 +769,7 @@ export function Blend() {
               >
                 <img
                   src={BackArrow}
-                  className="ring-2 pr-1.5 bg-white px-1"
+                  className="ring-2 pr-1.5 hover:bg-gray-200 bg-white px-1"
                   alt="Previous"
                 ></img>
               </button>
@@ -787,7 +787,7 @@ export function Blend() {
               >
                 <img
                   src={FrontArrow}
-                  className="ring-2 px-1 bg-white pl-1.5"
+                  className="ring-2 px-1 hover:bg-gray-200 bg-white pl-1.5"
                   alt="Next"
                 />
               </button>
@@ -858,7 +858,7 @@ export function Blend() {
               >
                 <img
                   src={BackArrow}
-                  className="ring-2 pr-1.5 bg-white px-1"
+                  className="ring-2 pr-1.5 hover:bg-gray-200 bg-white px-1"
                   alt="Previous"
                 ></img>
               </button>
@@ -876,7 +876,7 @@ export function Blend() {
               >
                 <img
                   src={FrontArrow}
-                  className="ring-2 px-1 bg-white pl-1.5"
+                  className="ring-2 px-1 hover:bg-gray-200 bg-white pl-1.5"
                   alt="Next"
                 ></img>
               </button>
