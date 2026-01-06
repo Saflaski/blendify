@@ -738,7 +738,7 @@ func (s *BlendService) getArtistBlend(context context.Context, userA, userB user
 	}
 
 	//Using Log Weighted Cosine Similarity
-	blendNumber := CalculateLWCS(0.8, s.extractPlayCount(listenHistoryA), s.extractPlayCount(listenHistoryB))
+	blendNumber := CalculateLWCS(1.0, s.extractPlayCount(listenHistoryA), s.extractPlayCount(listenHistoryB))
 	return blendNumber, nil
 }
 
@@ -846,7 +846,7 @@ func (s *BlendService) getAlbumBlend(context context.Context, userA, userB useri
 		return 0, fmt.Errorf("inappropriate listen history ranges, userA: %d , userB: %d", len(listenHistoryA), len(listenHistoryB))
 	}
 	//Using Log Weighted Cosine Similarity
-	blendNumber := CalculateLWCS(0.8, s.extractPlayCount(listenHistoryA), s.extractPlayCount(listenHistoryB))
+	blendNumber := CalculateLWCS(1.0, s.extractPlayCount(listenHistoryA), s.extractPlayCount(listenHistoryB))
 	return blendNumber, nil
 }
 
@@ -902,7 +902,7 @@ func (s *BlendService) getTrackBlend(context context.Context, userA, userB useri
 		return 0, fmt.Errorf("inappropriate listen history ranges, userA: %d , userB: %d", len(listenHistoryA), len(listenHistoryB))
 	}
 	//Using Log Weighted Cosine Similarity
-	blendNumber := CalculateLWCS(0.8, s.extractPlayCount(listenHistoryA), s.extractPlayCount(listenHistoryB))
+	blendNumber := CalculateLWCS(1.0, s.extractPlayCount(listenHistoryA), s.extractPlayCount(listenHistoryB))
 	return blendNumber, nil
 }
 
