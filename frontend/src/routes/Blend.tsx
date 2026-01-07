@@ -607,6 +607,7 @@ export function Blend() {
     // link.click();
   };
   const [blendPercent, setBlendPercent] = useState(3);
+  const [cardInfo, setCardInfo] = useState([[], []]);
   const [mode, setMode] = useState("Default");
   const [users, setUsers] = useState<string[]>(["", ""]);
 
@@ -680,6 +681,7 @@ export function Blend() {
 
         {/* <div className="md:flex md:flex-wrap pr-2 mt-8 lg:grid lg:grid-cols-2 "> Old*/}
         {/* LEFT CONTENT AREA */}
+        {/* This was card bit was enhanced from its previous version with AI. I am not that artistic to have come up with it myself lmao. */}
         <div className="  md:w-[40%] flex flex-col flex-wrap items-center justify-baseline gap-y-5">
           <div
             className={`text-black font-[Roboto_Mono] italic    ${!catalogueLoading && !cardLoading ? "hidden" : "lg:hidden block"} `}
@@ -693,146 +695,199 @@ export function Blend() {
             </p>
           </div>
           {/* Player card */}
-          <div className="w-full flex justify-center  ">
-            <div className="w-full flex justify-center ">
-              <div
-                ref={captureRef}
-                className={`shine-element relative ring-2 ring-black bg-neutral-200 
-    w-58 md:w-58 lg:w-66 p-4 aspect-[2/3]
-    bg-size-[auto_120px] `}
-                style={{
-                  backgroundImage: `url(${CardBackground})`,
-                }}
-              >
-                {!isCapturing && (
-                  <button
-                    onClick={handleScreenshot}
-                    className="absolute top-1 right-1 outline outline-black bg-inherit p-1"
-                  >
-                    <img src={CopyIcon} className="w-6 h-6" />
-                  </button>
-                )}
-
-                {copied && (
-                  <div
-                    className="absolute right-8 top-2 bg-gray-500 text-white 
-        text-[10px] px-2 py-0.5 shadow animate-fade-in-out"
-                  >
-                    Copied!
-                  </div>
-                )}
-                <h1
-                  className="mt-0 text-6xl md:text-5xl lg:text-7xl 
-    leading-none   -left-2 tracking-tight text-[#000] font-extrabold relative inline-block"
-                  style={{ fontFamily: "'Roboto Mono', sans-serif" }}
-                >
-                  {cardLoading ? "--" : blendPercent}
-                  <span className="absolute bottom-1 -right-10 text-lg font-normal ">
-                    /100
+          <div className="w-full flex justify-center p-8">
+            <div
+              ref={captureRef}
+              className="shine-element relative border-[3px] border-black bg-neutral-200 w-72 md:w-80 aspect-[2/3] flex flex-col overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+              style={{
+                backgroundImage: `url(${CardBackground})`,
+                backgroundSize: "cover",
+              }}
+            >
+              <div className="flex border-b-[3px] border-black bg-white/70 backdrop-blur-md h-28">
+                {/* 1. Score Block (Left Column) */}
+                <div className="flex-[1.5] p-3 border-r-[3px] border-black flex flex-col justify-center bg-white/40">
+                  <span className="text-[10px] font-black uppercase tracking-tighter mb-0.5 text-neutral-500">
+                    Score
                   </span>
-                </h1>
-                {/* <svg
-                  viewBox="0 0 260 120"
-                  width={220}
-                  height={100}
-                  className="relative top-0 left-9"
-                >
-                  <text
-                    x="0"
-                    y="96"
-                    style={{ fontFamily: "Filepile" }}
-                    fontSize="96"
-                    dominantBaseline="alphabetic"
+                  <h1
+                    className="text-5xl font-black leading-none tracking-tighter text-black"
+                    style={{ fontFamily: "'Roboto Mono', monospace" }}
                   >
                     {cardLoading ? "--" : blendPercent}
-                  </text>
-
-                  <text
-                    x={
-                      blendPercent != undefined
-                        ? blendPercent.toString().length * 56 + 35
-                        : 10
-                    }
-                    y="101"
-                    style={{ fontFamily: "Filepile" }}
-                    fontSize="23"
-                    dominantBaseline="alphabetic"
-                  >
-                    /100
-                  </text>
-                </svg> */}
-
-                {/* <span className="absolute top-21.5 right-10 -translate-0 font-[Roboto_Mono] text-lg text-black font-bold ">
-                    /100
-                  </span> */}
-
-                <div className="flex items-center font-[Roboto_Mono] gap-2 mt-2 justify-center text-gray-800">
-                  <span
-                    className="font-bold"
-                    style={{ fontSize: "clamp(1rem, 1.5vw, 1.2rem)" }}
-                  >
-                    {users ? users[0] : "You"}
-                  </span>
-
-                  <span className="font-normal text-gray-500">and</span>
-
-                  <span
-                    className="font-bold"
-                    style={{ fontSize: "clamp(1rem, 1.5vw, 1.2rem)" }}
-                  >
-                    {users ? users[1] : "someone"}
-                  </span>
+                    <span className="text-sm ml-0.5">%</span>
+                  </h1>
                 </div>
 
-                <p className="mt-1 text-sm/snug font-bold text-gray-800">
-                  {mode}
-                </p>
+                {/* 2. Metadata & Actions (Right Column) */}
+                <div className="flex-[3] flex flex-col">
+                  {/* BRANDING AND COPY */}
+                  <div className="flex-1 flex">
+                    <div className="flex-1 flex border-b-[3px]  border-black">
+                      {/* Branding Info */}
+                      <div className="flex-[2] px-3 flex flex-col justify-center items-center ">
+                        <p className="text-[11px] font-black tracking-[0.15em] justify-center font-[Quantico] text-black leading-none mb-1.5">
+                          BLENDIFY
+                        </p>
+                        <div className="flex items-center">
+                          <img
+                            src={LastfmIcon}
+                            className="h-2.5 w-auto opacity-70"
+                            alt="Lastfm"
+                          />
+                        </div>
+                      </div>
 
-                <div className="grid grid-row-2  gap-1  text-left text-black font-[Roboto_Mono] mt-2">
-                  <ul>
-                    <p className="font-semibold text-base">Top Artists</p>
-
-                    {userCatalogueArtist3MonthData
-                      .slice(0, 3)
-                      .map((item, index) => {
-                        return (
-                          <li
-                            key={index}
-                            className="text-[13px] font-medium leading-tight"
-                          >
-                            - {item.Name}
-                          </li>
-                        );
-                      })}
-                  </ul>
-
-                  <ul>
-                    <p className="font-semibold text-base">Top Songs</p>
-                    {userCatalogueTrack3MonthData
-                      .slice(0, 3)
-                      .map((item, index) => {
-                        return (
-                          <li
-                            key={index}
-                            className="text-[13px] font-medium leading-tight"
-                          >
-                            - {item.Name}
-                          </li>
-                        );
-                      })}
-                  </ul>
+                      {/* Copy Button (Functional Part of the Row) */}
+                      {!isCapturing && (
+                        <button
+                          onClick={handleScreenshot}
+                          className="flex-1 border-l-[3px] border-black bg-yellow-400 hover:bg-black group transition-colors flex items-center justify-center min-w-[50px]"
+                          title="Copy to Clipboard"
+                        >
+                          <img
+                            src={CopyIcon}
+                            className="pointer-events-none w-5 h-5 group-hover:invert transition-all"
+                            alt="Copy"
+                          />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {/* MODE */}
+                  <div className="flex-1 bg-black  text-white px-3 flex flex-col justify-center  border-black overflow-hidden">
+                    <span className="text-[7px] uppercase font-bold text-neutral-400 leading-none mb-1">
+                      Current Mode
+                    </span>
+                    <span className="text-[11px] font-bold uppercase truncate tracking-tight">
+                      {mode}
+                    </span>
+                  </div>
                 </div>
-
-                <div className="flex flex-col justify-between gap-3 absolute bottom-8 left-1/2 -translate-x-1/2 size-12 h-auto">
-                  <img src={LastfmIcon} />
-                </div>
-
-                <p className="text-center w-full font-[Quantico] font-bold text-[#404040] tracking-widest absolute bottom-2 left-1/2 -translate-x-1/2 text-[12px]  text-shadow-2xs">
-                  BLENDIFY
-                </p>
               </div>
+
+              <div className="bg-white text-black border-b-[3px] border-black px-4 py-2 flex justify-between items-center font-[Roboto_Mono] text-[11px] font-black uppercase tracking-tighter">
+                <span className="truncate max-w-[100px]">
+                  {users ? users[0] : "You"}
+                </span>
+
+                {/* Add a small visual "VS" badge for extra technical detail */}
+                <span className="bg-black text-white text-[8px] px-1.5 py-0.5 mx-2">
+                  VS
+                </span>
+
+                <span className="truncate max-w-[100px] text-right">
+                  {users ? users[1] : "Someone"}
+                </span>
+              </div>
+
+              {/* Main Content Area */}
+              {mode == "Default mode" ? (
+                <div className="flex-grow p-4 flex flex-col gap-4">
+                  <div className="border-[2px] border-black bg-white p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                    <p className="text-[10px] font-black text-black uppercase tracking-widest mb-2 border-b-2 border-black inline-block">
+                      Top Artists
+                    </p>
+                    <ul className="space-y-0">
+                      {userCatalogueArtist3MonthData
+                        .slice(0, 4)
+                        .map((item, index) => (
+                          <li
+                            key={index}
+                            className="text-[12px] font-bold text-black font-[Roboto_Mono] truncate flex items-center"
+                          >
+                            <span className="text-[10px] mr-2 text-neutral-400">
+                              0{index + 1}
+                            </span>
+                            {item.Name}
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+
+                  <div className="border-[2px] border-black bg-white p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                    <p className="text-[10px] font-black text-black uppercase tracking-widest mb-2 border-b-2 border-black inline-block">
+                      Top Tracks
+                    </p>
+                    <ul className="space-y-0">
+                      {userCatalogueTrack3MonthData
+                        .slice(0, 4)
+                        .map((item, index) => (
+                          <li
+                            key={index}
+                            className="text-[12px] font-bold  text-black font-[Roboto_Mono] truncate flex items-center"
+                          >
+                            <span className="text-[10px] mr-2 text-neutral-400">
+                              0{index + 1}
+                            </span>
+                            {item.Name}
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-grow-2 p-4 flex flex-col gap-4">
+                  {/* TOP ARTISTS: SIDE BY SIDE */}
+                  <div className="border-[2px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col">
+                    {/* Section Header */}
+                    <div className="border-b-[2px] border-black px-2 py-1 bg-neutral-100 flex justify-between items-center">
+                      <p className="text-[9px] font-black text-black uppercase tracking-widest">
+                        Top Artists Comparison
+                      </p>
+                      <span className="text-[8px] font-bold text-neutral-400 font-[Roboto_Mono]">
+                        15/50
+                      </span>
+                    </div>
+
+                    {/* Split Content */}
+                    <div className="grid grid-cols-2 divide-x-[2px] divide-black">
+                      {/* User 1 Column */}
+                      <div className="p-2 overflow-hidden">
+                        <p className="text-[8px] font-bold text-neutral-400 mb-2 uppercase tracking-tighter truncate"></p>
+                        <ul className="space-y-1">
+                          {userCatalogueArtist3MonthData
+                            .slice(0, 10)
+                            .map((item, index) => (
+                              <li
+                                key={index}
+                                className="text-[10px] font-bold text-black font-[Roboto_Mono] truncate flex items-center"
+                              >
+                                <span className="text-[8px] mr-1.5 opacity-30">
+                                  {index + 1}
+                                </span>
+                                {item.Name}
+                              </li>
+                            ))}
+                        </ul>
+                      </div>
+
+                      {/* User 2 Column */}
+                      <div className="p-2 overflow-hidden">
+                        <p className="text-[8px] font-bold text-neutral-400 mb-2 uppercase tracking-tighter truncate text-right"></p>
+                        <ul className="space-y-1">
+                          {userCatalogueArtist3MonthData
+                            .slice(0, 10)
+                            .map((item, index) => (
+                              <li
+                                key={index}
+                                className="text-[10px] font-bold text-black font-[Roboto_Mono] truncate flex flex-row-reverse items-center"
+                              >
+                                <span className="text-[8px] ml-1.5 opacity-30">
+                                  {index + 1}
+                                </span>
+                                <span className="truncate">{item.Name}</span>
+                              </li>
+                            ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
+
           {/* End of player card */}
 
           {/* Control panel */}
