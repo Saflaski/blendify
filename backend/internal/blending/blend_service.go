@@ -5,6 +5,7 @@ import (
 	"cmp"
 	"context"
 	"fmt"
+	"maps"
 	"slices"
 	"strconv"
 	"sync"
@@ -36,6 +37,20 @@ func (s *BlendService) GetUserInfo(context context.Context, userid userid) (any,
 	mapToReturn["track"] = userinfo.User.Track_count
 
 	return mapToReturn, nil
+}
+
+func (s *BlendService) GetUserTopItems(context context.Context, user userid, mode blendCategory, duration blendTimeDuration) (TopItems, error) {
+
+	items, err := s.getTopX(context, user, duration, mode)
+	if err != nil {
+		return TopItems{}, fmt.Errorf("could not get top x during GetUserTopItems: %w", err)
+	}
+
+	keys := s.GetSortedEntries(items)
+
+	return TopItems{
+		Items: keys[0:10],
+	}, nil
 }
 
 func (s *BlendService) DeleteUserBlends(context context.Context, user string) error {
@@ -322,6 +337,19 @@ func (s *BlendService) GetCommonAndSortedEntries(aEntries map[string]CatalogueSt
 	slices.SortFunc(commonKeys, sortFunc)
 
 	return commonKeys
+}
+
+func (s *BlendService) GetSortedEntries(entries map[string]CatalogueStats) []string {
+	keys := slices.Collect(maps.Keys(entries))
+
+	slices.SortFunc(keys, func(a, b string) int {
+		if entries[a].Count != entries[b].Count {
+			return cmp.Compare(entries[b].Count, entries[a].Count)
+		}
+		return cmp.Compare(a, b)
+	})
+
+	return keys
 }
 
 func (s *BlendService) buildOverallBlend(artistBlend, albumBlend, trackBlend TypeBlend) (int, error) {

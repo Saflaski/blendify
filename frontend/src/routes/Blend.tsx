@@ -873,9 +873,9 @@ export function Blend() {
                                 key={index}
                                 className="text-[10px] font-bold text-black font-[Roboto_Mono] truncate flex flex-row-reverse items-center"
                               >
-                                <span className="text-[8px] ml-1.5 opacity-30">
+                                {/* <span className="text-[8px] ml-1.5 opacity-30">
                                   {index + 1}
-                                </span>
+                                </span> */}
                                 <span className="truncate">{item.Name}</span>
                               </li>
                             ))}

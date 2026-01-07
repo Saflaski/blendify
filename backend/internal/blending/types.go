@@ -119,4 +119,8 @@ type complexResponse struct {
 	err      error
 }
 
+type TopItems struct {
+	Items []string `json:"items"`
+}
+
 // type MapCatStats map[string]CatalogueStats

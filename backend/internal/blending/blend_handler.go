@@ -37,6 +37,30 @@ type BlendRequest struct {
 	user         string
 }
 
+func (h *BlendHandler) GetUserTopItems(w http.ResponseWriter, r *http.Request) {
+	userA, err := h.GetUserIdFromContext(r.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, " could not validate session id during generating new link. Contact Admin")
+		glog.Error("Error during generating new link, %w", err)
+		return
+	}
+
+	response := r.URL.Query()
+
+	category := blendCategory(response.Get("category"))
+	timeDuration := blendTimeDuration(response.Get("duration"))
+	topItems, err := h.svc.GetUserTopItems(r.Context(), userA, category, timeDuration)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, " could not get top items. Contact Admin")
+		glog.Error("Error during getting top items for user:%s, %w", userA, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(topItems)
+
+}
 func (h *BlendHandler) GetUserBlends(w http.ResponseWriter, r *http.Request) {
 	userA, err := h.GetUserIdFromContext(r.Context())
 	if err != nil {
