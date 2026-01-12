@@ -39,9 +39,20 @@ func (s *BlendService) GetUserInfo(context context.Context, userid userid) (any,
 	return mapToReturn, nil
 }
 
-func (s *BlendService) GetUserTopItems(context context.Context, user userid, mode blendCategory, duration blendTimeDuration) (TopItems, error) {
+func (s *BlendService) GetUserTopItems(context context.Context, blendId blendId, user userid, requestedUsername string, mode blendCategory, duration blendTimeDuration) (TopItems, error) {
 
-	items, err := s.getTopX(context, user, duration, mode)
+	ok, err := s.AuthoriseBlend(context, blendId, user)
+	if err != nil {
+		return TopItems{}, fmt.Errorf("error during getting topitems' authorising blend: %w", err)
+	}
+	if !ok {
+		return TopItems{}, fmt.Errorf(" user %s not authorised to access blend %s", user, blendId)
+	}
+	useridRequested, err := s.repo.GetUserIdByLFMId(context, requestedUsername)
+	if err != nil {
+		return TopItems{}, fmt.Errorf("error during getting usertopitem's useridbylfm: %s : %w", requestedUsername, err)
+	}
+	items, err := s.getTopX(context, userid(useridRequested), duration, mode)
 	if err != nil {
 		return TopItems{}, fmt.Errorf("could not get top x during GetUserTopItems: %w", err)
 	}

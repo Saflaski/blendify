@@ -18,6 +18,7 @@ const INVITE_EXPIRY = time.Duration(time.Hour * 24)
 type RedisStateStore struct {
 	client           *redis.Client
 	userPrefix       string
+	lfmPrefix        string
 	musicPrefix      string
 	blendPrefix      string
 	blendIndexPrefix string
@@ -86,6 +87,12 @@ func (r *RedisStateStore) GetFromCacheTopX(context context.Context, userName str
 func (r *RedisStateStore) GetLFMByUserId(ctx context.Context, userID string) (string, error) {
 	key := fmt.Sprintf("%s:%s", r.userPrefix, userID)
 	result, err := r.client.HGet(ctx, key, "LFM Username").Result()
+	return result, err
+}
+
+func (r *RedisStateStore) GetUserIdByLFMId(ctx context.Context, lfmuserid string) (string, error) {
+	key := fmt.Sprintf("%s:%s", r.lfmPrefix, lfmuserid)
+	result, err := r.client.Get(ctx, key).Result()
 	return result, err
 }
 
@@ -204,6 +211,7 @@ func NewRedisStateStore(client *redis.Client) *RedisStateStore {
 	return &RedisStateStore{
 		client:           client,
 		userPrefix:       "user", //TODO is this the right way to connect to redis?
+		lfmPrefix:        "lfm_users",
 		musicPrefix:      "music_data",
 		blendPrefix:      "blend_data",
 		blendIndexPrefix: "blend_data:index:",

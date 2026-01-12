@@ -17,6 +17,8 @@ import {
   CardApiResponseSchema,
   CatalogueBlendResponse,
   CatalogueBlendSchema,
+  CatalogueTopItemsSchema,
+  CatalogueTopItemsResponse,
 } from "../components/prop-types";
 import { set, z } from "zod";
 import {
@@ -72,6 +74,8 @@ const TRACK_12_MONTH_KEY = "TRACK_12_MONTH_KEY";
 const ARTIST_1_MONTH_KEY = "ARTIST_1_MONTH_KEY";
 const TRACK_1_MONTH_KEY = "TRACK_1_MONTH_KEY";
 const BLEND_ID_KEY = "blend_id";
+const USER_A_TOP_ARTISTS_KEY = "USER_A_TOP_ARTISTS_KEY";
+const USER_B_TOP_ARTISTS_KEY = "USER_B_TOP_ARTISTS_KEY";
 
 export function Blend() {
   // ------ If user is from invite link and not Add button -------
@@ -91,7 +95,10 @@ export function Blend() {
   const [userCardData, setUserCardData] = useState<CardApiResponse>(
     {} as CardApiResponse,
   );
-
+  const [userATopItemsData, setUserATopItemsData] =
+    useState<CatalogueTopItemsResponse>({ Items: [] });
+  const [userBTopItemsData, setUserBTopItemsData] =
+    useState<CatalogueTopItemsResponse>({ Items: [] });
   const [userCatalogueArtist3MonthData, setUserCatalogueArtist3MonthData] =
     useLocalStorageState<CatalogueBlendResponse[]>(ARTIST_3_MONTH_KEY, []);
   const [userCatalogueArtist1MonthData, setUserCatalogueArtist1MonthData] =
@@ -111,6 +118,15 @@ export function Blend() {
   const [catTrack1Year, setCatTrack1Year] = useState(true);
   const [catTrack3Month, setCatTrack3Month] = useState(true);
   const [catTrack1Month, setCatTrack1Month] = useState(true);
+
+  // const [userATopArtists, setUserATopArtists] = useLocalStorageState<string[]>(
+  //   USER_A_TOP_ARTISTS_KEY,
+  //   [],
+  // );
+  // const [userBTopArtists, setUserBTopArtists] = useLocalStorageState<string[]>(
+  //   USER_B_TOP_ARTISTS_KEY,
+  //   [],
+  // );
 
   const currentTime = new Date().getTime();
   type LocationState = {
@@ -422,6 +438,56 @@ export function Blend() {
     return res;
   }
 
+  const downloadTopItems = async (
+    blendid: string,
+    category: string,
+    duration: string,
+    username: string,
+    setData: (val: CatalogueTopItemsResponse) => void,
+  ): Promise<void> => {
+    try {
+      const params = {
+        blendId: blendid,
+        duration: duration,
+        category: category,
+        username: username,
+      };
+      const queryString = new URLSearchParams(params).toString();
+      const res = await fetch(
+        `${API_BASE_URL}/blend/usertopitems?${queryString}`,
+        {
+          method: "GET",
+          credentials: "include",
+        },
+      );
+
+      if (res.status == 401) {
+        navigate(
+          `/login?redirectTo=${encodeURIComponent(location.pathname + location.search)}`,
+        );
+        return;
+      }
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.message || "Blend ID is invalid.");
+        return;
+      }
+
+      const data = await res.json();
+      console.log("Top items data received:", data);
+
+      const userData = CatalogueTopItemsSchema.parse(data);
+      // console.log("Parsed blend data:", userData);
+      console.log("Setting data for:", username, userData);
+      setData(userData);
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong. Please try again.");
+      return;
+    }
+  };
+
   const getCatalogueBlendData = async (
     duration: string,
     category: string,
@@ -612,10 +678,16 @@ export function Blend() {
   const [users, setUsers] = useState<string[]>(["", ""]);
 
   const props: ControlPanelProps = {
+    blendid: blendId as string,
     setMode,
     setUsers,
+    setUserATopItemsData,
+    setUserBTopItemsData,
     setBlendPercent,
+    userATopItemApiResponse: userATopItemsData,
+    userBTopItemApiResponse: userBTopItemsData,
     blendApiResponse: userCardData,
+    downloadTopItems: downloadTopItems,
   };
 
   useEffect(() => {
@@ -846,9 +918,8 @@ export function Blend() {
                       <div className="p-2 overflow-hidden">
                         <p className="text-[8px] font-bold text-neutral-400 mb-2 uppercase tracking-tighter truncate"></p>
                         <ul className="space-y-1">
-                          {userCatalogueArtist3MonthData
-                            .slice(0, 10)
-                            .map((item, index) => (
+                          {userATopItemsData.Items?.slice(0, 10).map(
+                            (item, index) => (
                               <li
                                 key={index}
                                 className="text-[10px] font-bold text-black font-[Roboto_Mono] truncate flex items-center"
@@ -856,9 +927,23 @@ export function Blend() {
                                 <span className="text-[8px] mr-1.5 opacity-30">
                                   {index + 1}
                                 </span>
-                                {item.Name}
+                                {item}
                               </li>
-                            ))}
+                            ),
+                          )}
+                          {/* {userATopItemsData.Items ===undefined ? {(
+                            (item, index) => (
+                              <li
+                                key={index}
+                                className="text-[10px] font-bold text-black font-[Roboto_Mono] truncate flex items-center"
+                              >
+                                <span className="text-[8px] mr-1.5 opacity-30">
+                                  {index + 1}
+                                </span>
+                                {item}
+                              </li>
+                            ),
+                          )}: null} */}
                         </ul>
                       </div>
 
@@ -866,19 +951,19 @@ export function Blend() {
                       <div className="p-2 overflow-hidden">
                         <p className="text-[8px] font-bold text-neutral-400 mb-2 uppercase tracking-tighter truncate text-right"></p>
                         <ul className="space-y-1">
-                          {userCatalogueArtist3MonthData
-                            .slice(0, 10)
-                            .map((item, index) => (
+                          {userBTopItemsData.Items?.slice(0, 10).map(
+                            (item, index) => (
                               <li
                                 key={index}
-                                className="text-[10px] font-bold text-black font-[Roboto_Mono] truncate flex flex-row-reverse items-center"
+                                className="text-[10px] font-bold text-black font-[Roboto_Mono] truncate flex items-center"
                               >
-                                {/* <span className="text-[8px] ml-1.5 opacity-30">
+                                <span className="text-[8px] mr-1.5 opacity-30">
                                   {index + 1}
-                                </span> */}
-                                <span className="truncate">{item.Name}</span>
+                                </span>
+                                {item}
                               </li>
-                            ))}
+                            ),
+                          )}
                         </ul>
                       </div>
                     </div>

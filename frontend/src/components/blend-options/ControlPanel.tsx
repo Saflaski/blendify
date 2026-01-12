@@ -1,10 +1,15 @@
-import React, { useState } from "react";
-import type { ControlPanelProps, CardApiResponse } from "../prop-types";
+import React, { useEffect, useState } from "react";
+import {
+  type ControlPanelProps,
+  type CardApiResponse,
+  CatalogueTopItemsSchema,
+} from "../prop-types";
 import ArtistIcon from "@/assets/images/artist.svg";
 import AlbumIcon from "@/assets/images/artist.svg";
 import TrackIcon from "@/assets/images/track.svg";
 import BlendifyWhiteIcon from "@/assets/images/blendifyIconWhite.svg";
 import BlendifyIcon from "@/assets/images/blendifyIcon.svg";
+import { set } from "zod";
 
 function ControlPanelTileButton({ highlight, children, label, onClick }) {
   return (
@@ -30,9 +35,13 @@ function ControlPanelTileButton({ highlight, children, label, onClick }) {
 }
 
 export function ControlPanel({
+  blendid,
   setMode,
   setUsers,
   setBlendPercent,
+  downloadTopItems,
+  setUserATopItemsData,
+  setUserBTopItemsData,
   blendApiResponse: BlendApiResponse,
 }: ControlPanelProps) {
   // async function updateBlendFromAPI({ user, mode, timeDuration }) {
@@ -93,6 +102,29 @@ export function ControlPanel({
     setSelectedGroup1("");
     setSelectedGroup2("");
   };
+
+  const category = selectedGroup1;
+  const duration = selectedGroup2;
+  // useEffect(() => {
+  // useEffect(() => {
+  //   if (!duration || !category) return;
+
+  //   // User A
+  //   downloadTopItems(
+  //     duration,
+  //     category,
+  //     BlendApiResponse.Usernames[0],
+  //     setUserATopItemsData,
+  //   );
+
+  //   // User B
+  //   downloadTopItems(
+  //     duration,
+  //     category,
+  //     BlendApiResponse.Usernames[1],
+  //     setUserBTopItemsData,
+  //   );
+  // }, [duration, category]);
 
   async function updateBlendFromStoredValue({ mode, timeDuration }) {
     try {
@@ -176,10 +208,30 @@ export function ControlPanel({
             break;
         }
       }
-
       setBlendPercent(newVal);
       setMode(displayedMode);
+
       setUsers(BlendApiResponse.Usernames);
+      if (!duration || !category) return;
+
+      //   // User A
+      downloadTopItems(
+        blendid,
+        duration,
+        category,
+        BlendApiResponse.Usernames[0],
+        setUserATopItemsData,
+      );
+
+      // User B
+      downloadTopItems(
+        blendid,
+        duration,
+        category,
+        BlendApiResponse.Usernames[1],
+        setUserBTopItemsData,
+      );
+      // }, []);
       console.log("Updated blend percentage:", newVal);
     } catch (err) {
       console.error("Error retrieving stored blend percentage:", err);

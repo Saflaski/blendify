@@ -1,10 +1,22 @@
 import { z } from "zod";
 
 export type ControlPanelProps = {
+  blendid: string;
   setMode: (val: string) => void;
   setUsers: (val: string[]) => void;
+  setUserATopItemsData: (val: CatalogueTopItemsResponse) => void;
+  setUserBTopItemsData: (val: CatalogueTopItemsResponse) => void;
   setBlendPercent: (num: number) => void;
+  userATopItemApiResponse: CatalogueTopItemsResponse;
+  userBTopItemApiResponse: CatalogueTopItemsResponse;
   blendApiResponse: CardApiResponse;
+  downloadTopItems: (
+    duration: string,
+    category: string,
+    username: string,
+    blendId: string,
+    setData: (val: CatalogueTopItemsResponse) => void,
+  ) => Promise<void>;
 };
 
 // export type BlendApiResponse = {
@@ -48,6 +60,12 @@ export const CatalogueBlendSchema = z.object({
 });
 
 export type CatalogueBlendResponse = z.infer<typeof CatalogueBlendSchema>;
+
+export const CatalogueTopItemsSchema = z.object({
+  Items: z.array(z.string()),
+});
+
+export type CatalogueTopItemsResponse = z.infer<typeof CatalogueTopItemsSchema>;
 
 // `json:"Name"`
 // URL            string `json:"EntryUrl,omitempty"`

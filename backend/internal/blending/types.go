@@ -120,7 +120,7 @@ type complexResponse struct {
 }
 
 type TopItems struct {
-	Items []string `json:"items"`
+	Items []string `json:"Items"`
 }
 
 // type MapCatStats map[string]CatalogueStats
