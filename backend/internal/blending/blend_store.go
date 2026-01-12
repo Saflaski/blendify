@@ -61,7 +61,8 @@ func (r *RedisStateStore) GetFromCacheTopX(context context.Context, userName str
 
 	Result, err := r.client.Get(context, key).Result()
 	if err == redis.Nil {
-		glog.Infof("Cache Miss: %s - %s", timeDuration, category)
+		glog.Infof("Cache Miss: %s - %s - %s", userName, timeDuration, category)
+		glog.Infof("Key looked for: %s", key)
 		return nil, nil
 	}
 	if err != nil {

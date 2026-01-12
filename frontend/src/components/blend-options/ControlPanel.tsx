@@ -198,7 +198,7 @@ export function ControlPanel({
           case "1year":
             newVal = typeBlend.OneYear;
             displayedMode += " in last 1 year";
-            handleGroup1Click("1year");
+            handleGroup1Click("12month");
             break;
           default:
             newVal = typeBlend.OneMonth;

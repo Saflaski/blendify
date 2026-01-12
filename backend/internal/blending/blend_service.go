@@ -809,6 +809,7 @@ func (s *BlendService) getTopX(context context.Context, userid userid, timeDurat
 		// }
 		return dbResp, nil
 	} else { //Cache miss
+		glog.Info("Cache miss on user %s", userid)
 		platformUsername, err := s.getLFM(context, string(userid))
 		if err != nil {
 			return nil, fmt.Errorf(" could get platform username from given userid:%s with err: %w", userid, err)
