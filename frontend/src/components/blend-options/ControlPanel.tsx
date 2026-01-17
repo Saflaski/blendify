@@ -16,7 +16,7 @@ function ControlPanelTileButton({ highlight, children, label, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`group relative aspect-square w-14 select-none  ${highlight ? "bg-[#D84727] text-slate-100 outline-[#000000]" : "bg-white text-slate-950 outline-black "}  p-3 outline-2 transition-all flex flex-col items-center justify-center gap-1`}
+      className={`group relative aspect-square w-14 select-none ${"active:shadow-[2px_2px_0_0_black] active:translate-[2px] shadow-[4px_4px_0_0_black]"} ${highlight ? "bg-[#D84727] text-slate-100 outline-[#000000]" : "bg-white text-slate-950 outline-black "}  p-3 outline-2 transition-all flex flex-col items-center justify-center gap-1`}
     >
       <div className="flex items-center justify-center flex-1 w-full">
         <div
@@ -279,9 +279,9 @@ export function ControlPanel({
 
   return (
     <div className=" flex items-center justify-center  bg-inherit outline-black ">
-      <div className="grid grid-row-3 items-center gap-3">
+      <div className="grid grid-row-3 items-center gap-3 ">
         {/* DATE RANGES */}
-        <div className="outline-2 outline-black p-2 flex gap-4">
+        <div className="outline-2 outline-black p-2 flex gap-4  shadow-[3px_3px_0_0_black]">
           <ControlPanelTileButton
             highlight={selectedGroup1 == "1month"}
             label=""
@@ -318,7 +318,7 @@ export function ControlPanel({
         </div>
 
         {/* --- ARTIST / GENRE / SONG  --- */}
-        <div className="outline-2 outline-black p-2 flex gap-4">
+        <div className="outline-2 outline-black p-2 flex gap-4 shadow-[3px_3px_0_0_black]">
           <ControlPanelTileButton
             highlight={selectedGroup2 == "artist"}
             label="Artists"
@@ -352,7 +352,7 @@ export function ControlPanel({
         </div>
 
         {/* --- DEFAULT --- */}
-        <div className="outline-2 outline-black w-fit mx-auto p-2">
+        <div className="outline-2 outline-black w-fit mx-auto p-2 shadow-[3px_3px_0_0_black]">
           <ControlPanelTileButton
             highlight={group3Selected}
             onClick={() => {
