@@ -281,7 +281,7 @@ export function ControlPanel({
     <div className=" flex items-center justify-center  bg-inherit outline-black ">
       <div className="grid grid-row-3 items-center gap-3 ">
         {/* DATE RANGES */}
-        <div className="outline-2 outline-black p-2 flex gap-4  shadow-[3px_3px_0_0_black]">
+        <div className="outline-2 outline-black p-2 flex gap-4  shadow-[4px_4px_0_0_black]">
           <ControlPanelTileButton
             highlight={selectedGroup1 == "1month"}
             label=""
@@ -318,7 +318,7 @@ export function ControlPanel({
         </div>
 
         {/* --- ARTIST / GENRE / SONG  --- */}
-        <div className="outline-2 outline-black p-2 flex gap-4 shadow-[3px_3px_0_0_black]">
+        <div className="outline-2 outline-black p-2 flex gap-4 shadow-[4px_4px_0_0_black]">
           <ControlPanelTileButton
             highlight={selectedGroup2 == "artist"}
             label="Artists"
@@ -352,7 +352,7 @@ export function ControlPanel({
         </div>
 
         {/* --- DEFAULT --- */}
-        <div className="outline-2 outline-black w-fit mx-auto p-2 shadow-[3px_3px_0_0_black]">
+        <div className="outline-2 outline-black w-fit mx-auto p-2 shadow-[4px_4px_0_0_black]">
           <ControlPanelTileButton
             highlight={group3Selected}
             onClick={() => {
