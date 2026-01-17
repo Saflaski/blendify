@@ -10,6 +10,7 @@ import TrackIcon from "@/assets/images/track.svg";
 import BlendifyWhiteIcon from "@/assets/images/blendifyIconWhite.svg";
 import BlendifyIcon from "@/assets/images/blendifyIcon.svg";
 import { set } from "zod";
+import { ca } from "zod/v4/locales";
 
 function ControlPanelTileButton({ highlight, children, label, onClick }) {
   return (
@@ -40,8 +41,8 @@ export function ControlPanel({
   setUsers,
   setBlendPercent,
   downloadTopItems,
-  setUserATopItemsData,
-  setUserBTopItemsData,
+  // setUserATopItemsData,
+  // setUserBTopItemsData,
   blendApiResponse: BlendApiResponse,
 }: ControlPanelProps) {
   // async function updateBlendFromAPI({ user, mode, timeDuration }) {
@@ -76,9 +77,19 @@ export function ControlPanel({
   const [selectedGroup2, setSelectedGroup2] = useState("");
   const [group3Selected, setGroup3Selected] = useState(true);
 
+  const requestGroup1 = selectedGroup1 || "1month";
+  const requestGroup2 = selectedGroup2 || "artist";
   const handleGroup1Click = (option) => {
     setSelectedGroup1(option);
     setGroup3Selected(false);
+    // downloadTopItems(
+    //   blendid,
+    //   requestGroup2,
+    //   option,
+    //   BlendApiResponse.Usernames[0],
+    //   setUserATopItemsData,
+    // );
+    console.log("Downloaded User A Top Items", requestGroup2, requestGroup1);
   };
 
   const handleGroup2Click = (option) => {
@@ -103,8 +114,8 @@ export function ControlPanel({
     setSelectedGroup2("");
   };
 
-  const category = selectedGroup1;
-  const duration = selectedGroup2;
+  var category = selectedGroup1;
+  var duration = selectedGroup2;
   // useEffect(() => {
   // useEffect(() => {
   //   if (!duration || !category) return;
@@ -195,7 +206,7 @@ export function ControlPanel({
             displayedMode += " in last 3 months";
             handleGroup1Click("3month");
             break;
-          case "1year":
+          case "12month":
             newVal = typeBlend.OneYear;
             displayedMode += " in last 1 year";
             handleGroup1Click("12month");
@@ -207,30 +218,45 @@ export function ControlPanel({
             handleGroup1Click("1month");
             break;
         }
+        //User A
+        downloadTopItems(
+          blendid,
+          mode,
+          timeDuration,
+          BlendApiResponse.Usernames[0],
+          0,
+        );
+        console.log(
+          "Downloaded User A Top Items",
+          requestGroup2,
+          requestGroup1,
+        );
+        // User B
+        downloadTopItems(
+          blendid,
+          mode,
+          timeDuration,
+          BlendApiResponse.Usernames[1],
+          1,
+          // setUserBTopItemsData,
+        );
+        console.log(
+          "Downloaded User B Top Items",
+          requestGroup2,
+          requestGroup1,
+        );
       }
       setBlendPercent(newVal);
       setMode(displayedMode);
 
       setUsers(BlendApiResponse.Usernames);
-      if (!duration || !category) return;
 
       //   // User A
-      downloadTopItems(
-        blendid,
-        duration,
-        category,
-        BlendApiResponse.Usernames[0],
-        setUserATopItemsData,
-      );
+      // if (!category) category = "artist";
+      // if (!duration) duration = "1month";
 
-      // User B
-      downloadTopItems(
-        blendid,
-        duration,
-        category,
-        BlendApiResponse.Usernames[1],
-        setUserBTopItemsData,
-      );
+      if (true) {
+      }
       // }, []);
       console.log("Updated blend percentage:", newVal);
     } catch (err) {
@@ -279,11 +305,11 @@ export function ControlPanel({
             <p className="font-[Roboto_Mono] text-xs font-bold">3 MONTH</p>
           </ControlPanelTileButton>
           <ControlPanelTileButton
-            highlight={selectedGroup1 == "1year"}
+            highlight={selectedGroup1 == "12month"}
             label=""
             onClick={() => {
               if (curMode == "default") setCurMode("artist");
-              setCurDuration("1year");
+              setCurDuration("12month");
               // handleGroup1Click("1year");
             }}
           >

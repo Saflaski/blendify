@@ -119,6 +119,8 @@ export function Blend() {
   const [catTrack3Month, setCatTrack3Month] = useState(true);
   const [catTrack1Month, setCatTrack1Month] = useState(true);
 
+  const [userATopItemsLoading, setUserATopItemsLoading] = useState(true);
+  const [userBTopItemsLoading, setUserBTopItemsLoading] = useState(true);
   // const [userATopArtists, setUserATopArtists] = useLocalStorageState<string[]>(
   //   USER_A_TOP_ARTISTS_KEY,
   //   [],
@@ -443,8 +445,20 @@ export function Blend() {
     category: string,
     duration: string,
     username: string,
-    setData: (val: CatalogueTopItemsResponse) => void,
+    index: number,
+    // setData: (val: CatalogueTopItemsResponse) => void,
   ): Promise<void> => {
+    console.log("Downloading top items for:", username, category, duration);
+    switch (index) {
+      case 0:
+        setUserATopItemsLoading(true);
+        break;
+      case 1:
+        setUserBTopItemsLoading(true);
+        break;
+      default:
+        console.error("Invalid user index for top items:", index);
+    }
     try {
       const params = {
         blendId: blendid,
@@ -480,7 +494,19 @@ export function Blend() {
       const userData = CatalogueTopItemsSchema.parse(data);
       // console.log("Parsed blend data:", userData);
       console.log("Setting data for:", username, userData);
-      setData(userData);
+      switch (index) {
+        case 0:
+          setUserATopItemsData(userData);
+          setUserATopItemsLoading(false);
+          break;
+        case 1:
+          setUserBTopItemsData(userData);
+          setUserBTopItemsLoading(false);
+          break;
+        default:
+          console.error("Invalid user index for top items:", index);
+      }
+      // setData(userData);
     } catch (err) {
       console.error(err);
       setError("Something went wrong. Please try again.");
@@ -681,8 +707,8 @@ export function Blend() {
     blendid: blendId as string,
     setMode,
     setUsers,
-    setUserATopItemsData,
-    setUserBTopItemsData,
+    // setUserATopItemsData,
+    // setUserBTopItemsData,
     setBlendPercent,
     userATopItemApiResponse: userATopItemsData,
     userBTopItemApiResponse: userBTopItemsData,
@@ -777,7 +803,6 @@ export function Blend() {
               }}
             >
               <div className="flex border-b-[3px] border-black bg-white/70 backdrop-blur-md h-28">
-                {/* 1. Score Block (Left Column) */}
                 <div className="flex-[1.5] p-3 border-r-[3px] border-black flex flex-col justify-center bg-white/40">
                   <span className="text-[10px] font-black uppercase tracking-tighter mb-0.5 text-neutral-500">
                     Score
@@ -791,12 +816,9 @@ export function Blend() {
                   </h1>
                 </div>
 
-                {/* 2. Metadata & Actions (Right Column) */}
                 <div className="flex-[3] flex flex-col">
-                  {/* BRANDING AND COPY */}
                   <div className="flex-1 flex">
                     <div className="flex-1 flex border-b-[3px]  border-black">
-                      {/* Branding Info */}
                       <div className="flex-[2] px-3 flex flex-col justify-center items-center ">
                         <p className="text-[11px] font-black tracking-[0.15em] justify-center font-[Quantico] text-black leading-none mb-1.5">
                           BLENDIFY
@@ -810,7 +832,6 @@ export function Blend() {
                         </div>
                       </div>
 
-                      {/* Copy Button (Functional Part of the Row) */}
                       {!isCapturing && (
                         <button
                           onClick={handleScreenshot}
@@ -826,7 +847,6 @@ export function Blend() {
                       )}
                     </div>
                   </div>
-                  {/* MODE */}
                   <div className="flex-1 bg-black  text-white px-3 flex flex-col justify-center  border-black overflow-hidden">
                     <span className="text-[7px] uppercase font-bold text-neutral-400 leading-none mb-1">
                       Current Mode
@@ -843,7 +863,6 @@ export function Blend() {
                   {users ? users[0] : "You"}
                 </span>
 
-                {/* Add a small visual "VS" badge for extra technical detail */}
                 <span className="bg-black text-white text-[8px] px-1.5 py-0.5 mx-2">
                   VS
                 </span>
@@ -853,20 +872,19 @@ export function Blend() {
                 </span>
               </div>
 
-              {/* Main Content Area */}
               {mode == "Default mode" ? (
                 <div className="flex-grow p-4 flex flex-col gap-4">
-                  <div className="border-[2px] border-black bg-white p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                    <p className="text-[10px] font-black text-black uppercase tracking-widest mb-2 border-b-2 border-black inline-block">
+                  <div className="border-[2px] border-black bg-white px-2 pb-1.5 pt-0 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                    <p className="text-[10px] font-black text-black uppercase tracking-widest mb-1 mt-0 border-b-2 border-black inline-block">
                       Top Artists
                     </p>
-                    <ul className="space-y-0">
+                    <ul className="space-y-0.5">
                       {userCatalogueArtist3MonthData
-                        .slice(0, 4)
+                        .slice(0, 5)
                         .map((item, index) => (
                           <li
                             key={index}
-                            className="text-[12px] font-bold text-black font-[Roboto_Mono] truncate flex items-center"
+                            className="text-[10px] font-bold text-black font-[Roboto_Mono] truncate flex items-center"
                           >
                             <span className="text-[10px] mr-2 text-neutral-400">
                               0{index + 1}
@@ -877,17 +895,17 @@ export function Blend() {
                     </ul>
                   </div>
 
-                  <div className="border-[2px] border-black bg-white p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                    <p className="text-[10px] font-black text-black uppercase tracking-widest mb-2 border-b-2 border-black inline-block">
+                  <div className="border-[2px] border-black bg-white px-2 pb-1.5 pt-0  shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                    <p className="text-[10px] font-black text-black uppercase tracking-widest mb-1 mt-0 border-b-2 border-black inline-block">
                       Top Tracks
                     </p>
-                    <ul className="space-y-0">
+                    <ul className="space-y-0.5">
                       {userCatalogueTrack3MonthData
-                        .slice(0, 4)
+                        .slice(0, 5)
                         .map((item, index) => (
                           <li
                             key={index}
-                            className="text-[12px] font-bold  text-black font-[Roboto_Mono] truncate flex items-center"
+                            className="text-[10px] font-bold  text-black font-[Roboto_Mono] truncate flex items-center"
                           >
                             <span className="text-[10px] mr-2 text-neutral-400">
                               0{index + 1}
@@ -905,66 +923,76 @@ export function Blend() {
                     {/* Section Header */}
                     <div className="border-b-[2px] border-black px-2 py-1 bg-neutral-100 flex justify-between items-center">
                       <p className="text-[9px] font-black text-black uppercase tracking-widest">
-                        Top Artists Comparison
+                        {mode}
                       </p>
-                      <span className="text-[8px] font-bold text-neutral-400 font-[Roboto_Mono]">
-                        15/50
-                      </span>
+                      <span className="text-[8px] font-bold text-neutral-400 font-[Roboto_Mono]"></span>
                     </div>
 
                     {/* Split Content */}
                     <div className="grid grid-cols-2 divide-x-[2px] divide-black">
                       {/* User 1 Column */}
+
                       <div className="p-2 overflow-hidden">
                         <p className="text-[8px] font-bold text-neutral-400 mb-2 uppercase tracking-tighter truncate"></p>
-                        <ul className="space-y-1">
-                          {userATopItemsData.Items?.slice(0, 10).map(
-                            (item, index) => (
+                        {userATopItemsLoading ? (
+                          <ul className="space-y-0.5">
+                            {" "}
+                            {Array.from({ length: 5 }).map((_, index) => (
                               <li
                                 key={index}
-                                className="text-[10px] font-bold text-black font-[Roboto_Mono] truncate flex items-center"
-                              >
-                                <span className="text-[8px] mr-1.5 opacity-30">
-                                  {index + 1}
-                                </span>
-                                {item}
-                              </li>
-                            ),
-                          )}
-                          {/* {userATopItemsData.Items ===undefined ? {(
-                            (item, index) => (
-                              <li
-                                key={index}
-                                className="text-[10px] font-bold text-black font-[Roboto_Mono] truncate flex items-center"
-                              >
-                                <span className="text-[8px] mr-1.5 opacity-30">
-                                  {index + 1}
-                                </span>
-                                {item}
-                              </li>
-                            ),
-                          )}: null} */}
-                        </ul>
+                                className="h-3 mb-1 bg-gray-300 animate-pulse"
+                              />
+                            ))}
+                          </ul>
+                        ) : (
+                          <ul className="space-y-1">
+                            {userATopItemsData.Items?.slice(0, 10).map(
+                              (item, index) => (
+                                <li
+                                  key={index}
+                                  className="text-[10px] font-bold text-black font-[Roboto_Mono] truncate flex items-center"
+                                >
+                                  <span className="text-[8px] mr-1.5 opacity-30">
+                                    {index + 1}
+                                  </span>
+                                  {item}
+                                </li>
+                              ),
+                            )}
+                          </ul>
+                        )}
                       </div>
 
                       {/* User 2 Column */}
                       <div className="p-2 overflow-hidden">
                         <p className="text-[8px] font-bold text-neutral-400 mb-2 uppercase tracking-tighter truncate text-right"></p>
-                        <ul className="space-y-1">
-                          {userBTopItemsData.Items?.slice(0, 10).map(
-                            (item, index) => (
+                        {userATopItemsLoading ? (
+                          <ul className="space-y-0.5">
+                            {" "}
+                            {Array.from({ length: 5 }).map((_, index) => (
                               <li
                                 key={index}
-                                className="text-[10px] font-bold text-black font-[Roboto_Mono] truncate flex items-center"
-                              >
-                                <span className="text-[8px] mr-1.5 opacity-30">
+                                className="h-3 mb-1 bg-gray-300 animate-pulse"
+                              />
+                            ))}
+                          </ul>
+                        ) : (
+                          <ul className="space-y-1">
+                            {userBTopItemsData.Items?.slice(0, 10).map(
+                              (item, index) => (
+                                <li
+                                  key={index}
+                                  className="text-[10px] font-bold text-black font-[Roboto_Mono] truncate flex items-center"
+                                >
+                                  {/* <span className="text-[8px] mr-1.5 opacity-30">
                                   {index + 1}
-                                </span>
-                                {item}
-                              </li>
-                            ),
-                          )}
-                        </ul>
+                                </span> */}
+                                  {item}
+                                </li>
+                              ),
+                            )}
+                          </ul>
+                        )}
                       </div>
                     </div>
                   </div>

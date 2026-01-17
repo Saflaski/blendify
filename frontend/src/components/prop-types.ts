@@ -4,8 +4,8 @@ export type ControlPanelProps = {
   blendid: string;
   setMode: (val: string) => void;
   setUsers: (val: string[]) => void;
-  setUserATopItemsData: (val: CatalogueTopItemsResponse) => void;
-  setUserBTopItemsData: (val: CatalogueTopItemsResponse) => void;
+  // setUserATopItemsData: (val: CatalogueTopItemsResponse) => void;
+  // setUserBTopItemsData: (val: CatalogueTopItemsResponse) => void;
   setBlendPercent: (num: number) => void;
   userATopItemApiResponse: CatalogueTopItemsResponse;
   userBTopItemApiResponse: CatalogueTopItemsResponse;
@@ -15,7 +15,8 @@ export type ControlPanelProps = {
     category: string,
     username: string,
     blendId: string,
-    setData: (val: CatalogueTopItemsResponse) => void,
+    index: number,
+    // setData: (val: CatalogueTopItemsResponse) => void,
   ) => Promise<void>;
 };
 
