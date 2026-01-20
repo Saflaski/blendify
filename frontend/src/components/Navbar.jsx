@@ -89,7 +89,11 @@ export function Navbar() {
               flex items-center justify-center
             "
           >
-            <img src={MenuIcon} alt="menu" className="w-full h-full" />
+            <img
+              src={MenuIcon}
+              alt="menu"
+              className="w-full h-full drop-shadow-[2px_2px_0_rgba(0,0,0,1)] active:translate-0.25 active:drop-shadow-[1px_1px_0_rgba(0,0,0,1)]"
+            />
           </button>
 
           {open && (
@@ -196,18 +200,17 @@ function DropDownItem({ page, funcName, setOpen, text }) {
 
 function HomeButton({ onClick }) {
   return (
-    <Link to={"/home"} className="no-underline">
+    <Link to="/home" className="no-underline">
       <button
         type="button"
         onClick={onClick}
-        className="
-        bg-transparent
-        text-black
-        w-7 h-7
-        flex items-center justify-center
-      "
+        className="bg-transparent w-8 h-8 flex items-center justify-center overflow-visible"
       >
-        <img src={HomeIcon} alt="home" className="w-full h-full" />
+        <img
+          src={HomeIcon}
+          alt="home"
+          className="w-8 h-8 drop-shadow-[2px_2px_0_rgba(0,0,0,1)] active:translate-0.25 active:drop-shadow-[1px_1px_0_rgba(0,0,0,1)]"
+        />
       </button>
     </Link>
   );
