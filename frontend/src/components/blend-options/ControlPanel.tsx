@@ -1,16 +1,22 @@
-import React, { useState } from "react";
-import type { ControlPanelProps, CardApiResponse } from "../prop-types";
+import React, { useEffect, useState } from "react";
+import {
+  type ControlPanelProps,
+  type CardApiResponse,
+  CatalogueTopItemsSchema,
+} from "../prop-types";
 import ArtistIcon from "@/assets/images/artist.svg";
 import AlbumIcon from "@/assets/images/artist.svg";
 import TrackIcon from "@/assets/images/track.svg";
 import BlendifyWhiteIcon from "@/assets/images/blendifyIconWhite.svg";
 import BlendifyIcon from "@/assets/images/blendifyIcon.svg";
+import { set } from "zod";
+import { ca } from "zod/v4/locales";
 
 function ControlPanelTileButton({ highlight, children, label, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`group relative aspect-square w-14 select-none  ${highlight ? "bg-[#D84727] text-slate-100 outline-[#000000]" : "bg-white text-slate-950 outline-black "}  p-3 outline-2 transition-all flex flex-col items-center justify-center gap-1`}
+      className={`group relative aspect-square w-14 select-none ${"active:shadow-[2px_2px_0_0_black] active:translate-[2px] shadow-[4px_4px_0_0_black]"} ${highlight ? "bg-[#D84727] text-slate-100 outline-[#000000]" : "bg-white text-slate-950 outline-black "}  p-3 outline-2 transition-all flex flex-col items-center justify-center gap-1`}
     >
       <div className="flex items-center justify-center flex-1 w-full">
         <div
@@ -30,9 +36,13 @@ function ControlPanelTileButton({ highlight, children, label, onClick }) {
 }
 
 export function ControlPanel({
+  blendid,
   setMode,
   setUsers,
   setBlendPercent,
+  downloadTopItems,
+  // setUserATopItemsData,
+  // setUserBTopItemsData,
   blendApiResponse: BlendApiResponse,
 }: ControlPanelProps) {
   // async function updateBlendFromAPI({ user, mode, timeDuration }) {
@@ -67,9 +77,19 @@ export function ControlPanel({
   const [selectedGroup2, setSelectedGroup2] = useState("");
   const [group3Selected, setGroup3Selected] = useState(true);
 
+  const requestGroup1 = selectedGroup1 || "1month";
+  const requestGroup2 = selectedGroup2 || "artist";
   const handleGroup1Click = (option) => {
     setSelectedGroup1(option);
     setGroup3Selected(false);
+    // downloadTopItems(
+    //   blendid,
+    //   requestGroup2,
+    //   option,
+    //   BlendApiResponse.Usernames[0],
+    //   setUserATopItemsData,
+    // );
+    console.log("Downloaded User A Top Items", requestGroup2, requestGroup1);
   };
 
   const handleGroup2Click = (option) => {
@@ -93,6 +113,29 @@ export function ControlPanel({
     setSelectedGroup1("");
     setSelectedGroup2("");
   };
+
+  var category = selectedGroup1;
+  var duration = selectedGroup2;
+  // useEffect(() => {
+  // useEffect(() => {
+  //   if (!duration || !category) return;
+
+  //   // User A
+  //   downloadTopItems(
+  //     duration,
+  //     category,
+  //     BlendApiResponse.Usernames[0],
+  //     setUserATopItemsData,
+  //   );
+
+  //   // User B
+  //   downloadTopItems(
+  //     duration,
+  //     category,
+  //     BlendApiResponse.Usernames[1],
+  //     setUserBTopItemsData,
+  //   );
+  // }, [duration, category]);
 
   async function updateBlendFromStoredValue({ mode, timeDuration }) {
     try {
@@ -163,10 +206,10 @@ export function ControlPanel({
             displayedMode += " in last 3 months";
             handleGroup1Click("3month");
             break;
-          case "1year":
+          case "12month":
             newVal = typeBlend.OneYear;
             displayedMode += " in last 1 year";
-            handleGroup1Click("1year");
+            handleGroup1Click("12month");
             break;
           default:
             newVal = typeBlend.OneMonth;
@@ -175,11 +218,46 @@ export function ControlPanel({
             handleGroup1Click("1month");
             break;
         }
+        //User A
+        downloadTopItems(
+          blendid,
+          mode,
+          timeDuration,
+          BlendApiResponse.Usernames[0],
+          0,
+        );
+        console.log(
+          "Downloaded User A Top Items",
+          requestGroup2,
+          requestGroup1,
+        );
+        // User B
+        downloadTopItems(
+          blendid,
+          mode,
+          timeDuration,
+          BlendApiResponse.Usernames[1],
+          1,
+          // setUserBTopItemsData,
+        );
+        console.log(
+          "Downloaded User B Top Items",
+          requestGroup2,
+          requestGroup1,
+        );
       }
-
       setBlendPercent(newVal);
       setMode(displayedMode);
+
       setUsers(BlendApiResponse.Usernames);
+
+      //   // User A
+      // if (!category) category = "artist";
+      // if (!duration) duration = "1month";
+
+      if (true) {
+      }
+      // }, []);
       console.log("Updated blend percentage:", newVal);
     } catch (err) {
       console.error("Error retrieving stored blend percentage:", err);
@@ -201,9 +279,9 @@ export function ControlPanel({
 
   return (
     <div className=" flex items-center justify-center  bg-inherit outline-black ">
-      <div className="grid grid-row-3 items-center gap-3">
+      <div className="grid grid-row-3 items-center gap-3 ">
         {/* DATE RANGES */}
-        <div className="outline-2 outline-black p-2 flex gap-4">
+        <div className="outline-2 outline-black p-2 flex gap-4  shadow-[4px_4px_0_0_black]">
           <ControlPanelTileButton
             highlight={selectedGroup1 == "1month"}
             label=""
@@ -227,11 +305,11 @@ export function ControlPanel({
             <p className="font-[Roboto_Mono] text-xs font-bold">3 MONTH</p>
           </ControlPanelTileButton>
           <ControlPanelTileButton
-            highlight={selectedGroup1 == "1year"}
+            highlight={selectedGroup1 == "12month"}
             label=""
             onClick={() => {
               if (curMode == "default") setCurMode("artist");
-              setCurDuration("1year");
+              setCurDuration("12month");
               // handleGroup1Click("1year");
             }}
           >
@@ -240,7 +318,7 @@ export function ControlPanel({
         </div>
 
         {/* --- ARTIST / GENRE / SONG  --- */}
-        <div className="outline-2 outline-black p-2 flex gap-4">
+        <div className="outline-2 outline-black p-2 flex gap-4 shadow-[4px_4px_0_0_black]">
           <ControlPanelTileButton
             highlight={selectedGroup2 == "artist"}
             label="Artists"
@@ -274,7 +352,7 @@ export function ControlPanel({
         </div>
 
         {/* --- DEFAULT --- */}
-        <div className="outline-2 outline-black w-fit mx-auto p-2">
+        <div className="outline-2 outline-black w-fit mx-auto p-2 shadow-[4px_4px_0_0_black]">
           <ControlPanelTileButton
             highlight={group3Selected}
             onClick={() => {

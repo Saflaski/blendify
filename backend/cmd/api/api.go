@@ -95,6 +95,7 @@ func (app *application) mount() http.Handler {
 			r.Get("/carddata", blendHandler.GetBlendPageData)
 			r.Get("/cataloguedata", blendHandler.GetBlendedEntryData)
 			r.Get("/userblends", blendHandler.GetUserBlends)
+			r.Get("/usertopitems", blendHandler.GetUserTopItems)
 			r.Get("/generatelink", blendHandler.GenerateNewLink)
 			r.Get("/userinfo", blendHandler.GetUserInfo)
 		})

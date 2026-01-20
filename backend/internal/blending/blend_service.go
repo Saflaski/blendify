@@ -5,6 +5,7 @@ import (
 	"cmp"
 	"context"
 	"fmt"
+	"maps"
 	"slices"
 	"strconv"
 	"sync"
@@ -36,6 +37,31 @@ func (s *BlendService) GetUserInfo(context context.Context, userid userid) (any,
 	mapToReturn["track"] = userinfo.User.Track_count
 
 	return mapToReturn, nil
+}
+
+func (s *BlendService) GetUserTopItems(context context.Context, blendId blendId, user userid, requestedUsername string, mode blendCategory, duration blendTimeDuration) (TopItems, error) {
+
+	ok, err := s.AuthoriseBlend(context, blendId, user)
+	if err != nil {
+		return TopItems{}, fmt.Errorf("error during getting topitems' authorising blend: %w", err)
+	}
+	if !ok {
+		return TopItems{}, fmt.Errorf(" user %s not authorised to access blend %s", user, blendId)
+	}
+	useridRequested, err := s.repo.GetUserIdByLFMId(context, requestedUsername)
+	if err != nil {
+		return TopItems{}, fmt.Errorf("error during getting usertopitem's useridbylfm: %s : %w", requestedUsername, err)
+	}
+	items, err := s.getTopX(context, userid(useridRequested), duration, mode)
+	if err != nil {
+		return TopItems{}, fmt.Errorf("could not get top x during GetUserTopItems: %w", err)
+	}
+
+	keys := s.GetSortedEntries(items)
+
+	return TopItems{
+		Items: keys[0:10],
+	}, nil
 }
 
 func (s *BlendService) DeleteUserBlends(context context.Context, user string) error {
@@ -322,6 +348,19 @@ func (s *BlendService) GetCommonAndSortedEntries(aEntries map[string]CatalogueSt
 	slices.SortFunc(commonKeys, sortFunc)
 
 	return commonKeys
+}
+
+func (s *BlendService) GetSortedEntries(entries map[string]CatalogueStats) []string {
+	keys := slices.Collect(maps.Keys(entries))
+
+	slices.SortFunc(keys, func(a, b string) int {
+		if entries[a].Count != entries[b].Count {
+			return cmp.Compare(entries[b].Count, entries[a].Count)
+		}
+		return cmp.Compare(a, b)
+	})
+
+	return keys
 }
 
 func (s *BlendService) buildOverallBlend(artistBlend, albumBlend, trackBlend TypeBlend) (int, error) {
@@ -770,6 +809,7 @@ func (s *BlendService) getTopX(context context.Context, userid userid, timeDurat
 		// }
 		return dbResp, nil
 	} else { //Cache miss
+		glog.Info("Cache miss on user %s", userid)
 		platformUsername, err := s.getLFM(context, string(userid))
 		if err != nil {
 			return nil, fmt.Errorf(" could get platform username from given userid:%s with err: %w", userid, err)
