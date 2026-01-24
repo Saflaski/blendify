@@ -100,13 +100,15 @@ type TypeBlend struct {
 }
 
 type TopEntry struct {
-	Name           string `json:"Name"`
-	URL            string `json:"EntryUrl,omitempty"`
-	ImageURL       string `json:"ImageUrl,omitempty"`
-	ArtistName     string `json:"Artist,omitempty"` //Not needed when it's an artist
-	ArtistURL      string `json:"ArtistUrl,omitempty"`
-	ArtistImageURL string `json:"ArtistImageUrl,omitempty"`
-	Playcounts     []int  `json:"Playcounts"`
+	Name           string   `json:"Name"`
+	URL            string   `json:"EntryUrl,omitempty"`
+	ImageURL       string   `json:"ImageUrl,omitempty"`
+	MBID           string   `json:"MBID,omitempty"`
+	ArtistName     string   `json:"Artist,omitempty"` //Not needed when it's an artist
+	ArtistURL      string   `json:"ArtistUrl,omitempty"`
+	ArtistImageURL string   `json:"ArtistImageUrl,omitempty"`
+	Playcounts     []int    `json:"Playcounts"`
+	Genres         []string `json:"Genres"`
 }
 
 type CatalogueStats = musicapi.CatalogueStats

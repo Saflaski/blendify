@@ -75,6 +75,7 @@ type Track struct {
 	Attributes map[string]any `json:"@attr"`
 	Playcount  string         `json:"playcount"`
 	LFMImages  []LFMImage     `json:"image"`
+	Genres     []string       `json:"genres,omitempty"`
 }
 
 type UserWeeklyTrackList struct {
@@ -136,11 +137,12 @@ type UserTopArtists struct {
 }
 
 type CatalogueStats struct { //A catalogue can be an album, track or artist. The following is metadata for a catalogue
-	Artist      Artist `json:"artist"`
-	Count       int    `json:"count"`
-	PlatformURL string `json:"platformurl"` //Catalogue URL
-	Image       string `json:"imageurl"`    //Image URL
-	PlatformID  string `json:"platformid"`  //Catalogue Platform ID
+	Artist      Artist   `json:"artist"`
+	Count       int      `json:"count"`
+	PlatformURL string   `json:"platformurl"` //Catalogue URL
+	Image       string   `json:"imageurl"`    //Image URL
+	PlatformID  string   `json:"platformid"`  //Catalogue Platform ID
+	Genres      []string `json:"genres"`
 }
 
 func JSONToMapCatStats(data []byte) (map[string]CatalogueStats, error) {

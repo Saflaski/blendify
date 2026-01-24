@@ -2,6 +2,7 @@ package blend
 
 import (
 	musicapi "backend-lastfm/internal/music_api/lastfm"
+	"backend-lastfm/internal/musicbrainz"
 	"context"
 	"os"
 	"strconv"
@@ -43,7 +44,7 @@ func TestBlend(t *testing.T) {
 		true,
 		200,
 	)
-	blendService := NewBlendService(*redisStore, *lfm_adapter)
+	blendService := NewBlendService(*redisStore, *lfm_adapter, musicbrainz.MBService{})
 	_ = blendService
 	_ = redisStore
 	//Mock Data
@@ -220,7 +221,7 @@ func TestDownloadAndCache(t *testing.T) {
 		200,
 	)
 
-	blendService := NewBlendService(*redisStore, *lfm_adapter)
+	blendService := NewBlendService(*redisStore, *lfm_adapter, *musicbrainz.NewMBService(musicbrainz.NewPostgresMusicBrainzRepo(nil)))
 	_ = blendService
 	_ = redisStore
 

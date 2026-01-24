@@ -4,6 +4,7 @@ import (
 	"backend-lastfm/internal/auth"
 	blend "backend-lastfm/internal/blending"
 	musicapi "backend-lastfm/internal/music_api/lastfm"
+	"backend-lastfm/internal/musicbrainz"
 	network "backend-lastfm/internal/network"
 	shared "backend-lastfm/internal/shared"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/golang/glog"
+	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -74,8 +76,15 @@ func (app *application) mount() http.Handler {
 		authCfg,
 	)
 
+	sqlxDB := sqlx.MustConnect("pgx", os.Getenv("MUSICBRAINZ_DB_DSN"))
+	sqlxDB.SetMaxOpenConns(25)
+	sqlxDB.SetMaxIdleConns(25)
+	sqlxDB.SetConnMaxLifetime(5 * time.Minute)
+	mbRepo := musicbrainz.NewPostgresMusicBrainzRepo(sqlxDB)
+	mbService := musicbrainz.NewMBService(mbRepo)
+
 	blendRepo := blend.NewRedisStateStore(rdb)
-	blendService := blend.NewBlendService(*blendRepo, *LastFMExternal)
+	blendService := blend.NewBlendService(*blendRepo, *LastFMExternal, *mbService)
 	blendHandler := blend.NewBlendHandler(
 		os.Getenv("FRONTEND_URL"),
 		"sid",
@@ -85,6 +94,7 @@ func (app *application) mount() http.Handler {
 
 	sharedService := shared.NewSharedService(authService, blendService)
 	sharedHandler := shared.NewSharedHandler(*sharedService)
+
 	r.Route("/v1", func(r chi.Router) {
 		r.Route("/blend", func(r chi.Router) {
 			r.Use(auth.ValidateCookie(*authHandler, *authService))
@@ -149,6 +159,19 @@ func (app *application) run(h http.Handler) error {
 		}
 	}
 	return srv.ListenAndServe()
+}
+
+func NewDB(dsn string) (*sqlx.DB, error) {
+	db, err := sqlx.Connect("pgx", dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(25)
+	db.SetConnMaxLifetime(5 * time.Minute)
+
+	return db, nil
 }
 
 type config struct {

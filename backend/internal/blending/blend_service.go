@@ -2,6 +2,7 @@ package blend
 
 import (
 	musicapi "backend-lastfm/internal/music_api/lastfm"
+	"backend-lastfm/internal/musicbrainz"
 	"cmp"
 	"context"
 	"fmt"
@@ -17,7 +18,7 @@ import (
 type BlendService struct {
 	repo           *RedisStateStore
 	LastFMExternal *musicapi.LastFMAPIExternal
-	// authRepo       *auth.AuthStateStore
+	MBService      *musicbrainz.MBService
 }
 
 func (s *BlendService) GetUserInfo(context context.Context, userid userid) (any, error) {
@@ -315,13 +316,15 @@ func (s *BlendService) ConvertCatalogueStatsToEntry(aStat CatalogueStats, name s
 	countB := bCount
 
 	entry := TopEntry{
-		Name:           name,
-		ImageURL:       aStat.Image,
-		URL:            aStat.PlatformURL,
+		Name:     name,
+		ImageURL: aStat.Image,
+		URL:      aStat.PlatformURL,
+		// MBID:           aStat.MBID,
 		ArtistName:     aStat.Artist.Name,
 		ArtistURL:      aStat.Artist.URL,
 		ArtistImageURL: s.getCatalogueImageURL(aStat.Artist.LFMImages),
 		Playcounts:     []int{countA, countB},
+		Genres:         aStat.Genres,
 	}
 	return entry
 }
@@ -737,8 +740,8 @@ func (s *BlendService) GenerateNewLinkAndAssignToUser(context context.Context, u
 	return newInviteValue, nil
 }
 
-func NewBlendService(blendStore RedisStateStore, lfmAdapter musicapi.LastFMAPIExternal) *BlendService {
-	return &BlendService{&blendStore, &lfmAdapter}
+func NewBlendService(blendStore RedisStateStore, lfmAdapter musicapi.LastFMAPIExternal, mbService musicbrainz.MBService) *BlendService {
+	return &BlendService{&blendStore, &lfmAdapter, &mbService}
 }
 
 func (s *BlendService) GetBlend(context context.Context, userA userid, userB userid, category blendCategory, timeDuration blendTimeDuration) (int, error) {
@@ -865,6 +868,11 @@ func (s *BlendService) downloadTopArtists(context context.Context, userName stri
 	// }
 
 	for _, v := range topArtist.TopArtists.Artist {
+		if v.MBID == "" {
+			//skip
+			continue
+		}
+
 		playcount, err := strconv.Atoi(v.Playcount)
 		if err != nil {
 			return artistToPlaybacks, fmt.Errorf("got unparseable string during string -> int conversation: %w", err)
@@ -919,6 +927,13 @@ func (s *BlendService) downloadTopAlbums(context context.Context, userName strin
 		return albumToPlays, fmt.Errorf("could not extract TopAlbums object from lastfm adapter, %w", err)
 	}
 	for _, v := range topAlbums.TopAlbums.Album {
+
+		if v.MBID == "" {
+			//Try to get it from album name + artist name
+			//skip for now
+			continue
+		}
+
 		playcount, err := strconv.Atoi(v.Playcount)
 		if err != nil {
 			return albumToPlays, fmt.Errorf("got unparseable string during string -> int conversation: %w", err)
@@ -990,19 +1005,57 @@ func (s *BlendService) downloadTopTracks(context context.Context, userName strin
 	// }
 
 	for _, v := range topTracks.TopTracks.Track {
+		exists := false
+		if v.MBID != "" {
+			exists, err = s.MBService.IsValidMBIDForRecord(context, v.MBID)
+			if err != nil {
+				return trackToPlays, fmt.Errorf("could not check if record exists through mbid: %w", err)
+			}
+			if !exists {
+				glog.Infof("Record does not exist for mbid: %s, track: %s by artist: %s", v.MBID, v.Name, v.Artist.Name)
+			}
+		}
+		_ = exists
+		// if v.MBID == "" {
+
+		// continue
+		// //Get MBID from artistname + track name, if not found, skip
+		// trackInfo, err := s.MBService.GetMBIDFromArtistAndTrackName(context, v.Artist.Name, v.Name)
+		// if err != nil {
+		// 	return trackToPlays, fmt.Errorf("could not perform mbidfromartistandtrackname after got empty mbid: %w", err)
+		// }
+		// if trackInfo.IsEmpty() {
+		// 	continue //Could not find a suitable track using pre-given SQL settings
+		// }
+
+		// v.MBID = trackInfo.RecordingMBID
+		// v.Artist.MBID = trackInfo.ArtistMBID
+		// v.Artist.Name = trackInfo.ArtistName
+		// v.Name = trackInfo.RecordingName
+
+		// }
 		playcount, err := strconv.Atoi(v.Playcount)
 		if err != nil {
 			return trackToPlays, fmt.Errorf("got unparseable string during string -> int conversation: %w", err)
 		}
 
 		imageURL := s.getCatalogueImageURL(v.LFMImages) //Selects a good pic out of the ones given
+		genreObjects, err := s.MBService.GetGenresByRecordingMBID(context, v.MBID)
+		if err != nil {
+			return trackToPlays, fmt.Errorf("could not get genres during gettoptracks: %w", err)
 
+		}
+		genres := make([]string, len(genreObjects))
+		for i, g := range genreObjects {
+			genres[i] = g.Name //Capitalize first letter of each genre
+		}
 		catStat := CatalogueStats{
 			Artist:      v.Artist,
 			Count:       playcount,
 			PlatformURL: v.URL,
 			Image:       imageURL,
 			PlatformID:  v.MBID,
+			Genres:      genres,
 		}
 		trackToPlays[v.Name] = catStat
 
