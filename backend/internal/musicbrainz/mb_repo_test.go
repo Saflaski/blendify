@@ -43,4 +43,62 @@ func TestNewPostgresMusicBrainzRepo(t *testing.T) {
 		assert.NotEmpty(t, genreObj)
 		assert.NoError(t, err)
 	})
+
+	t.Run("Get Recording Candidates by closest match to recording and artist name", func(t *testing.T) {
+		names := []string{
+			"Faint",
+			"Numb",
+			"Papercut",
+			"Show me how",
+			"Glamorous",
+			"Bags",
+		}
+		artists := []string{
+			"Linkin Park",
+			"Linkin Park",
+			"Linkin Park",
+			"Men I Trust",
+			"Fergie feat. Ludacris",
+			"Clairo",
+		}
+
+		mbids := []string{
+			"54a3c21c-5395-44a2-b90b-b7fab8095c20",
+			"352dd518-23cd-4c5a-9551-ba02097b177b",
+			"9aa621e1-46f2-4c91-8111-741583985612",
+			"dbad831a-7a9d-416e-9ef0-11e740fef6a0",
+			"a1cb2d52-7702-4a96-a5ed-41281995dbdb",
+			"9433df6b-037b-41f8-9edf-0e8c9ffaf390",
+		}
+
+		results, err := repo.Recording.GetClosestRecordings(t.Context(), names, artists)
+		if err != nil {
+			t.Fatalf("GetClosestRecordings failed: %v", err)
+
+		}
+
+		if len(results) != len(names) {
+			t.Log("Results:", results)
+			t.Fatalf("expected %d results, got %d", len(names), len(results))
+		}
+
+		for i, r := range results {
+			if r.RecordingMBID == "" {
+				t.Errorf("result %d has empty MBID", i)
+			}
+
+			if r.RecordingName == "" {
+				t.Errorf("result %d has empty recording name", i)
+			}
+
+			if r.ArtistName == "" {
+				t.Errorf("result %d has empty artist name", i)
+			}
+
+			assert.Equal(t, mbids[i], r.RecordingMBID, "mbid mismatch for result %d", i)
+		}
+		for _, r := range results {
+			t.Logf("Recording: %s by %s (MBID: %s)\n", r.RecordingName, r.ArtistName, r.RecordingMBID)
+		}
+	})
 }

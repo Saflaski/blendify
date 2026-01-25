@@ -13,6 +13,7 @@ type Storage struct {
 	Recording interface {
 		GetReleasesByArtist(string) (any, error)
 		GetClosestRecording(context.Context, string, string) (RecordingCandidate, error)
+		GetClosestRecordings(context.Context, []string, []string) ([]RecordingCandidate, error)
 		GetRegexForRecording(string) (any, error)
 		DoesRecordExistByMBID(context.Context, string) (bool, error)
 	}

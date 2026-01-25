@@ -80,6 +80,7 @@ func (app *application) mount() http.Handler {
 	sqlxDB.SetMaxOpenConns(25)
 	sqlxDB.SetMaxIdleConns(25)
 	sqlxDB.SetConnMaxLifetime(5 * time.Minute)
+
 	mbRepo := musicbrainz.NewPostgresMusicBrainzRepo(sqlxDB)
 	mbService := musicbrainz.NewMBService(mbRepo)
 
