@@ -32,7 +32,7 @@ func TestNewPostgresMusicBrainzRepo(t *testing.T) {
 
 	//Test GetGenresByRecording
 	t.Run("Get Genres by some recording", func(t *testing.T) {
-		genreObj, err := repo.Genre.GetGenreByRecordings(t.Context(), []string{"5afa33bb-83f6-42c6-b789-8bfa34c48b50"})
+		genreObj, err := repo.Genre.GetGenreByRecordings(t.Context(), []string{"54a3c21c-5395-44a2-b90b-b7fab8095c20"})
 		for k, v := range genreObj {
 			t.Log("Recording MBID:", k)
 			// t.Logf("Recording MBID: %s, Genres: %+v\n", k, v)
@@ -52,6 +52,8 @@ func TestNewPostgresMusicBrainzRepo(t *testing.T) {
 			"Show me how",
 			"Glamorous",
 			"Bags",
+			"Claire",
+			"C.R.E.A.M. (Cash Rules Everything Around Me)",
 		}
 		artists := []string{
 			"Linkin Park",
@@ -60,6 +62,8 @@ func TestNewPostgresMusicBrainzRepo(t *testing.T) {
 			"Men I Trust",
 			"Fergie feat. Ludacris",
 			"Clairo",
+			"Déyyess",
+			"Wu-Tang Clan",
 		}
 
 		mbids := []string{
@@ -67,8 +71,10 @@ func TestNewPostgresMusicBrainzRepo(t *testing.T) {
 			"352dd518-23cd-4c5a-9551-ba02097b177b",
 			"9aa621e1-46f2-4c91-8111-741583985612",
 			"dbad831a-7a9d-416e-9ef0-11e740fef6a0",
-			"a1cb2d52-7702-4a96-a5ed-41281995dbdb",
+			"8874d1be-e885-4c5f-8ddf-1e90b8aa7af1",
 			"9433df6b-037b-41f8-9edf-0e8c9ffaf390",
+			"d6c3c8a6-fccf-4a26-87f3-cf8fe2bcda99",
+			"60411567-f228-467c-933b-8a2622e2d8c7",
 		}
 
 		results, err := repo.Recording.GetClosestRecordings(t.Context(), names, artists)

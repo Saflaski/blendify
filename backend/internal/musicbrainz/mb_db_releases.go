@@ -41,41 +41,52 @@ func (s *RecordingStore) GetClosestRecordings(context context.Context, names []s
 	inputs := make([]Input, len(names))
 	candidates := make([]RecordingCandidate, len(names))
 	query := `
-			WITH input(title, artist) AS (
-		SELECT *
-		FROM UNNEST(
-			$1::text[],
-			$2::text[]
+		WITH input(title, artist) AS (
+			SELECT *
+			FROM UNNEST($1::text[], $2::text[])
 		)
-	)
-	SELECT
-		i.title,
-		i.artist,
-		c.recording_mbid
-	FROM input i
-	JOIN LATERAL (
-		SELECT recording_mbid
-		FROM (
-			SELECT DISTINCT
-				r.id,
-				r.gid AS recording_mbid,
-				similarity(r.name, i.title) AS title_similarity
+		SELECT
+			i.title,
+			i.artist,
+			c.recording_mbid
+		FROM input i
+		JOIN LATERAL (
+			SELECT r.gid AS recording_mbid
 			FROM recording r
 			JOIN artist_credit ac ON ac.id = r.artist_credit
 			JOIN artist_credit_name acn ON acn.artist_credit = ac.id
 			JOIN artist a ON a.id = acn.artist
-			WHERE
-				r.name ILIKE i.title || '%' AND r.name % i.title 
-				AND a.name % i.artist
-				AND (r.comment IS NULL OR r.comment = '')
-				AND r.name !~* '(live|remix|edit|version|demo|remaster|radio)'
-		) dedup
-		ORDER BY title_similarity DESC
-		LIMIT 1
-	) c ON TRUE;
-
-
-
+			LEFT JOIN LATERAL (
+				SELECT SUM(rt.count) AS tag_count
+				FROM recording_tag rt
+				WHERE rt.recording = r.id
+			) t ON true
+			LEFT JOIN release rel ON rel.id = (
+				SELECT t2.medium
+				FROM track t2
+				WHERE t2.recording = r.id
+				LIMIT 1
+			)
+			LEFT JOIN release_group rg ON rg.id = rel.release_group
+			LEFT JOIN release_group_primary_type rgpt ON rg.type = rgpt.id
+			WHERE r.name ILIKE i.title || '%'
+			AND r.name % i.title
+			AND a.name % i.artist
+			AND (r.comment IS NULL OR r.comment = '')
+			AND r.name !~* '(live|remix|edit|version|demo|remaster|radio)'
+			ORDER BY
+				COALESCE(t.tag_count, 0) DESC,
+				similarity(r.name, i.title) DESC,
+				CASE rgpt.name
+					WHEN 'Album' THEN 1
+					WHEN 'Single' THEN 2
+					WHEN 'EP' THEN 3
+					ELSE 4
+				END,
+				r.length IS NOT NULL DESC,
+				r.id
+			LIMIT 1
+		) c ON TRUE;
 	`
 	for i, name := range names {
 		inputs[i] = Input{
