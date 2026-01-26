@@ -88,6 +88,71 @@ func (s *RecordingStore) GetClosestRecordings(context context.Context, names []s
 			LIMIT 1
 		) c ON TRUE;
 	`
+
+	queryTwo := `
+	WITH input_pairs AS (
+  SELECT
+    row_number() OVER () AS pair_id,
+    t.name,
+    t.artist
+  FROM unnest(
+    $1::text[],
+    $2::text[]
+  ) AS t(name, artist)
+),
+exact_matches AS (
+  SELECT
+    ip.pair_id,
+    r.gid AS mbid,
+    r.name AS rname,
+    ac.name AS artist,
+    COUNT(rt.tag) AS occurrence_count
+  FROM input_pairs ip
+  JOIN recording r
+    ON r.name = ip.name
+	AND r.comment = ''
+  JOIN artist_credit ac
+    ON r.artist_credit = ac.id AND ac.name = ip.artist
+  LEFT JOIN recording_tag rt
+    ON r.id = rt.recording
+  GROUP BY ip.pair_id, r.gid, r.name, ac.name
+), 
+fuzzy_matches AS (
+  SELECT
+    ip.pair_id,
+    r.gid AS mbid,
+    r.name AS rname,
+    ac.name AS artist,
+    COUNT(rt.tag) AS occurrence_count
+  FROM input_pairs ip
+  LEFT JOIN exact_matches em
+    ON ip.pair_id = em.pair_id
+  JOIN recording r
+    ON r.name % ip.name
+	AND r.comment = ''
+  JOIN artist_credit ac
+    ON r.artist_credit = ac.id AND ac.name % ip.artist
+  LEFT JOIN recording_tag rt
+    ON r.id = rt.recording
+  WHERE em.pair_id IS NULL
+  GROUP BY ip.pair_id, r.gid, r.name, ac.name
+),
+final as ( select * from (
+  SELECT *, ROW_NUMBER() OVER (PARTITION BY pair_id ORDER BY occurrence_count DESC) AS rn
+  FROM (
+    SELECT * FROM exact_matches
+    UNION ALL
+    SELECT * FROM fuzzy_matches
+  ) combined
+) t
+WHERE rn = 1
+ORDER BY pair_id
+)
+select mbid, rname, artist from final;
+
+	`
+	_ = query
+	_ = queryTwo
 	for i, name := range names {
 		inputs[i] = Input{
 			Title:  name,
@@ -95,7 +160,7 @@ func (s *RecordingStore) GetClosestRecordings(context context.Context, names []s
 		}
 	}
 
-	rows, err := s.db.QueryxContext(context, query, (names), (artistNames))
+	rows, err := s.db.QueryxContext(context, queryTwo, (names), (artistNames))
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +168,7 @@ func (s *RecordingStore) GetClosestRecordings(context context.Context, names []s
 	i := 0
 	for rows.Next() {
 		var title, artist, mbid string
-		rows.Scan(&title, &artist, &mbid)
+		rows.Scan(&mbid, &title, &artist)
 		candidates[i] = RecordingCandidate{
 			RecordingName: title,
 			ArtistName:    artist,

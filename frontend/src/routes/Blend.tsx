@@ -1128,7 +1128,7 @@ export function Blend() {
               <div>
                 <div className=" pb-10">
                   <div
-                    className={`flex flex-wrap justify-center flex-row m-2 gap-3 ${genreExpanded ? "max-h-[260px]" : "max-h-[110px] overflow-y-scroll py-2"}`}
+                    className={`flex flex-wrap justify-center flex-row m-2 gap-3 px-[3px] ${genreExpanded ? "max-h-[260px]" : "max-h-[110px] overflow-y-scroll py-2"}`}
                   >
                     {genres.map((genre) => (
                       <button
