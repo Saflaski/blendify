@@ -824,7 +824,7 @@ func (s *BlendService) getTopX(context context.Context, userid userid, timeDurat
 		}
 
 		if len(lfmResp) == 0 {
-			return nil, fmt.Errorf(" downloaded empty map for %s %s : %w", timeDuration, category, err)
+			return nil, fmt.Errorf(" downloaded empty map for %s %s : %s", timeDuration, category, err)
 		}
 
 		return lfmResp, nil
@@ -985,7 +985,7 @@ func (s *BlendService) downloadTopTracks(context context.Context, userName strin
 		context,
 		userName,
 		string(timeDuration),
-		5,
+		1,
 		50,
 	)
 
@@ -1005,17 +1005,17 @@ func (s *BlendService) downloadTopTracks(context context.Context, userName strin
 	// }
 
 	for _, v := range topTracks.TopTracks.Track {
-		exists := false
-		if v.MBID != "" {
-			exists, err = s.MBService.IsValidMBIDForRecord(context, v.MBID)
-			if err != nil {
-				return trackToPlays, fmt.Errorf("could not check if record exists through mbid: %w", err)
-			}
-			if !exists {
-				glog.Infof("Record does not exist for mbid: %s, track: %s by artist: %s", v.MBID, v.Name, v.Artist.Name)
-			}
-		}
-		_ = exists
+		// exists := false
+		// if v.MBID != "" {
+		// 	exists, err = s.MBService.IsValidMBIDForRecord(context, v.MBID)
+		// 	if err != nil {
+		// 		return trackToPlays, fmt.Errorf("could not check if record exists through mbid: %w", err)
+		// 	}
+		// 	if !exists {
+		// 		glog.Infof("Record does not exist for mbid: %s, track: %s by artist: %s", v.MBID, v.Name, v.Artist.Name)
+		// 	}
+		// }
+		// _ = exists
 		// if v.MBID == "" {
 
 		// continue
@@ -1040,28 +1040,75 @@ func (s *BlendService) downloadTopTracks(context context.Context, userName strin
 		}
 
 		imageURL := s.getCatalogueImageURL(v.LFMImages) //Selects a good pic out of the ones given
-		genreObjects, err := s.MBService.GetGenresByRecordingMBID(context, v.MBID)
-		if err != nil {
-			return trackToPlays, fmt.Errorf("could not get genres during gettoptracks: %w", err)
+		// genreObjects, err := s.MBService.GetGenresByRecordingMBID(context, v.MBID)
+		// if err != nil {
+		// 	return trackToPlays, fmt.Errorf("could not get genres during gettoptracks: %w", err)
 
-		}
-		genres := make([]string, len(genreObjects))
-		for i, g := range genreObjects {
-			genres[i] = g.Name //Capitalize first letter of each genre
-		}
+		// }
+		// genres := make([]string, len(genreObjects))
+		// for i, g := range genreObjects {
+		// 	genres[i] = g.Name //Capitalize first letter of each genre
+		// }
 		catStat := CatalogueStats{
 			Artist:      v.Artist,
 			Count:       playcount,
 			PlatformURL: v.URL,
 			Image:       imageURL,
 			PlatformID:  v.MBID,
-			Genres:      genres,
 		}
 		trackToPlays[v.Name] = catStat
 
 	}
 
-	return trackToPlays, nil
+	newTrackToPlays, err := s.PopulateMBIDsForMapCatStats(context, trackToPlays)
+	if err != nil {
+		return trackToPlays, fmt.Errorf(" could not populate mbids for map cat stats: %w", err)
+	}
+
+	//Prepare list of tracknames and artist names from CatalogueStats map
+
+	return newTrackToPlays, nil
+}
+
+func (s *BlendService) PopulateMBIDsForMapCatStats(context context.Context, input map[string]CatalogueStats) (map[string]CatalogueStats, error) {
+	output := make(map[string]CatalogueStats)
+	//Prepare list of tracknames and artist names from CatalogueStats map
+	trackNames := make([]string, 0, len(input))
+	artistNames := make([]string, 0, len(input))
+	for k, v := range input {
+		trackNames = append(trackNames, k)
+		artistNames = append(artistNames, v.Artist.Name)
+	}
+
+	mbidList, err := s.MBService.GetMBIDsFromArtistAndTrackNames(context, artistNames, trackNames)
+	if err != nil {
+		return output, fmt.Errorf(" could not get mbid list from artist and track names: %w", err)
+	}
+
+	for k := 0; k < len(input); k++ {
+
+		trackName := trackNames[k]
+		catStat := input[trackName]
+		mbidInfo := mbidList[k]
+		if !mbidInfo.IsEmpty() {
+			catStat.PlatformID = mbidInfo.RecordingMBID
+			catStat.Artist.MBID = mbidInfo.ArtistMBID
+			catStat.Artist.Name = mbidInfo.ArtistName
+			// genreObjects := mbidInfo.Genres
+			// genres := make([]string, len(genreObjects))
+			// for i, g := range genreObjects {
+			// 	genres[i] = g.Name //Capitalize first letter of each genre
+			// }
+			// catStat.Genres = genres
+		}
+		output[trackName] = catStat
+	}
+
+	if len(output) == 0 {
+		return input, fmt.Errorf(" could not populate any mbids for map cat stats")
+	}
+
+	return output, nil
 }
 
 func (s *BlendService) getCatalogueImageURL(images []musicapi.LFMImage) string {

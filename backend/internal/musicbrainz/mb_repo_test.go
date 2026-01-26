@@ -73,8 +73,8 @@ func TestNewPostgresMusicBrainzRepo(t *testing.T) {
 			"dbad831a-7a9d-416e-9ef0-11e740fef6a0",
 			"8874d1be-e885-4c5f-8ddf-1e90b8aa7af1",
 			"9433df6b-037b-41f8-9edf-0e8c9ffaf390",
-			"d6c3c8a6-fccf-4a26-87f3-cf8fe2bcda99",
-			"60411567-f228-467c-933b-8a2622e2d8c7",
+			"356c0fa3-48a9-4d4e-b3d2-616b927a0e60",
+			"1bd1ac12-ab90-41c8-9650-c73846ad1c5a",
 		}
 
 		results, err := repo.Recording.GetClosestRecordings(t.Context(), names, artists)
@@ -102,6 +102,155 @@ func TestNewPostgresMusicBrainzRepo(t *testing.T) {
 			}
 
 			assert.Equal(t, mbids[i], r.RecordingMBID, "mbid mismatch for result %d", i)
+		}
+		for _, r := range results {
+			t.Logf("Recording: %s by %s (MBID: %s)\n", r.RecordingName, r.ArtistName, r.RecordingMBID)
+		}
+	})
+
+	t.Run("Get Recording Bulk Candidates by closest match to recording and artist name", func(t *testing.T) {
+		names := []string{
+			"Numb",
+			"Faint",
+			"Papercut",
+			"Show me how",
+			"Glamorous",
+			"Bags",
+			"Claire",
+			"C.R.E.A.M. (Cash Rules Everything Around Me)",
+			"In the End",
+			"Breaking the Habit",
+			"Somewhere I Belong",
+			"Crawling",
+			"Lose Yourself",
+			"Stan",
+			"The Real Slim Shady",
+			"Juicy",
+			"Big Poppa",
+			"Shook Ones, Pt. II",
+			"NY State of Mind",
+			"California Love",
+			"Changes",
+			"Dear Mama",
+			"Ms. Jackson",
+			"Hey Ya!",
+			"Electric Relaxation",
+			"Can I Kick It?",
+			"No Diggity",
+			"Poison",
+			"Regulate",
+			"Gin and Juice",
+			"Still D.R.E.",
+			"Forgot About Dre",
+			"X Gon' Give It to Ya",
+			"Ruff Ryders' Anthem",
+			"Hard Knock Life (Ghetto Anthem)",
+			"Empire State of Mind",
+			"Gold Digger",
+			"Stronger",
+			"Jesus Walks",
+			"Heartless",
+			"Come As You Are",
+			"Smells Like Teen Spirit",
+			"Creep",
+			"Karma Police",
+			"Mr. Brightside",
+			"Seven Nation Army",
+			"Boulevard of Broken Dreams",
+			"American Idiot",
+			"Toxic",
+		}
+		artists := []string{
+			"Linkin Park",
+			"Linkin Park",
+			"Linkin Park",
+			"Men I Trust",
+			"Fergie",
+			"Clairo",
+			"Déyyess",
+			"Wu-Tang Clan",
+			"Linkin Park",
+			"Linkin Park",
+			"Linkin Park",
+			"Linkin Park",
+			"Eminem",
+			"Eminem",
+			"Eminem",
+			"The Notorious B.I.G.",
+			"The Notorious B.I.G.",
+			"Mobb Deep",
+			"Nas",
+			"2Pac",
+			"2Pac",
+			"2Pac",
+			"OutKast",
+			"OutKast",
+			"A Tribe Called Quest",
+			"A Tribe Called Quest",
+			"Blackstreet",
+			"Bell Biv DeVoe",
+			"Warren G & Nate Dogg",
+			"Snoop Dogg",
+			"Dr. Dre",
+			"Dr. Dre",
+			"DMX",
+			"DMX",
+			"Jay-Z",
+			"Jay-Z & Alicia Keys",
+			"Kanye West",
+			"Kanye West",
+			"Kanye West",
+			"Kanye West",
+			"Nirvana",
+			"Nirvana",
+			"Radiohead",
+			"Radiohead",
+			"The Killers",
+			"The White Stripes",
+			"Green Day",
+			"Green Day",
+			"Britney Spears",
+		}
+
+		results, err := repo.Recording.GetClosestRecordings(t.Context(), names, artists)
+		if err != nil {
+			t.Fatalf("GetClosestRecordings failed: %v", err)
+
+		}
+
+		if len(results) != len(names) || len(results) != len(artists) {
+			t.Log("Results:", results)
+			for _, name := range names {
+				found := false
+
+				for _, r := range results {
+					if r.RecordingName == name {
+						found = true
+						break
+					}
+				}
+
+				if !found {
+					t.Errorf("recording %q not found in results", name)
+				}
+			}
+			t.Fatalf("expected %d results, got %d", len(names), len(results))
+		}
+
+		for i, r := range results {
+			if r.RecordingMBID == "" {
+				t.Errorf("result %d has empty MBID", i)
+				t.Log("Expected names and artists:", names[i], artists[i])
+			}
+
+			if r.RecordingName == "" {
+				t.Errorf("result %d has empty recording name", i)
+			}
+
+			if r.ArtistName == "" {
+				t.Errorf("result %d has empty artist name", i)
+			}
+
 		}
 		for _, r := range results {
 			t.Logf("Recording: %s by %s (MBID: %s)\n", r.RecordingName, r.ArtistName, r.RecordingMBID)

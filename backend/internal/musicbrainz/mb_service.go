@@ -45,6 +45,31 @@ func (mb *MBService) GetMBIDFromArtistAndTrackName(context context.Context, arti
 
 }
 
+func (mb *MBService) GetMBIDsFromArtistAndTrackNames(context context.Context, artistNames []string, trackNames []string) ([]TrackInfo, error) {
+	candidates, err := mb.repo.Recording.GetClosestRecordings(context, trackNames, artistNames)
+	if err != nil {
+		return nil, fmt.Errorf("GetMBIDsFromArtistAndTrackNames error: %v", err)
+	}
+
+	recordingMBIDs := make([]string, 0, len(candidates))
+	for _, candidate := range candidates {
+		recordingMBIDs = append(recordingMBIDs, candidate.RecordingMBID)
+	}
+
+	trackInfos := make([]TrackInfo, len(candidates))
+	for i := range len(candidates) {
+		trackInfos[i] = TrackInfo{
+			RecordingMBID: candidates[i].RecordingMBID,
+			RecordingName: candidates[i].RecordingName,
+			ArtistName:    candidates[i].ArtistName,
+			ArtistMBID:    candidates[i].ArtistMBID,
+			// Genres:        genresMap[candidates[i].RecordingMBID],
+		}
+	}
+
+	return trackInfos, nil
+}
+
 func (mb *MBService) GetGenresByRecordingMBIDs(context context.Context, recordingMBIDs []string) (map[string][]Genre, error) {
 	return mb.repo.Genre.GetGenreByRecordings(context, recordingMBIDs)
 }
