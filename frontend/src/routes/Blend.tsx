@@ -772,6 +772,104 @@ export function Blend() {
     setCurrentRangeIndex((prev) => (prev === ranges.length - 1 ? 0 : prev + 1));
   };
 
+  const genres = [
+    "rock",
+    "pop",
+    "edm",
+    "hiphop",
+    "classical",
+    "jazz",
+    "country",
+    "metal",
+    "indie",
+    "punk",
+    "reggae",
+    "blues",
+    "folk",
+    "disco",
+  ];
+
+  const [genreTracks, setGenreTracks] = useState<
+    CatalogueBlendResponse[] | undefined
+  >([]);
+
+  const [enabledButtons, setEnabledButtons] = useState({});
+  // useEffect(() => {
+  //   const genre = genres[0];
+  //   setEnabledButtons({ [genre]: true });
+  // }, []);
+  const toggleButton = (genre) => {
+    //If there is only 1 genre enabled, do not allow disabling it
+    // if (enabledButtons[genre] && getEnabledGenres().length <= 1) { //UNCOMMENT IF YOU ALWAYS WANT ONE ENABLED
+    //   return;
+    // }
+    setEnabledButtons((prev) => {
+      const newState = { ...prev, [genre]: !prev[genre] };
+      console.log(
+        "Enabled buttons:",
+        Object.keys(newState).filter((g) => newState[g]),
+      );
+
+      // Update genreTracks based on new state
+      const songs = getSongsBasedOffGenres(
+        Object.keys(newState).filter((g) => newState[g]),
+      );
+      setGenreTracks(songs);
+      console.log("User 1 year track data", userCatalogueTrack1YearData);
+      return newState;
+    });
+    console.log("Enabled buttons: ", getEnabledGenres());
+    var songs = getSongsBasedOffGenres(getEnabledGenres());
+    setGenreTracks(songs);
+    console.log("Songs based off genres: ", songs);
+    console.log(
+      "BRO",
+      userCatalogueTrack1MonthData.filter((item) =>
+        item.Name.includes("Wildflower".toLowerCase()),
+      ),
+    );
+  };
+
+  useEffect(() => {
+    setGenreTracks(userCatalogueTrack1YearData);
+  }, [userCatalogueTrack1YearData]);
+  const getEnabledGenres = () => {
+    return Object.keys(enabledButtons).filter((genre) => enabledButtons[genre]);
+  };
+
+  //MOCK FUNCTION
+  const getSongsBasedOffGenres = (genres: string[]) => {
+    console.log("Getting songs based off genres: ", genres);
+    if (genres.length === 0) {
+      console.log("Not returning any songs");
+      return userCatalogueTrack1YearData; //Or return all
+    } else if (genres.length === 3) {
+      console.log("All genres");
+      return [];
+    } else if (genres.includes("edm") && genres.includes("rock")) {
+      return userCatalogueTrack1YearData.filter((item) =>
+        item.Name.toLowerCase().includes("Drown".toLowerCase()),
+      );
+    } else if (genres.includes("rock")) {
+      return userCatalogueTrack1YearData.filter((item) =>
+        item.Artist?.toLowerCase().includes("Linkin Park".toLowerCase()),
+      );
+    } else if (genres.includes("pop")) {
+      return userCatalogueTrack1YearData.filter((item) =>
+        item.Name.toLowerCase().includes("wildflower".toLowerCase()),
+      );
+    }
+  };
+
+  useEffect(() => {
+    console.log(
+      "BROOO",
+      userCatalogueTrack1YearData.filter((item) =>
+        item.Name.toLowerCase().includes("Crawling".toLowerCase()),
+      ),
+    );
+  }, [userCatalogueTrack1YearData]);
+  const [genreExpanded, setGenreExpanded] = useState(false);
   return (
     <div className="w-full ">
       <div className="w-full md:w-[60%] flex pt-4 flex-col md:flex-row gap-x-5 mx-auto text-center px-4 gap-y-4 md:px-0 py-0 md:py-5">
@@ -1011,7 +1109,7 @@ export function Blend() {
         </div>
 
         {/* RIGHT CONTENT AREA */}
-        <div className=" md:w-[60%] outline-amber-600 flex flex-col flex-wrap items-center justify-baseline gap-y-5">
+        <div className=" md:w-[60%] outline-amber-600 flex flex-col flex-wrap items-center justify-baseline gap-y-5 mt-10">
           <div
             className={`text-black font-[Roboto_Mono] italic   ${!catalogueLoading && !cardLoading ? "hidden" : "hidden lg:block"} `}
           >
@@ -1024,9 +1122,74 @@ export function Blend() {
             </p>
           </div>
 
+          {/* New genre thingy  */}
+          <section className="w-full flex flex-col mb-6 ">
+            <div className="relative flex flex-col justify-center ring-2 p-2 ring-black   ">
+              <div>
+                <div className=" pb-10">
+                  <div
+                    className={`flex flex-wrap justify-center flex-row m-2 gap-3 ${genreExpanded ? "max-h-[260px]" : "max-h-[110px] overflow-y-scroll py-2"}`}
+                  >
+                    {genres.map((genre) => (
+                      <button
+                        key={genre}
+                        onClick={() => toggleButton(genre)}
+                        className={`flex flex-row group relative w-auto h-10 min-w-5 text-sm font-[Roboto_Mono] font-medium select-none ${"active:shadow-[2px_2px_0_0_black] active:translate-[2px] shadow-[4px_4px_0_0_black]"} ${enabledButtons[genre] ? "bg-[#D84727] text-slate-100 outline-[#000000]" : "bg-white text-slate-950 outline-black "}  p-3 outline-2 transition-all flex flex-col items-center justify-center gap-1`}
+                      >
+                        {genre}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setGenreExpanded((prev) => !prev)}
+                    className={`absolute right-4 w-20 h-8 flex items-center justify-center
+                  bg-black  shadow-[2px_2px_0_0_black]
+                  active:translate-[1px] active:shadow-[1px_1px_0_0_black]
+                  transition-all text-white font-[Roboto_Mono] font-medium text-sm`}
+                    aria-label="Toggle genre list height"
+                  >
+                    <p className="pr-1 pl-1.5">
+                      {genreExpanded ? "Less" : "Expand"}{" "}
+                    </p>
+                    <span
+                      className={`transition-transform duration-300 ${
+                        genreExpanded ? "rotate-180" : "rotate-0"
+                      }`}
+                    >
+                      ▼
+                    </span>
+                  </button>
+                </div>
+
+                <div className="flex flex-col max-h-[280px] pt-2 overflow-y-scroll">
+                  <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6 ">
+                    {genreTracks ? (
+                      genreTracks.map((item, index) => (
+                        <SplitRatioBar
+                          key={index}
+                          itemName={item.Name}
+                          Artist={item.Artist as string}
+                          valueA={item.Playcounts[0]}
+                          valueB={item.Playcounts[1]}
+                          ArtistUrl={item.ArtistUrl as string}
+                          itemUrl={item.EntryUrl as string}
+                        />
+                      ))
+                    ) : (
+                      <p className="text-black font-[Roboto_Mono]">
+                        No Music Found
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* New experimental dropdown bit */}
-          <section className="w-full flex flex-col">
-            <div className="flex items-center justify-center gap-4 mb-4">
+          <section className="w-full flex flex-col ring-2 p-2 ring-black">
+            <div className="flex items-center justify-center gap-4 mb-4 ">
               <button
                 onClick={() => goPrev(setCurrentArtistRangeIndex)}
                 className="text-xl font-bold text-black hover:opacity-70"
@@ -1140,7 +1303,7 @@ export function Blend() {
             )}
           </section>
 
-          <section className="w-full flex flex-col">
+          <section className="w-full flex flex-col ring-2 p-2 ring-black">
             <div className="flex items-center justify-center gap-4 mb-4">
               <button
                 onClick={() => goPrev(setCurrentTrackRangeIndex)}

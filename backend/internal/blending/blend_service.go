@@ -1060,14 +1060,14 @@ func (s *BlendService) downloadTopTracks(context context.Context, userName strin
 
 	}
 
-	newTrackToPlays, err := s.PopulateMBIDsForMapCatStats(context, trackToPlays)
-	if err != nil {
-		return trackToPlays, fmt.Errorf(" could not populate mbids for map cat stats: %w", err)
-	}
+	// newTrackToPlays, err := s.PopulateMBIDsForMapCatStats(context, trackToPlays)
+	// if err != nil {
+	// 	return trackToPlays, fmt.Errorf(" could not populate mbids for map cat stats: %w", err)
+	// }
 
 	//Prepare list of tracknames and artist names from CatalogueStats map
 
-	return newTrackToPlays, nil
+	return trackToPlays, nil
 }
 
 func (s *BlendService) PopulateMBIDsForMapCatStats(context context.Context, input map[string]CatalogueStats) (map[string]CatalogueStats, error) {
