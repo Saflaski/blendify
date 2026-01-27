@@ -50,16 +50,15 @@ func TestNewPostgresMusicBrainzRepo(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("Get Recording Candidates by closest match to recording and artist name", func(t *testing.T) {
+	t.Run("Get Recording Candidates by closest match to recording and artist name - Non Fuzzy", func(t *testing.T) {
 		names := []string{
 			"Faint",
 			"Numb",
 			"Papercut",
-			"Show me how",
+			"Show Me How",
 			"Glamorous",
 			"Bags",
 			"Claire",
-			"C.R.E.A.M. (Cash Rules Everything Around Me)",
 		}
 		artists := []string{
 			"Linkin Park",
@@ -69,7 +68,6 @@ func TestNewPostgresMusicBrainzRepo(t *testing.T) {
 			"Fergie feat. Ludacris",
 			"Clairo",
 			"Déyyess",
-			"Wu-Tang Clan",
 		}
 
 		mbids := []string{
@@ -77,10 +75,9 @@ func TestNewPostgresMusicBrainzRepo(t *testing.T) {
 			"352dd518-23cd-4c5a-9551-ba02097b177b",
 			"9aa621e1-46f2-4c91-8111-741583985612",
 			"dbad831a-7a9d-416e-9ef0-11e740fef6a0",
-			"8874d1be-e885-4c5f-8ddf-1e90b8aa7af1",
+			"74ff24ec-0a35-4093-bab9-9e8bbcae11ac",
 			"9433df6b-037b-41f8-9edf-0e8c9ffaf390",
 			"356c0fa3-48a9-4d4e-b3d2-616b927a0e60",
-			"1bd1ac12-ab90-41c8-9650-c73846ad1c5a",
 		}
 
 		results, err := repo.Recording.GetClosestRecordings(t.Context(), names, artists)

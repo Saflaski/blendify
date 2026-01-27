@@ -155,23 +155,27 @@ exact_matches AS (
     r.gid AS mbid,
     r.name AS rname,
     ac.name AS artist,
-    COUNT(rt.tag) AS occurrence_count
+    r.genre_count_cache AS occurrence_count
   FROM input_pairs ip
   JOIN recording r
     ON r.name = ip.name
+    AND r."comment" not ilike 'Live%'
+    and r.video = false
   JOIN artist_credit ac
     ON r.artist_credit = ac.id AND ac.name = ip.artist
-  LEFT JOIN recording_tag rt
-    ON r.id = rt.recording
-  GROUP BY ip.pair_id, r.gid, r.name, ac.name
-)
-SELECT mbid, rname, artist
+),
+final as (
+SELECT *
 FROM (
   SELECT *, ROW_NUMBER() OVER (PARTITION BY pair_id ORDER BY occurrence_count DESC) AS rn
-  FROM exact_matches
-) t
+  FROM (
+    SELECT * FROM exact_matches
+  ) combined
+) ranked
 WHERE rn = 1
-ORDER BY pair_id;
+ORDER BY pair_id)
+select mbid, rname, artist from final;
+
 `
 	_ = query
 	_ = queryTwo

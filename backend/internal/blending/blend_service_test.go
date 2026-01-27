@@ -374,14 +374,14 @@ func TestMBService(t *testing.T) {
 		}
 		// ------------------------
 		t.Log("Length of MapCatStats: ", len(trackToPlays))
-		newTrackToPlays, err := blendService.PopulateMBIDsForMapCatStats(t.Context(), trackToPlays)
+		trackToPlays, err = blendService.PopulateMBIDsForMapCatStats(t.Context(), trackToPlays)
 		if err != nil {
 
 			t.Errorf(" could not populate mbids for map cat stats: %v", err)
 		}
 		t.Log("Populated CatalogueStats with MBIDs")
 		t.Log("Populating with Genres")
-		newNewTrackToPlays, err := blendService.PopulateGenresForMapCatStats(t.Context(), newTrackToPlays)
+		trackToPlays, err = blendService.PopulateGenresForMapCatStats(t.Context(), trackToPlays)
 		assert.NoError(t, err)
 
 		t.Log("Populated CatalogueStats with Genres")
@@ -390,7 +390,7 @@ func TestMBService(t *testing.T) {
 		i := 0
 		sum := 0
 		genreSum := 0
-		for trackName, catStat := range newNewTrackToPlays {
+		for trackName, catStat := range trackToPlays {
 			i += 1
 			if catStat.PlatformID == "" {
 				t.Logf("Could not populate MBID for track: %s", trackName)
@@ -404,7 +404,7 @@ func TestMBService(t *testing.T) {
 				genreSum += 1
 			}
 
-			t.Logf("Track: %s, MBID: %s, Genres: %s\n", trackName, catStat.PlatformID, catStat.Genres)
+			t.Logf("MBID: %s, Genres: %s\n", catStat.PlatformID, catStat.Genres)
 		}
 		t.Logf("Successfully populated %d out of %d MBIDs", sum, i)
 		t.Logf("Successfully populated %d out of %d Genres", genreSum, i)

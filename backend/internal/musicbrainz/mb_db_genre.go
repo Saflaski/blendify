@@ -30,68 +30,64 @@ func (s *GenreStore) GetGenreByRecordings(context context.Context, recordingMBID
 	rows := []RecordingGenreRow{}
 
 	query := `
-	WITH recording_tags AS (
+	WITH all_potential_tags AS (
     SELECT
-        r.gid::text      AS recording_mbid,
-        t.id             AS genre_id,
-        t.name           AS genre,
-        rt.count         AS tag_count,
-        ROW_NUMBER() OVER (
-            PARTITION BY r.gid
-            ORDER BY rt.count DESC
-        ) AS rn
+        r.gid::text AS recording_mbid,
+        t.id AS genre_id,
+        t.name AS genre,
+        rt.count AS tag_count,
+        'recording' AS source
     FROM musicbrainz.recording r
-    JOIN musicbrainz.recording_tag rt
-        ON rt.recording = r.id
-    JOIN musicbrainz.tag t
-        ON t.id = rt.tag
+    JOIN musicbrainz.recording_tag rt ON rt.recording = r.id
+    JOIN musicbrainz.tag t ON t.id = rt.tag
     WHERE r.gid = ANY($1::uuid[])
-),
-
-release_group_tags AS (
+    UNION ALL
     SELECT
-        r.gid::text      AS recording_mbid,
-        t.id             AS genre_id,
-        t.name           AS genre,
-        rgt.count        AS tag_count,
-        ROW_NUMBER() OVER (
-            PARTITION BY r.gid
-            ORDER BY rgt.count DESC
-        ) AS rn
+        r.gid::text AS recording_mbid,
+        t.id AS genre_id,
+        t.name AS genre,
+        rgt.count AS tag_count,
+        'release_group' AS source
     FROM musicbrainz.recording r
-    JOIN musicbrainz.track tr
-        ON tr.recording = r.id
-    JOIN musicbrainz.medium m
-        ON m.id = tr.medium
-    JOIN musicbrainz.release rel
-        ON rel.id = m.release
-    JOIN musicbrainz.release_group rg
-        ON rg.id = rel.release_group
-    JOIN musicbrainz.release_group_tag rgt
-        ON rgt.release_group = rg.id
-    JOIN musicbrainz.tag t
-        ON t.id = rgt.tag
+    JOIN musicbrainz.track tr ON tr.recording = r.id
+    JOIN musicbrainz.medium m ON m.id = tr.medium
+    JOIN musicbrainz.release rel ON rel.id = m.release
+    JOIN musicbrainz.release_group rg ON rg.id = rel.release_group
+    JOIN musicbrainz.release_group_tag rgt ON rgt.release_group = rg.id
+    JOIN musicbrainz.tag t ON t.id = rgt.tag
     WHERE r.gid = ANY($1::uuid[])
       AND NOT EXISTS (
-          SELECT 1
-          FROM musicbrainz.recording_tag rt
-          WHERE rt.recording = r.id
+          SELECT 1 FROM musicbrainz.recording_tag rt2 
+          WHERE rt2.recording = r.id
       )
+),
+ranked_tags AS (
+    SELECT 
+        *,
+        ROW_NUMBER() OVER (
+            PARTITION BY recording_mbid 
+            ORDER BY tag_count DESC, genre ASC 
+        ) as rn
+    FROM all_potential_tags
+	WHERE genre NOT IN (
+    	'5+ wochen',
+    	'offizielle charts'
+    	'ph_3_stars',
+    	'ph_temp_checken'
+    	'offizielle charts',
+    	'ph_3_stars',
+    	'offizielle charts',
+    	'ph_temp_checken'
 )
-
-SELECT recording_mbid, genre_id, genre, tag_count
-FROM recording_tags
-WHERE rn <= 5
-
-UNION ALL
-
-SELECT recording_mbid, genre_id, genre, tag_count
-FROM release_group_tags
-WHERE rn <= 5
-
-ORDER BY recording_mbid, tag_count ASC;
-
-
+)
+SELECT DISTINCT
+    recording_mbid, 
+    genre_id, 
+    genre, 
+    tag_count
+FROM ranked_tags
+WHERE rn <= 10
+ORDER BY recording_mbid, tag_count DESC;
     `
 	if err := s.db.SelectContext(context, &rows, query, pq.Array(recordingMBIDs)); err != nil {
 		return nil, fmt.Errorf(" error during selectcontext in GetGenreByRecordings: %v", err)
@@ -105,6 +101,7 @@ ORDER BY recording_mbid, tag_count ASC;
 			Name:     row.Name,
 			TagCount: row.TagCount,
 		})
+		fmt.Printf("Debug: RecordingMBID: %s, Genre: %s, TagCount: %d\n", row.RecordingMBID, row.Name, row.TagCount)
 	}
 
 	return result, nil

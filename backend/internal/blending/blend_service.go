@@ -695,6 +695,7 @@ func (s *BlendService) GetNewDataForUser(ctx context.Context, user userid) error
 		if resp.err != nil {
 			return fmt.Errorf("error in downloading data asynchronously for duration %s and category %s : %w", resp.duration, resp.category, resp.err)
 		}
+		fmt.Println("Caching data for user:", resp.user, " duration:", resp.duration, " category:", resp.category)
 		if err := s.cacheLFMData(ctx, resp); err != nil {
 			return fmt.Errorf("could not cache data: %w", err)
 		}
@@ -985,7 +986,7 @@ func (s *BlendService) downloadTopTracks(context context.Context, userName strin
 		context,
 		userName,
 		string(timeDuration),
-		2,
+		5,
 		50,
 	)
 
@@ -1064,14 +1065,22 @@ func (s *BlendService) downloadTopTracks(context context.Context, userName strin
 	if err != nil {
 		return trackToPlays, fmt.Errorf(" could not populate mbids for map cat stats: %w", err)
 	}
-
+	trackToPlays, err = s.PopulateGenresForMapCatStats(context, trackToPlays)
+	if err != nil {
+		return trackToPlays, fmt.Errorf(" could not internally populate genres for map cat stats : %w", err)
+	}
 	//Prepare list of tracknames and artist names from CatalogueStats map
 
 	return trackToPlays, nil
 }
 
 func (s *BlendService) PopulateMBIDsForMapCatStats(context context.Context, input map[string]CatalogueStats) (map[string]CatalogueStats, error) {
-	output := make(map[string]CatalogueStats)
+
+	//Whilst this does not fully populate it as it uses '=' operator on SQL,
+	//we can assume that the data is good enough for our use case
+	//the goal would now be to start a cron job later that updates this data fully in the background
+	//ie, get mbids from trigram search on postgresql
+	//and for genres, make request to
 	//Prepare list of tracknames and artist names from CatalogueStats map
 	trackNames := make([]string, len(input))
 	artistNames := make([]string, len(input))
@@ -1084,33 +1093,44 @@ func (s *BlendService) PopulateMBIDsForMapCatStats(context context.Context, inpu
 
 	mbidList, err := s.MBService.GetMBIDsFromArtistAndTrackNames(context, artistNames, trackNames)
 	if err != nil {
-		return output, fmt.Errorf(" could not get mbid list from artist and track names: %w", err)
+		return input, fmt.Errorf(" could not get mbid list from artist and track names: %w", err)
 	}
 
-	for k := 0; k < len(input); k++ {
-
-		trackName := trackNames[k]
-		catStat := input[trackName]
-		mbidInfo := mbidList[k]
-		if !mbidInfo.IsEmpty() {
-			catStat.PlatformID = mbidInfo.RecordingMBID
-			catStat.Artist.MBID = mbidInfo.ArtistMBID
-			catStat.Artist.Name = mbidInfo.ArtistName
-			// genreObjects := mbidInfo.Genres
-			// genres := make([]string, len(genreObjects))
-			// for i, g := range genreObjects {
-			// 	genres[i] = g.Name //Capitalize first letter of each genre
-			// }
-			// catStat.Genres = genres
+	for _, v := range mbidList {
+		newMapCatStats, ok := input[v.RecordingName]
+		if !ok {
+			continue
 		}
-		output[trackName] = catStat
+		newMapCatStats.PlatformID = v.RecordingMBID
+		newMapCatStats.Artist.MBID = v.ArtistMBID
+		newMapCatStats.Artist.Name = v.ArtistName
+		input[v.RecordingName] = newMapCatStats
 	}
 
-	if len(output) == 0 {
+	// for k := 0; k < len(input); k++ {
+
+	// 	trackName := trackNames[k]
+	// 	catStat := input[trackName]
+	// 	mbidInfo := mbidList[k]
+	// 	if !mbidInfo.IsEmpty() {
+	// 		catStat.PlatformID = mbidInfo.RecordingMBID
+	// 		catStat.Artist.MBID = mbidInfo.ArtistMBID
+	// 		catStat.Artist.Name = mbidInfo.ArtistName
+	// 		// genreObjects := mbidInfo.Genres
+	// 		// genres := make([]string, len(genreObjects))
+	// 		// for i, g := range genreObjects {
+	// 		// 	genres[i] = g.Name //Capitalize first letter of each genre
+	// 		// }
+	// 		// catStat.Genres = genres
+	// 	}
+	// 	output[trackName] = catStat
+	// }
+
+	if len(mbidList) == 0 {
 		return input, fmt.Errorf(" could not populate any mbids for map cat stats")
 	}
 
-	return output, nil
+	return input, nil
 }
 
 // Need MBIDs to get genres from musicbrainz or else will fail
