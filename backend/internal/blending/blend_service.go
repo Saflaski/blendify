@@ -985,7 +985,7 @@ func (s *BlendService) downloadTopTracks(context context.Context, userName strin
 		context,
 		userName,
 		string(timeDuration),
-		1,
+		2,
 		50,
 	)
 
@@ -1060,10 +1060,10 @@ func (s *BlendService) downloadTopTracks(context context.Context, userName strin
 
 	}
 
-	// newTrackToPlays, err := s.PopulateMBIDsForMapCatStats(context, trackToPlays)
-	// if err != nil {
-	// 	return trackToPlays, fmt.Errorf(" could not populate mbids for map cat stats: %w", err)
-	// }
+	trackToPlays, err = s.PopulateMBIDsForMapCatStats(context, trackToPlays)
+	if err != nil {
+		return trackToPlays, fmt.Errorf(" could not populate mbids for map cat stats: %w", err)
+	}
 
 	//Prepare list of tracknames and artist names from CatalogueStats map
 
@@ -1073,11 +1073,13 @@ func (s *BlendService) downloadTopTracks(context context.Context, userName strin
 func (s *BlendService) PopulateMBIDsForMapCatStats(context context.Context, input map[string]CatalogueStats) (map[string]CatalogueStats, error) {
 	output := make(map[string]CatalogueStats)
 	//Prepare list of tracknames and artist names from CatalogueStats map
-	trackNames := make([]string, 0, len(input))
-	artistNames := make([]string, 0, len(input))
+	trackNames := make([]string, len(input))
+	artistNames := make([]string, len(input))
+	i := 0
 	for k, v := range input {
-		trackNames = append(trackNames, k)
-		artistNames = append(artistNames, v.Artist.Name)
+		trackNames[i] = k
+		artistNames[i] = v.Artist.Name
+		i++
 	}
 
 	mbidList, err := s.MBService.GetMBIDsFromArtistAndTrackNames(context, artistNames, trackNames)
@@ -1108,6 +1110,45 @@ func (s *BlendService) PopulateMBIDsForMapCatStats(context context.Context, inpu
 		return input, fmt.Errorf(" could not populate any mbids for map cat stats")
 	}
 
+	return output, nil
+}
+
+// Need MBIDs to get genres from musicbrainz or else will fail
+func (s *BlendService) PopulateGenresForMapCatStats(context context.Context, input map[string]CatalogueStats) (map[string]CatalogueStats, error) {
+	output := make(map[string]CatalogueStats)
+
+	//We are going to pass a list of mbids to musicbrainz service to get genres
+	mbids := make([]string, 0, len(input))
+	// injectionMap := make(map[string]string) //mbid -> genres
+	for k, v := range input {
+		if input[k].PlatformID == "" {
+			continue
+		} else {
+			mbids = append(mbids, v.PlatformID)
+		}
+	}
+
+	mbidsToGenres, err := s.MBService.GetGenresByRecordingMBIDs(context, mbids)
+	if err != nil {
+		return output, fmt.Errorf(" could not get genres by recording mbids: %w", err)
+	}
+	for k, v := range input {
+		if v.PlatformID == "" {
+			output[k] = v
+			continue
+		}
+		genreObjects, ok := mbidsToGenres[v.PlatformID]
+		if !ok {
+			output[k] = v
+			continue
+		}
+		genres := make([]string, len(genreObjects))
+		for i, g := range genreObjects {
+			genres[i] = g.Name //Capitalize first letter of each genre
+		}
+		v.Genres = genres
+		output[k] = v
+	}
 	return output, nil
 }
 

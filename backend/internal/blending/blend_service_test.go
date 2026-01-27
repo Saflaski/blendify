@@ -7,9 +7,12 @@ import (
 	"os"
 	"strconv"
 	"testing"
+	"time"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
+	"github.com/stretchr/testify/assert"
 )
 
 type StubBlendService struct {
@@ -44,7 +47,13 @@ func TestBlend(t *testing.T) {
 		true,
 		200,
 	)
-	blendService := NewBlendService(*redisStore, *lfm_adapter, musicbrainz.MBService{})
+	sqlxDB := sqlx.MustConnect("pgx", os.Getenv("MUSICBRAINZ_DB_DSN"))
+	sqlxDB.SetMaxOpenConns(25)
+	sqlxDB.SetMaxIdleConns(25)
+	sqlxDB.SetConnMaxLifetime(5 * time.Minute)
+
+	mbRepo := musicbrainz.NewPostgresMusicBrainzRepo(sqlxDB)
+	blendService := NewBlendService(*redisStore, *lfm_adapter, *musicbrainz.NewMBService(mbRepo))
 	_ = blendService
 	_ = redisStore
 	//Mock Data
@@ -264,5 +273,140 @@ func TestDownloadAndCache(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
+	})
+}
+
+func TestMBService(t *testing.T) {
+	godotenv.Load("../../.env")
+	if err := godotenv.Load("../../.env"); err != nil {
+		t.Fatal("godotenv.Load failed")
+	}
+
+	DB_ADDR := os.Getenv("DB_ADDR")
+	DB_PASS := os.Getenv("DB_PASS")
+	// DB_NUM, _ := strconv.Atoi(os.Getenv("DB_NUM"))
+	DB_PROTOCOL, _ := strconv.Atoi(os.Getenv("DB_PROTOCOL"))
+	LASTFM_API_KEY := os.Getenv("LASTFM_API_KEY")
+
+	if len(DB_ADDR) == 0 || len(LASTFM_API_KEY) == 0 {
+		t.Errorf("key Environment Value is empty")
+	}
+
+	redisStore := NewRedisStateStore(redis.NewClient(&redis.Options{
+		Addr:     DB_ADDR,
+		Password: DB_PASS,
+		DB:       2,
+		Protocol: DB_PROTOCOL,
+	}))
+
+	lfm_adapter := musicapi.NewLastFMExternalAdapter(
+		LASTFM_API_KEY,
+		"https://ws.audioscrobbler.com/2.0/",
+		true,
+		200,
+	)
+	sqlxDB := sqlx.MustConnect("pgx", os.Getenv("MUSICBRAINZ_DB_DSN"))
+	sqlxDB.SetMaxOpenConns(25)
+	sqlxDB.SetMaxIdleConns(25)
+	sqlxDB.SetConnMaxLifetime(5 * time.Minute)
+
+	mbRepo := musicbrainz.NewPostgresMusicBrainzRepo(sqlxDB)
+	blendService := NewBlendService(*redisStore, *lfm_adapter, *musicbrainz.NewMBService(mbRepo))
+	_ = blendService
+	_ = redisStore
+	//Mock Data
+
+	t.Run("Test Populate MapCatStats with MBID Closest search", func(t *testing.T) {
+		trackToPlays := map[string]CatalogueStats{}
+
+		// TIMEDURATION DOESNT WORK
+		// ------------------------
+		topTracks, err := lfm_adapter.GetUserTopTracks(
+			t.Context(),
+			"saflas",
+			string(BlendTimeDurationYear),
+			6,
+			50,
+		)
+
+		if len(topTracks.TopTracks.Track) == 0 {
+			t.Error("got empty track list from lastfm adapter")
+		}
+
+		if err != nil {
+			t.Error("error during get user top tracks: %w", err)
+		}
+		// for _, v := range topTracks.TopTracks.Track {
+		// 	playcount, err := strconv.Atoi(v.Playcount)
+		// 	if err != nil {
+		// 		return trackToPlays, fmt.Errorf("got unparseable string during string -> int conversation: %w", err)
+		// 	}
+		// 	trackToPlays[v.Name] = playcount
+		// }
+
+		for _, v := range topTracks.TopTracks.Track {
+
+			playcount, err := strconv.Atoi(v.Playcount)
+			if err != nil {
+				t.Errorf("got unparseable string during string -> int conversation: %v", err)
+			}
+
+			// // imageURL := getCatalogueImageURL(v.LFMImages) //Selects a good pic out of the ones given
+			// genreObjects, err := blendService.MBService.GetGenresByRecordingMBID(t.Context(), v.MBID)
+			// if err != nil {
+			// 	t.Errorf("could not get genres during gettoptracks: %v", err)
+
+			// }
+			// genres := make([]string, len(genreObjects))
+			// for i, g := range genreObjects {
+			// 	genres[i] = g.Name //Capitalize first letter of each genre
+			// }
+			catStat := CatalogueStats{
+				Artist:      v.Artist,
+				Count:       playcount,
+				PlatformURL: v.URL,
+				Image:       "",
+				PlatformID:  v.MBID,
+				// Genres:      genres,
+			}
+			trackToPlays[v.Name] = catStat
+
+		}
+		// ------------------------
+		t.Log("Length of MapCatStats: ", len(trackToPlays))
+		newTrackToPlays, err := blendService.PopulateMBIDsForMapCatStats(t.Context(), trackToPlays)
+		if err != nil {
+
+			t.Errorf(" could not populate mbids for map cat stats: %v", err)
+		}
+		t.Log("Populated CatalogueStats with MBIDs")
+		t.Log("Populating with Genres")
+		newNewTrackToPlays, err := blendService.PopulateGenresForMapCatStats(t.Context(), newTrackToPlays)
+		assert.NoError(t, err)
+
+		t.Log("Populated CatalogueStats with Genres")
+
+		t.Log("Printing populated CatalogueStats with MBIDs")
+		i := 0
+		sum := 0
+		genreSum := 0
+		for trackName, catStat := range newNewTrackToPlays {
+			i += 1
+			if catStat.PlatformID == "" {
+				t.Logf("Could not populate MBID for track: %s", trackName)
+			} else {
+				sum += 1
+			}
+
+			if len(catStat.Genres) == 0 {
+				t.Logf("Could not populate Genres for track: %s, MBID: %s", trackName, catStat.PlatformID)
+			} else {
+				genreSum += 1
+			}
+
+			t.Logf("Track: %s, MBID: %s, Genres: %s\n", trackName, catStat.PlatformID, catStat.Genres)
+		}
+		t.Logf("Successfully populated %d out of %d MBIDs", sum, i)
+		t.Logf("Successfully populated %d out of %d Genres", genreSum, i)
 	})
 }

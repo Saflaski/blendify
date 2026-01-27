@@ -32,7 +32,12 @@ func TestNewPostgresMusicBrainzRepo(t *testing.T) {
 
 	//Test GetGenresByRecording
 	t.Run("Get Genres by some recording", func(t *testing.T) {
-		genreObj, err := repo.Genre.GetGenreByRecordings(t.Context(), []string{"54a3c21c-5395-44a2-b90b-b7fab8095c20"})
+		testStrArray := []string{"54a3c21c-5395-44a2-b90b-b7fab8095c20", "a892a0de-3119-49e3-8237-587537dad4d9"}
+		genreObj, err := repo.Genre.GetGenreByRecordings(t.Context(),
+			testStrArray)
+		if err != nil {
+			t.Errorf(": %v", err)
+		}
 		for k, v := range genreObj {
 			t.Log("Recording MBID:", k)
 			// t.Logf("Recording MBID: %s, Genres: %+v\n", k, v)
@@ -40,6 +45,7 @@ func TestNewPostgresMusicBrainzRepo(t *testing.T) {
 				t.Logf(" - Genre: %s (Tag Count: %d)\n", genre.Name, genre.TagCount)
 			}
 		}
+		assert.Equal(t, len(testStrArray), len(genreObj))
 		assert.NotEmpty(t, genreObj)
 		assert.NoError(t, err)
 	})
