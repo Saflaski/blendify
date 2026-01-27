@@ -101,7 +101,7 @@ ORDER BY recording_mbid, tag_count DESC;
 			Name:     row.Name,
 			TagCount: row.TagCount,
 		})
-		fmt.Printf("Debug: RecordingMBID: %s, Genre: %s, TagCount: %d\n", row.RecordingMBID, row.Name, row.TagCount)
+		// fmt.Printf("Debug: RecordingMBID: %s, Genre: %s, TagCount: %d\n", row.RecordingMBID, row.Name, row.TagCount)
 	}
 
 	return result, nil

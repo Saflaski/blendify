@@ -63,7 +63,6 @@ func (mb *MBService) GetMBIDsFromArtistAndTrackNames(context context.Context, ar
 			RecordingName: candidates[i].RecordingName,
 			ArtistName:    candidates[i].ArtistName,
 			ArtistMBID:    candidates[i].ArtistMBID,
-			// Genres:        genresMap[candidates[i].RecordingMBID],
 		}
 	}
 

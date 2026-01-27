@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"maps"
 	"slices"
+	"sort"
 	"strconv"
 	"sync"
 
@@ -16,7 +17,7 @@ import (
 )
 
 type BlendService struct {
-	repo           *RedisStateStore
+	repo           *BlendStore
 	LastFMExternal *musicapi.LastFMAPIExternal
 	MBService      *musicbrainz.MBService
 }
@@ -699,8 +700,76 @@ func (s *BlendService) GetNewDataForUser(ctx context.Context, user userid) error
 		if err := s.cacheLFMData(ctx, resp); err != nil {
 			return fmt.Errorf("could not cache data: %w", err)
 		}
+
+		if resp.category == BlendCategoryTrack {
+			topGenres := s.extractTopGenres(resp.data, 50)
+			// if err := s.cacheTopGenres(ctx, resp.user, topGenres); err != nil {
+			// 	return fmt.Errorf(" could not cache top genres: %v", err)
+			// }
+			// for _, genre := range topGenres {
+			// 	glog.Infof("User: %s Top Genre: %s", resp.user, genre)
+			// }
+			cacheTopGenresErr := s.cacheTopGenres(ctx, resp.user, resp.data, topGenres)
+			if cacheTopGenresErr != nil {
+				return fmt.Errorf(" could not cache top genres: %v", cacheTopGenresErr)
+			}
+			//DEBUG
+			topGenres, err := s.repo.GetCachedUserTopGenres(ctx, resp.user)
+			if err != nil {
+				return fmt.Errorf(" could not extract top genres from redis cache: %w", err)
+			}
+			for _, genre := range topGenres {
+				glog.Infof("User: %s Top Genre from REDIS: %s", resp.user, genre)
+			}
+
+		}
 	}
 	return nil
+}
+
+func (s *BlendService) GetCachedUserTopGenres(ctx context.Context, user userid) ([]string, error) {
+	topGenres, err := s.repo.GetCachedUserTopGenres(ctx, user)
+	if err != nil {
+		return nil, fmt.Errorf(" could not extract top genres from cache: %w", err)
+	}
+	return topGenres, nil
+}
+
+func (s *BlendService) cacheTopGenres(ctx context.Context, userid userid, mcs map[string]CatalogueStats, topGenres []string) error {
+	// For each genre in the top genres, cache it
+	// And add those mbids to the genre
+	s.repo.CacheUserTopGenres(ctx, userid, mcs, topGenres)
+	return nil
+}
+
+func (s *BlendService) extractTopGenres(input map[string]CatalogueStats, topN int) []string {
+	genreCount := make(map[string]int)
+	for _, v := range input {
+		for _, genre := range v.Genres {
+			genreCount[genre] += v.Count
+		}
+	}
+
+	type genrePair struct {
+		Genre string
+		Count int
+	}
+
+	genrePairs := make([]genrePair, 0, len(genreCount))
+	for genre, count := range genreCount {
+		genrePairs = append(genrePairs, genrePair{Genre: genre, Count: count})
+	}
+
+	sort.Slice(genrePairs, func(i, j int) bool {
+		return genrePairs[i].Count > genrePairs[j].Count
+	})
+
+	topGenres := make([]string, 0, topN)
+	for i := 0; i < topN && i < len(genrePairs); i++ {
+		topGenres = append(topGenres, genrePairs[i].Genre)
+	}
+
+	return topGenres
 }
 
 func (s *BlendService) cacheLFMData(ctx context.Context, resp complexResponse) error {
@@ -710,24 +779,6 @@ func (s *BlendService) cacheLFMData(ctx context.Context, resp complexResponse) e
 	}
 	return nil
 }
-
-func (s *BlendService) downloadLFMData(context context.Context, user string, timePeriod blendTimeDuration, category blendCategory) (map[string]CatalogueStats, error) {
-
-	switch category {
-	case BlendCategoryArtist:
-		return s.downloadTopArtists(context, user, timePeriod)
-
-	case BlendCategoryTrack:
-		return s.downloadTopTracks(context, user, timePeriod)
-
-	case BlendCategoryAlbum:
-		return s.downloadTopAlbums(context, user, timePeriod)
-	default:
-		return nil, fmt.Errorf("invalid category")
-	}
-}
-
-// func (s *BlendService) downloadData(context context.Context, userid userid, duration blendTimeDuration)
 
 func (s *BlendService) GenerateNewLinkAndAssignToUser(context context.Context, userA userid) (blendLinkValue, error) {
 
@@ -741,7 +792,7 @@ func (s *BlendService) GenerateNewLinkAndAssignToUser(context context.Context, u
 	return newInviteValue, nil
 }
 
-func NewBlendService(blendStore RedisStateStore, lfmAdapter musicapi.LastFMAPIExternal, mbService musicbrainz.MBService) *BlendService {
+func NewBlendService(blendStore BlendStore, lfmAdapter musicapi.LastFMAPIExternal, mbService musicbrainz.MBService) *BlendService {
 	return &BlendService{&blendStore, &lfmAdapter, &mbService}
 }
 
@@ -997,13 +1048,6 @@ func (s *BlendService) downloadTopTracks(context context.Context, userName strin
 	if err != nil {
 		return trackToPlays, fmt.Errorf("could not extract TopTracks object from lastfm adapter, %w", err)
 	}
-	// for _, v := range topTracks.TopTracks.Track {
-	// 	playcount, err := strconv.Atoi(v.Playcount)
-	// 	if err != nil {
-	// 		return trackToPlays, fmt.Errorf("got unparseable string during string -> int conversation: %w", err)
-	// 	}
-	// 	trackToPlays[v.Name] = playcount
-	// }
 
 	for _, v := range topTracks.TopTracks.Track {
 		// exists := false

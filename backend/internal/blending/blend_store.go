@@ -4,19 +4,22 @@ import (
 	musicapi "backend-lastfm/internal/music_api/lastfm"
 	"backend-lastfm/internal/utility"
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
 )
 
 const LFM_EXPIRY = time.Duration(time.Hour * 24 * 3) //Three days //TODO: Change this to env var
 const INVITE_EXPIRY = time.Duration(time.Hour * 24)
 
-type RedisStateStore struct {
-	client           *redis.Client
+type BlendStore struct {
+	redisClient      *redis.Client
+	sqlClient        *sqlx.DB
 	userPrefix       string
 	lfmPrefix        string
 	musicPrefix      string
@@ -24,10 +27,58 @@ type RedisStateStore struct {
 	blendIndexPrefix string
 }
 
-func (r *RedisStateStore) DeleteMusicData(context context.Context, user string) error {
+func (r *BlendStore) CacheUserTopGenres(ctx context.Context, user userid, mcs map[string]CatalogueStats, topGenres []string) error {
+	//Uses SQL DB instead of Redis
+	// query := `
+	// 	INSERT INTO
+	// `
+
+	err := r.CacheUserTopGenresIntoRedis(ctx, user, topGenres) //Uses redis to cache just the user's top genre names directly
+	if err != nil {
+		return fmt.Errorf(" during caching top genres to sql db, error in caching to redis: %w", err)
+	}
+
+	return nil
+}
+
+func (r *BlendStore) CacheUserTopGenresIntoRedis(ctx context.Context, user userid, topGenres []string) error {
+	key := fmt.Sprintf("%s:%s:%s", r.musicPrefix, user, "top_genres")
+	genresBytes, err := utility.ObjectToJSON(topGenres)
+	if err != nil {
+		return fmt.Errorf(" during caching top genres to redis, error in encoding to json: %w", err)
+	}
+	err = r.redisClient.Set(ctx, key, genresBytes, LFM_EXPIRY).Err()
+	if err != nil {
+		return fmt.Errorf(" during caching top genres to redis, could not set json array in redis: %w", err)
+	}
+	return nil
+}
+
+func (r *BlendStore) GetCachedUserTopGenres(ctx context.Context, user userid) ([]string, error) {
+	key := fmt.Sprintf("%s:%s:%s", r.musicPrefix, user, "top_genres")
+	result, err := r.redisClient.Get(ctx, key).Result()
+	if err == redis.Nil {
+		glog.Infof("Top Genres Cache Miss for user: %s", user)
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf(" during extracting top genres cache from redis, could not get json array from redis:%w", err)
+	}
+
+	var topGenres []string
+	err = json.Unmarshal([]byte(result), &topGenres)
+	if err != nil {
+		return nil, fmt.Errorf(" during extracting top genres cache from redis, error in decoding from json: %w", err)
+	}
+	glog.Infof("Top Genres Cache Hit for user: %s", user)
+
+	return topGenres, nil
+}
+
+func (r *BlendStore) DeleteMusicData(context context.Context, user string) error {
 	pattern := fmt.Sprintf("%s:%s:*", r.musicPrefix, user)
 	// r.client.Unlink(context, )
-	keys, err := r.client.Keys(context, pattern).Result()
+	keys, err := r.redisClient.Keys(context, pattern).Result()
 	if err != nil {
 		return fmt.Errorf("could not get keys for deletion: %w", err)
 	}
@@ -36,18 +87,18 @@ func (r *RedisStateStore) DeleteMusicData(context context.Context, user string) 
 		return nil
 	}
 
-	err = r.client.Unlink(context, keys...).Err()
+	err = r.redisClient.Unlink(context, keys...).Err()
 	if err != nil {
 		return fmt.Errorf("could not unlink keys during deleting music data: %w", err)
 	}
 	return nil
 }
 
-func (r *RedisStateStore) DeleteBlendByBlendId(context context.Context, user userid, blendId blendId) error {
+func (r *BlendStore) DeleteBlendByBlendId(context context.Context, user userid, blendId blendId) error {
 	keyByUser := fmt.Sprintf("%s:%s:%s", r.userPrefix, "blends", string(user))
 	keyByBlend := fmt.Sprintf("%s:%s:%s", r.blendPrefix, string(blendId), "users")
 
-	pipe := r.client.TxPipeline()
+	pipe := r.redisClient.TxPipeline()
 	pipe.SRem(context, keyByUser, string(blendId)).Err()
 	pipe.Del(context, keyByBlend).Err()
 
@@ -56,10 +107,10 @@ func (r *RedisStateStore) DeleteBlendByBlendId(context context.Context, user use
 }
 
 // Returns nil, nil for cache miss, else MapCatStats, nil or nil, error for error
-func (r *RedisStateStore) GetFromCacheTopX(context context.Context, userName string, timeDuration blendTimeDuration, category blendCategory) (map[string]CatalogueStats, error) {
+func (r *BlendStore) GetFromCacheTopX(context context.Context, userName string, timeDuration blendTimeDuration, category blendCategory) (map[string]CatalogueStats, error) {
 	key := fmt.Sprintf("%s:%s:%s:%s", r.musicPrefix, userName, categoryPrefix[category], durationPrefix[timeDuration])
 
-	Result, err := r.client.Get(context, key).Result()
+	Result, err := r.redisClient.Get(context, key).Result()
 	if err == redis.Nil {
 		glog.Infof("Cache Miss: %s - %s - %s", userName, timeDuration, category)
 		glog.Infof("Key looked for: %s", key)
@@ -85,21 +136,21 @@ func (r *RedisStateStore) GetFromCacheTopX(context context.Context, userName str
 
 }
 
-func (r *RedisStateStore) GetLFMByUserId(ctx context.Context, userID string) (string, error) {
+func (r *BlendStore) GetLFMByUserId(ctx context.Context, userID string) (string, error) {
 	key := fmt.Sprintf("%s:%s", r.userPrefix, userID)
-	result, err := r.client.HGet(ctx, key, "LFM Username").Result()
+	result, err := r.redisClient.HGet(ctx, key, "LFM Username").Result()
 	return result, err
 }
 
-func (r *RedisStateStore) GetUserIdByLFMId(ctx context.Context, lfmuserid string) (string, error) {
+func (r *BlendStore) GetUserIdByLFMId(ctx context.Context, lfmuserid string) (string, error) {
 	key := fmt.Sprintf("%s:%s", r.lfmPrefix, lfmuserid)
-	result, err := r.client.Get(ctx, key).Result()
+	result, err := r.redisClient.Get(ctx, key).Result()
 	return result, err
 }
 
-func (r *RedisStateStore) GetCachedOverallBlend(context context.Context, blendid blendId) (int, error) {
+func (r *BlendStore) GetCachedOverallBlend(context context.Context, blendid blendId) (int, error) {
 	key := fmt.Sprintf("%s:%s", r.blendPrefix, string(blendid))
-	res, err := r.client.HGet(context, key, "Overall").Result()
+	res, err := r.redisClient.HGet(context, key, "Overall").Result()
 	if err != nil {
 		return -1, fmt.Errorf(" could not set overallblend num to blend: %w", err)
 	}
@@ -110,9 +161,9 @@ func (r *RedisStateStore) GetCachedOverallBlend(context context.Context, blendid
 	return num, nil
 }
 
-func (r *RedisStateStore) GetBlendTimeStamp(context context.Context, id blendId) (time.Time, error) {
+func (r *BlendStore) GetBlendTimeStamp(context context.Context, id blendId) (time.Time, error) {
 	key_timestamp := fmt.Sprintf("%s:%s", r.blendPrefix, string(id))
-	res, err := r.client.HGet(context, key_timestamp, "Created At").Result()
+	res, err := r.redisClient.HGet(context, key_timestamp, "Created At").Result()
 	if err != nil {
 		return time.Time{}, fmt.Errorf(" could not get blend timestamp of blend: %s", err)
 	}
@@ -124,21 +175,21 @@ func (r *RedisStateStore) GetBlendTimeStamp(context context.Context, id blendId)
 
 }
 
-func (r *RedisStateStore) AssignOverallBlendToBlend(context context.Context, id blendId, blendNum int) error {
+func (r *BlendStore) AssignOverallBlendToBlend(context context.Context, id blendId, blendNum int) error {
 	key := fmt.Sprintf("%s:%s", r.blendPrefix, string(id))
 	// key_overall := fmt.Sprintf("%s:%s:%s", r.blendPrefix, string(id), "Overall")
 	// key_timestamp := fmt.Sprintf("%s:%s:%s", r.blendPrefix, string(id), "Created At")
 
 	// err := r.client.Set(context, key, blendNum, 0).Err()
-	err := r.client.HSet(context, key, "Overall", blendNum, "Created At", time.Now().Unix()).Err()
+	err := r.redisClient.HSet(context, key, "Overall", blendNum, "Created At", time.Now().Unix()).Err()
 	if err != nil {
 		return fmt.Errorf(" could not set overallblend num to blend, with blendNum %d and Created at %d : %s", blendNum, time.Now().Unix(), err)
 	}
 	return nil
 }
-func (r *RedisStateStore) AddUsersToBlend(context context.Context, id blendId, userids []userid) error {
+func (r *BlendStore) AddUsersToBlend(context context.Context, id blendId, userids []userid) error {
 
-	pipe := r.client.TxPipeline() //Execute redis commands with atomicity
+	pipe := r.redisClient.TxPipeline() //Execute redis commands with atomicity
 
 	key := fmt.Sprintf("%s:%s:%s", r.blendPrefix, id, "users")
 	members := make([]interface{}, len(userids))
@@ -160,9 +211,9 @@ func (r *RedisStateStore) AddUsersToBlend(context context.Context, id blendId, u
 	return err
 }
 
-func (r *RedisStateStore) GetBlendsByUser(context context.Context, user userid) ([]blendId, error) {
+func (r *BlendStore) GetBlendsByUser(context context.Context, user userid) ([]blendId, error) {
 	key := fmt.Sprintf("%s:%s:%s", r.userPrefix, "blends", string(user))
-	ress, err := r.client.SMembers(context, key).Result()
+	ress, err := r.redisClient.SMembers(context, key).Result()
 	// ress, err := r.client.ZRange(context, key, -1, 999).Result()
 	if err != nil {
 		return nil, fmt.Errorf(" could not get Blends of user from user id %s: and err %w", user, err)
@@ -180,9 +231,9 @@ func (r *RedisStateStore) GetBlendsByUser(context context.Context, user userid) 
 	return blends, nil
 }
 
-func (r *RedisStateStore) GetUsersFromBlend(context context.Context, id blendId) ([]userid, error) {
+func (r *BlendStore) GetUsersFromBlend(context context.Context, id blendId) ([]userid, error) {
 	key := fmt.Sprintf("%s:%s:%s", r.blendPrefix, id, "users")
-	res, err := r.client.SMembers(context, key).Result()
+	res, err := r.redisClient.SMembers(context, key).Result()
 	if err != nil {
 		return nil, fmt.Errorf(" could not get Members of users for users from blend id %s: and err %w", id, err)
 	}
@@ -198,9 +249,9 @@ func (r *RedisStateStore) GetUsersFromBlend(context context.Context, id blendId)
 
 }
 
-func (r *RedisStateStore) IsUserInBlend(context context.Context, user userid, id blendId) (bool, error) {
+func (r *BlendStore) IsUserInBlend(context context.Context, user userid, id blendId) (bool, error) {
 	key := fmt.Sprintf("%s:%s:%s", r.blendPrefix, id, "users")
-	res, err := r.client.SIsMember(context, key, string(user)).Result()
+	res, err := r.redisClient.SIsMember(context, key, string(user)).Result()
 	if err != nil {
 		return false, fmt.Errorf(" error during checking if member was in set, as got value: %t: %w", res, err)
 	}
@@ -208,9 +259,10 @@ func (r *RedisStateStore) IsUserInBlend(context context.Context, user userid, id
 	return res, nil
 }
 
-func NewRedisStateStore(client *redis.Client) *RedisStateStore {
-	return &RedisStateStore{
-		client:           client,
+func NewBlendStore(redisClient *redis.Client, psqlClient *sqlx.DB) *BlendStore {
+	return &BlendStore{
+		redisClient:      redisClient,
+		sqlClient:        psqlClient,
 		userPrefix:       "user", //TODO is this the right way to connect to redis?
 		lfmPrefix:        "lfm_users",
 		musicPrefix:      "music_data",
@@ -220,9 +272,9 @@ func NewRedisStateStore(client *redis.Client) *RedisStateStore {
 
 }
 
-func (r *RedisStateStore) IsExistingBlendFromLink(context context.Context, linkValue blendLinkValue) (blendId, error) {
+func (r *BlendStore) IsExistingBlendFromLink(context context.Context, linkValue blendLinkValue) (blendId, error) {
 	key := fmt.Sprintf("%s:%s:%s:%s", r.blendPrefix, "invite", linkValue, "id")
-	res, err := r.client.Get(context, key).Result()
+	res, err := r.redisClient.Get(context, key).Result()
 	if err != nil && err != redis.Nil {
 		return "", fmt.Errorf(" could not fetch blend's id from link in redis: %w", err)
 	} else if err == redis.Nil {
@@ -232,9 +284,9 @@ func (r *RedisStateStore) IsExistingBlendFromLink(context context.Context, linkV
 	}
 }
 
-func (r *RedisStateStore) GetLinkCreator(context context.Context, linkValue blendLinkValue) (userid, error) {
+func (r *BlendStore) GetLinkCreator(context context.Context, linkValue blendLinkValue) (userid, error) {
 	key := fmt.Sprintf("%s:%s:%s:%s", r.blendPrefix, "invite", linkValue, "creator")
-	res, err := r.client.Get(context, key).Result()
+	res, err := r.redisClient.Get(context, key).Result()
 	if err != nil {
 		return "", fmt.Errorf(" could not fetch blend's user from link in redis: %w", err)
 	} else {
@@ -249,9 +301,9 @@ type Key struct {
 }
 
 // Checks to see if any music data under this user exists. Returns true if anything exists
-func (r *RedisStateStore) UserHasAnyMusicData(context context.Context, user userid) (bool, error) {
+func (r *BlendStore) UserHasAnyMusicData(context context.Context, user userid) (bool, error) {
 	pattern := fmt.Sprintf("%s:%s:*", r.musicPrefix, user)
-	iter := r.client.Scan(context, 0, pattern, 1).Iterator()
+	iter := r.redisClient.Scan(context, 0, pattern, 1).Iterator()
 	for iter.Next(context) {
 		return true, nil
 	}
@@ -266,12 +318,12 @@ func (r *RedisStateStore) UserHasAnyMusicData(context context.Context, user user
 }
 
 // Individually checks for each possible key in cache and returns the ones that are expired
-func (r *RedisStateStore) GetEachExpiredCacheEntryByUser(context context.Context, user userid) ([]Key, error) {
+func (r *BlendStore) GetEachExpiredCacheEntryByUser(context context.Context, user userid) ([]Key, error) {
 	Keys := make([]Key, 0)
 	for _, v1 := range categoryRange {
 		for _, v2 := range durationRange {
 			key := fmt.Sprintf("%s:%s:%s:%s", r.musicPrefix, user, v1, v2)
-			err := r.client.Get(context, key).Err()
+			err := r.redisClient.Get(context, key).Err()
 			if err == redis.Nil {
 				Keys = append(Keys, Key{
 					cat: v1,
@@ -299,21 +351,21 @@ var durationPrefix = map[blendTimeDuration]string{
 	BlendTimeDurationYear:       "one_year",
 }
 
-func (r *RedisStateStore) CacheUserMusicData(context context.Context, resp complexResponse) error {
+func (r *BlendStore) CacheUserMusicData(context context.Context, resp complexResponse) error {
 	key := fmt.Sprintf("%s:%s:%s:%s", r.musicPrefix, resp.user, categoryPrefix[resp.category], durationPrefix[resp.duration])
 
 	jsonBytes, err := utility.ObjectToJSON(resp.data)
 	if err != nil {
 		return fmt.Errorf(" during caching to db, error in encoding to json: %w", err)
 	}
-	err = r.client.Set(context, key, jsonBytes, LFM_EXPIRY).Err()
+	err = r.redisClient.Set(context, key, jsonBytes, LFM_EXPIRY).Err()
 	if err != nil {
 		return fmt.Errorf(" during caching to db, could not set json map in db: %w", err)
 	}
 	return nil
 }
 
-func (r *RedisStateStore) GetUser(userA UUID) (string, error) {
+func (r *BlendStore) GetUser(userA UUID) (string, error) {
 	return "saflas", nil
 }
 
@@ -321,9 +373,9 @@ type UserListenHistory struct {
 	// Define fields for user listen history
 }
 
-func (r *RedisStateStore) SetUserToLink(context context.Context, userA userid, linkValue blendLinkValue) error {
+func (r *BlendStore) SetUserToLink(context context.Context, userA userid, linkValue blendLinkValue) error {
 	key := fmt.Sprintf("%s:%s:%s:%s", r.blendPrefix, "invite", linkValue, "creator")
-	err := r.client.Set(context, key, string(userA), INVITE_EXPIRY).Err()
+	err := r.redisClient.Set(context, key, string(userA), INVITE_EXPIRY).Err()
 	if err != nil {
 		return fmt.Errorf(" could not set blend's user from link into redis: %w", err)
 	} else {
@@ -332,6 +384,6 @@ func (r *RedisStateStore) SetUserToLink(context context.Context, userA userid, l
 
 }
 
-func (r *RedisStateStore) GetUserListenHistory(userID string) (UserListenHistory, error) {
+func (r *BlendStore) GetUserListenHistory(userID string) (UserListenHistory, error) {
 	return UserListenHistory{}, nil
 }

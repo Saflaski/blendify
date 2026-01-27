@@ -33,13 +33,19 @@ func TestBlend(t *testing.T) {
 	if len(DB_ADDR) == 0 || len(LASTFM_API_KEY) == 0 {
 		t.Errorf("key Environment Value is empty")
 	}
+	BlendifysqlxDB := sqlx.MustConnect("pgx", os.Getenv("BLENDIFY_DB_DSN"))
+	BlendifysqlxDB.SetMaxOpenConns(25)
+	BlendifysqlxDB.SetMaxIdleConns(25)
+	BlendifysqlxDB.SetConnMaxLifetime(5 * time.Minute)
 
-	redisStore := NewRedisStateStore(redis.NewClient(&redis.Options{
+	redisStore := NewBlendStore(redis.NewClient(&redis.Options{
 		Addr:     DB_ADDR,
 		Password: DB_PASS,
 		DB:       2,
 		Protocol: DB_PROTOCOL,
-	}))
+	}),
+		BlendifysqlxDB,
+	)
 
 	lfm_adapter := musicapi.NewLastFMExternalAdapter(
 		LASTFM_API_KEY,
@@ -108,7 +114,7 @@ func TestBlend(t *testing.T) {
 		user := userid("123-123-123-123-123")
 		user2 := userid("456-456-456-456-456")
 
-		blendService.repo.client.HSet(ctx2, "user:", "LFM Username", string(user2))
+		blendService.repo.redisClient.HSet(ctx2, "user:", "LFM Username", string(user2))
 
 		link, err := blendService.GenerateNewLinkAndAssignToUser(ctx, user)
 		if err != nil {
@@ -151,8 +157,8 @@ func TestBlend(t *testing.T) {
 			t.Fatalf("Could not delete blends %s", err)
 		}
 
-		blendService.repo.client.HDel(ctx2, "user:", "LFM Username", string(user2))
-		blendService.repo.client.HDel(ctx2, "user:", "LFM Username", string(user))
+		blendService.repo.redisClient.HDel(ctx2, "user:", "LFM Username", string(user2))
+		blendService.repo.redisClient.HDel(ctx2, "user:", "LFM Username", string(user))
 
 	})
 
@@ -166,7 +172,7 @@ func TestBlend(t *testing.T) {
 		user := userid("123-123-123-123-123")
 		user2 := userid("456-456-456-456-456")
 
-		blendService.repo.client.HSet(ctx2, "user:", "LFM Username", string(user2))
+		blendService.repo.redisClient.HSet(ctx2, "user:", "LFM Username", string(user2))
 
 		t.Log("Making sure user blends were deleted")
 
@@ -193,8 +199,8 @@ func TestBlend(t *testing.T) {
 			t.Fatalf("Could not delete blends %s", err)
 		}
 
-		blendService.repo.client.HDel(ctx2, "user:", "LFM Username", string(user2))
-		blendService.repo.client.HDel(ctx2, "user:", "LFM Username", string(user))
+		blendService.repo.redisClient.HDel(ctx2, "user:", "LFM Username", string(user2))
+		blendService.repo.redisClient.HDel(ctx2, "user:", "LFM Username", string(user))
 
 	})
 
@@ -215,13 +221,19 @@ func TestDownloadAndCache(t *testing.T) {
 	if len(DB_ADDR) == 0 || len(LASTFM_API_KEY) == 0 {
 		t.Errorf("key Environment Value is empty")
 	}
+	BlendifysqlxDB := sqlx.MustConnect("pgx", os.Getenv("BLENDIFY_DB_DSN"))
+	BlendifysqlxDB.SetMaxOpenConns(25)
+	BlendifysqlxDB.SetMaxIdleConns(25)
+	BlendifysqlxDB.SetConnMaxLifetime(5 * time.Minute)
 
-	redisStore := NewRedisStateStore(redis.NewClient(&redis.Options{
+	blendStore := NewBlendStore(redis.NewClient(&redis.Options{
 		Addr:     DB_ADDR,
 		Password: DB_PASS,
 		DB:       0,
 		Protocol: DB_PROTOCOL,
-	}))
+	}),
+		BlendifysqlxDB,
+	)
 
 	lfm_adapter := musicapi.NewLastFMExternalAdapter(
 		LASTFM_API_KEY,
@@ -230,9 +242,9 @@ func TestDownloadAndCache(t *testing.T) {
 		200,
 	)
 
-	blendService := NewBlendService(*redisStore, *lfm_adapter, *musicbrainz.NewMBService(musicbrainz.NewPostgresMusicBrainzRepo(nil)))
+	blendService := NewBlendService(*blendStore, *lfm_adapter, *musicbrainz.NewMBService(musicbrainz.NewPostgresMusicBrainzRepo(nil)))
 	_ = blendService
-	_ = redisStore
+	_ = blendStore
 
 	t.Run("Hydrate and cache user", func(t *testing.T) {
 		blendService.GetNewDataForUser(context.Background(), userid("dc2e4fcf-0d07-4871-b287-9b3488599c3d"))
@@ -292,12 +304,19 @@ func TestMBService(t *testing.T) {
 		t.Errorf("key Environment Value is empty")
 	}
 
-	redisStore := NewRedisStateStore(redis.NewClient(&redis.Options{
+	BlendifysqlxDB := sqlx.MustConnect("pgx", os.Getenv("BLENDIFY_DB_DSN"))
+	BlendifysqlxDB.SetMaxOpenConns(25)
+	BlendifysqlxDB.SetMaxIdleConns(25)
+	BlendifysqlxDB.SetConnMaxLifetime(5 * time.Minute)
+
+	blendStore := NewBlendStore(redis.NewClient(&redis.Options{
 		Addr:     DB_ADDR,
 		Password: DB_PASS,
 		DB:       2,
 		Protocol: DB_PROTOCOL,
-	}))
+	}),
+		BlendifysqlxDB,
+	)
 
 	lfm_adapter := musicapi.NewLastFMExternalAdapter(
 		LASTFM_API_KEY,
@@ -311,9 +330,9 @@ func TestMBService(t *testing.T) {
 	sqlxDB.SetConnMaxLifetime(5 * time.Minute)
 
 	mbRepo := musicbrainz.NewPostgresMusicBrainzRepo(sqlxDB)
-	blendService := NewBlendService(*redisStore, *lfm_adapter, *musicbrainz.NewMBService(mbRepo))
+	blendService := NewBlendService(*blendStore, *lfm_adapter, *musicbrainz.NewMBService(mbRepo))
 	_ = blendService
-	_ = redisStore
+	_ = blendStore
 	//Mock Data
 
 	t.Run("Test Populate MapCatStats with MBID Closest search", func(t *testing.T) {

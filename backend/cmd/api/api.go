@@ -76,15 +76,20 @@ func (app *application) mount() http.Handler {
 		authCfg,
 	)
 
-	sqlxDB := sqlx.MustConnect("pgx", os.Getenv("MUSICBRAINZ_DB_DSN"))
-	sqlxDB.SetMaxOpenConns(25)
-	sqlxDB.SetMaxIdleConns(25)
-	sqlxDB.SetConnMaxLifetime(5 * time.Minute)
+	MBsqlxDB := sqlx.MustConnect("pgx", os.Getenv("MUSICBRAINZ_DB_DSN"))
+	MBsqlxDB.SetMaxOpenConns(25)
+	MBsqlxDB.SetMaxIdleConns(25)
+	MBsqlxDB.SetConnMaxLifetime(5 * time.Minute)
 
-	mbRepo := musicbrainz.NewPostgresMusicBrainzRepo(sqlxDB)
+	BlendifysqlxDB := sqlx.MustConnect("pgx", os.Getenv("BLENDIFY_DB_DSN"))
+	BlendifysqlxDB.SetMaxOpenConns(25)
+	BlendifysqlxDB.SetMaxIdleConns(25)
+	BlendifysqlxDB.SetConnMaxLifetime(5 * time.Minute)
+
+	mbRepo := musicbrainz.NewPostgresMusicBrainzRepo(MBsqlxDB)
 	mbService := musicbrainz.NewMBService(mbRepo)
 
-	blendRepo := blend.NewRedisStateStore(rdb)
+	blendRepo := blend.NewBlendStore(rdb, BlendifysqlxDB)
 	blendService := blend.NewBlendService(*blendRepo, *LastFMExternal, *mbService)
 	blendHandler := blend.NewBlendHandler(
 		os.Getenv("FRONTEND_URL"),
@@ -150,6 +155,7 @@ func (app *application) run(h http.Handler) error {
 	glog.Infof("WriteTimeout: %f", srv.WriteTimeout.Seconds())
 	glog.Infof("IdleTimeout: %f", srv.IdleTimeout.Seconds())
 	glog.Infof("Session Valid Time: %s", (time.Duration(app.config.sessionExpiry) * time.Second).String())
+
 	prod, _ := strconv.ParseBool(os.Getenv("PROD"))
 	if prod {
 		for _, o := range strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",") {
