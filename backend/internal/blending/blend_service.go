@@ -22,6 +22,71 @@ type BlendService struct {
 	MBService      *musicbrainz.MBService
 }
 
+func (s *BlendService) GetBlendTopGenres(context context.Context, blendId blendId, userA userid, timeDuration blendTimeDuration) ([]string, error) {
+	userids, err := s.repo.GetUsersFromBlend(context, blendId)
+	if err != nil {
+		return nil, fmt.Errorf(" error getting users from blend id: %s, err: %w", blendId, err)
+	}
+
+	//Collect top genres from all users
+	allUserGenres := make([][]string, len(userids))
+
+	for k, userid := range userids {
+		userTopGenres, err := s.GetUserTopGenres(context, userid)
+		if err != nil {
+			return nil, fmt.Errorf(" could not get top genres from userid %s : %w", userid, err)
+		}
+		allUserGenres[k] = userTopGenres
+	}
+
+	//This is passed off to another function as in the future we can use a separate topgenre calculation method
+	commonTopGenres, err := s.CalculateIntersectionOfStringSlices(allUserGenres)
+	if err != nil {
+		return nil, fmt.Errorf(" coult not calculate intersection of genres: %v", err)
+	}
+
+	return commonTopGenres, nil
+}
+
+func (s *BlendService) CalculateIntersectionOfStringSlices(megaslice [][]string) ([]string, error) {
+
+	//I did not have a better word than megaslice ok?
+	if len(megaslice) == 0 {
+		return []string{}, fmt.Errorf(" Given length 0 for intersection calculation")
+	}
+	// Rock, Pop, Jazz
+	// Jazz, Funk, Pop
+	counts := make(map[string]int)
+	for _, subSlice := range megaslice {
+		visited := make(map[string]bool)
+		for _, item := range subSlice {
+			if !visited[item] {
+				counts[item]++
+				visited[item] = true
+			}
+		}
+	}
+
+	intersection := make([]string, 0)
+	totalSlices := len(megaslice)
+
+	for k, count := range counts {
+		if count == totalSlices {
+			intersection = append(intersection, k)
+		}
+	}
+	return intersection, nil
+}
+
+func (s *BlendService) GetUserTopGenres(context context.Context, user userid) ([]string, error) {
+	topGenres, err := s.repo.GetCachedUserTopGenres(context, user)
+	if err != nil {
+		return nil, fmt.Errorf(" could not get top genres from userid %s : %w", user, err)
+	}
+
+	return topGenres, nil
+}
+
 func (s *BlendService) GetUserInfo(context context.Context, userid userid) (any, error) {
 	username, err := s.repo.GetLFMByUserId(context, string(userid))
 	if err != nil {
@@ -670,18 +735,45 @@ func (s *BlendService) GetNewDataForUser(ctx context.Context, user userid) error
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				respData, err := s.downloadTopX(ctx, platformUsername, d, c)
-				if len(respData) == 0 {
-					//wrap the error regardless of it is nil/not nil
-					err = fmt.Errorf(" downloaded empty map from platform: %w", err)
+
+				//It is possible that this request for new data came as a result of a mid-fresh load reload.
+				//Therefore we use the cached data to reduce load up times on the n+1th load.
+				dbResp, err := s.repo.GetFromCacheTopX(ctx, string(user), d, c)
+				if err != nil {
+					glog.Errorf(" Cache error during getting topX for user %s with duration %s and category %s that needs to be checked: %w", user, d, c, err)
 				}
-				resp := complexResponse{
-					user:     user,
-					data:     respData,
-					duration: d,
-					category: c,
-					err:      err,
+				resp := complexResponse{}
+				if len(dbResp) != 0 || dbResp != nil { //Use cached data
+					fmt.Println("Using cached data for user:", user, " duration:", d, " category:", c)
+					resp = complexResponse{
+						user:     user,
+						data:     dbResp,
+						duration: d,
+						category: c,
+						err:      err,
+					}
+
+				} else {
+					respData, err := s.downloadTopX(ctx, platformUsername, d, c)
+					if len(respData) == 0 {
+						//wrap the error regardless of it is nil/not nil
+						err = fmt.Errorf(" downloaded empty map from platform: %w", err)
+					}
+					resp = complexResponse{
+						user:     user,
+						data:     respData,
+						duration: d,
+						category: c,
+						err:      err,
+					}
+					fmt.Println("Caching data for user:", resp.user, " duration:", resp.duration, " category:", resp.category)
+					err = s.cacheLFMData(ctx, resp)
+					if err != nil {
+						resp.err = fmt.Errorf(" error during caching lfm data: %w", err)
+					}
 				}
+				// respData, err := s.downloadTopX(ctx, platformUsername, d, c)
+
 				respc <- resp
 			}()
 		}
@@ -695,10 +787,6 @@ func (s *BlendService) GetNewDataForUser(ctx context.Context, user userid) error
 		// resp := <-respc
 		if resp.err != nil {
 			return fmt.Errorf("error in downloading data asynchronously for duration %s and category %s : %w", resp.duration, resp.category, resp.err)
-		}
-		fmt.Println("Caching data for user:", resp.user, " duration:", resp.duration, " category:", resp.category)
-		if err := s.cacheLFMData(ctx, resp); err != nil {
-			return fmt.Errorf("could not cache data: %w", err)
 		}
 
 		if resp.category == BlendCategoryTrack {
@@ -721,7 +809,6 @@ func (s *BlendService) GetNewDataForUser(ctx context.Context, user userid) error
 			for _, genre := range topGenres {
 				glog.Infof("User: %s Top Genre from REDIS: %s", resp.user, genre)
 			}
-
 		}
 	}
 	return nil
@@ -904,7 +991,7 @@ func (s *BlendService) downloadTopArtists(context context.Context, userName stri
 		context,
 		userName,
 		string(timeDuration),
-		6,
+		4,
 		50,
 	)
 
@@ -971,7 +1058,7 @@ func (s *BlendService) downloadTopAlbums(context context.Context, userName strin
 		context,
 		userName,
 		string(timeDuration),
-		3,
+		1,
 		50,
 	)
 
@@ -1037,7 +1124,7 @@ func (s *BlendService) downloadTopTracks(context context.Context, userName strin
 		context,
 		userName,
 		string(timeDuration),
-		5,
+		2,
 		50,
 	)
 

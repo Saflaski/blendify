@@ -428,4 +428,20 @@ func TestMBService(t *testing.T) {
 		t.Logf("Successfully populated %d out of %d MBIDs", sum, i)
 		t.Logf("Successfully populated %d out of %d Genres", genreSum, i)
 	})
+
+	t.Run("Calculating common genres with placeholders", func(t *testing.T) {
+		userAGenres := []string{"Rock", "Pop", "Jazz", "Classical", "Hip Hop", "Electronic"}
+		userBGenres := []string{"Rock", "Pop", "Country", "Classical", "Reggae", "Electronic"}
+
+		allUserGenres := make([][]string, 2)
+
+		allUserGenres[0] = userAGenres
+		allUserGenres[1] = userBGenres
+		commonGenres, err := blendService.CalculateIntersectionOfStringSlices(allUserGenres)
+		assert.NoError(t, err)
+		t.Log("Common Genres:")
+		for _, genre := range commonGenres {
+			t.Log(genre)
+		}
+	})
 }

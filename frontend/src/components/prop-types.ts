@@ -68,6 +68,10 @@ export const CatalogueTopItemsSchema = z.object({
 
 export type CatalogueTopItemsResponse = z.infer<typeof CatalogueTopItemsSchema>;
 
+export const CatalogueTopGenresSchema = z.array(z.string());
+export type CatalogueTopGenresResponse = z.infer<
+  typeof CatalogueTopGenresSchema
+>;
 // `json:"Name"`
 // URL            string `json:"EntryUrl,omitempty"`
 // ImageURL       string `json:"ImageUrl,omitempty"`

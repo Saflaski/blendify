@@ -19,6 +19,8 @@ import {
   CatalogueBlendSchema,
   CatalogueTopItemsSchema,
   CatalogueTopItemsResponse,
+  CatalogueTopGenresResponse,
+  CatalogueTopGenresSchema,
 } from "../components/prop-types";
 import { set, z } from "zod";
 import {
@@ -67,6 +69,7 @@ function useLocalStorageState<T>(key: string, initialValue: T) {
   return [state, setState] as const;
 }
 
+const TOP_GENRE_KEY = "TOP_GENRES";
 const ARTIST_3_MONTH_KEY = "ARTIST_3_MONTH_KEY";
 const TRACK_3_MONTH_KEY = "TRACK_3_MONTH_KEY";
 const ARTIST_12_MONTH_KEY = "ARTIST_12_MONTH_KEY";
@@ -121,6 +124,11 @@ export function Blend() {
 
   const [userATopItemsLoading, setUserATopItemsLoading] = useState(true);
   const [userBTopItemsLoading, setUserBTopItemsLoading] = useState(true);
+
+  const [genreData, setGenreData] =
+    useLocalStorageState<CatalogueTopGenresResponse>(TOP_GENRE_KEY, []);
+  const [genreLoading, setGenreLoading] = useState(false);
+
   // const [userATopArtists, setUserATopArtists] = useLocalStorageState<string[]>(
   //   USER_A_TOP_ARTISTS_KEY,
   //   [],
@@ -282,6 +290,7 @@ export function Blend() {
       try {
         setCardLoading(true);
         setCatalogueLoading(true);
+        setGenreLoading(true);
 
         await Promise.all([
           getCatalogueBlendData(
@@ -341,6 +350,7 @@ export function Blend() {
         ]);
 
         await getCardBlendData(); // runs AFTER all catalogue calls
+        await getTopMutualGenreData();
         setCatArt1Year(false);
         setCatArt3Month(false);
         setCatTrack1Year(false);
@@ -356,6 +366,45 @@ export function Blend() {
     loadAllCatalogueData();
   }, [blendId]);
 
+  const getTopMutualGenreData = async () => {
+    console.log("Getting data for top mutual genre");
+
+    try {
+      const encodedValue = encodeURIComponent(blendId as string);
+      const res = await fetch(
+        `${API_BASE_URL}/blend/blendtopgenres?blendId=${encodedValue}`,
+        {
+          method: "GET",
+          credentials: "include",
+        },
+      );
+
+      if (res.status == 401) {
+        navigate(
+          `/login?redirectTo=${encodeURIComponent(location.pathname + location.search)}`,
+        );
+        return;
+      }
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.message || "Blend ID is invalid.");
+        setGenreLoading(false);
+        return;
+      }
+
+      const data = await res.json();
+      console.log("Genre data received:", data);
+      const userData = CatalogueTopGenresSchema.parse(data);
+      console.log("Parsed genre data:", userData);
+      setGenreData(userData);
+      setGenreLoading(false);
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong. Please try again.");
+      setGenreLoading(false);
+    }
+  };
   // console.log("Getting data for blendId (1): ", blendId);
   const getCardBlendData = async () => {
     console.log("Getting data for blendId (2): ", blendId);
@@ -772,22 +821,7 @@ export function Blend() {
     setCurrentRangeIndex((prev) => (prev === ranges.length - 1 ? 0 : prev + 1));
   };
 
-  const genres = [
-    "rock",
-    "pop",
-    "edm",
-    "hiphop",
-    "classical",
-    "jazz",
-    "country",
-    "metal",
-    "indie",
-    "punk",
-    "reggae",
-    "blues",
-    "folk",
-    "disco",
-  ];
+  const genres = ["rock"];
 
   const [genreTracks, setGenreTracks] = useState<
     CatalogueBlendResponse[] | undefined
@@ -1125,65 +1159,73 @@ export function Blend() {
           {/* New genre thingy  */}
           <section className="w-full flex flex-col mb-6 ">
             <div className="relative flex flex-col justify-center ring-2 p-2 ring-black   ">
-              <div>
-                <div className=" pb-10">
-                  <div
-                    className={`flex flex-wrap justify-center flex-row m-2 gap-3 px-[3px] ${genreExpanded ? "max-h-[260px]" : "max-h-[110px] overflow-y-scroll py-2"}`}
-                  >
-                    {genres.map((genre) => (
-                      <button
-                        key={genre}
-                        onClick={() => toggleButton(genre)}
-                        className={`flex flex-row group relative w-auto h-10 min-w-5 text-sm font-[Roboto_Mono] font-medium select-none ${"active:shadow-[2px_2px_0_0_black] active:translate-[2px] shadow-[4px_4px_0_0_black]"} ${enabledButtons[genre] ? "bg-[#D84727] text-slate-100 outline-[#000000]" : "bg-white text-slate-950 outline-black "}  p-3 outline-2 transition-all flex flex-col items-center justify-center gap-1`}
-                      >
-                        {genre}
-                      </button>
-                    ))}
-                  </div>
+              {genreLoading ? (
+                <div className="flex flex-col gap-y-4 items-center">
+                  {[...Array(3)].map((_, index) => (
+                    <SplitRatioBarSkeleton key={index} />
+                  ))}
+                </div>
+              ) : (
+                <div>
+                  <div className=" pb-10">
+                    <div
+                      className={`flex flex-wrap justify-center flex-row m-2 gap-3 px-[3px] py-2 overflow-y-scroll ${genreExpanded ? "max-h-[260px]" : "max-h-[110px]  "}`}
+                    >
+                      {genreData.map((genre) => (
+                        <button
+                          key={genre}
+                          onClick={() => toggleButton(genre)}
+                          className={`flex flex-row group capitalize relative w-auto h-10 min-w-5 text-sm font-[Roboto_Mono] font-medium select-none ${"active:shadow-[2px_2px_0_0_black] active:translate-[2px] shadow-[4px_4px_0_0_black]"} ${enabledButtons[genre] ? "bg-[#D84727] text-slate-100 outline-[#000000]" : "bg-white text-slate-950 outline-black "}  p-3 outline-2 transition-all flex flex-col items-center justify-center gap-1`}
+                        >
+                          {genre}
+                        </button>
+                      ))}
+                    </div>
 
-                  <button
-                    onClick={() => setGenreExpanded((prev) => !prev)}
-                    className={`absolute right-4 w-20 h-8 flex items-center justify-center
+                    <button
+                      onClick={() => setGenreExpanded((prev) => !prev)}
+                      className={`absolute right-4 w-20 h-8 flex items-center justify-center
                   bg-black  shadow-[2px_2px_0_0_black]
                   active:translate-[1px] active:shadow-[1px_1px_0_0_black]
                   transition-all text-white font-[Roboto_Mono] font-medium text-sm`}
-                    aria-label="Toggle genre list height"
-                  >
-                    <p className="pr-1 pl-1.5">
-                      {genreExpanded ? "Less" : "Expand"}{" "}
-                    </p>
-                    <span
-                      className={`transition-transform duration-300 ${
-                        genreExpanded ? "rotate-180" : "rotate-0"
-                      }`}
+                      aria-label="Toggle genre list height"
                     >
-                      ▼
-                    </span>
-                  </button>
-                </div>
-
-                <div className="flex flex-col max-h-[280px] pt-2 overflow-y-scroll">
-                  <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6 ">
-                    {genreTracks ? (
-                      genreTracks.map((item, index) => (
-                        <SplitRatioBar
-                          key={index}
-                          itemName={item.Name}
-                          Artist={item.Artist as string}
-                          valueA={item.Playcounts[0]}
-                          valueB={item.Playcounts[1]}
-                          ArtistUrl={item.ArtistUrl as string}
-                          itemUrl={item.EntryUrl as string}
-                        />
-                      ))
-                    ) : (
-                      <p className="text-black font-[Roboto_Mono]">
-                        No Music Found
+                      <p className="pr-1 pl-1.5">
+                        {genreExpanded ? "Less" : "Expand"}{" "}
                       </p>
-                    )}
+                      <span
+                        className={`transition-transform duration-300 ${
+                          genreExpanded ? "rotate-180" : "rotate-0"
+                        }`}
+                      >
+                        ▼
+                      </span>
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col max-h-[280px] pt-2 overflow-y-scroll">
+                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6 ">
+                      {genreTracks ? (
+                        genreTracks.map((item, index) => (
+                          <SplitRatioBar
+                            key={index}
+                            itemName={item.Name}
+                            Artist={item.Artist as string}
+                            valueA={item.Playcounts[0]}
+                            valueB={item.Playcounts[1]}
+                            ArtistUrl={item.ArtistUrl as string}
+                            itemUrl={item.EntryUrl as string}
+                          />
+                        ))
+                      ) : (
+                        <p className="text-black font-[Roboto_Mono]">
+                          No Music Found
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </section>
 

@@ -114,6 +114,8 @@ func (app *application) mount() http.Handler {
 			r.Get("/usertopitems", blendHandler.GetUserTopItems)
 			r.Get("/generatelink", blendHandler.GenerateNewLink)
 			r.Get("/userinfo", blendHandler.GetUserInfo)
+			r.Get("/usertopgenres", blendHandler.GetUserTopGenres)
+			r.Get("/blendtopgenres", blendHandler.GetBlendTopGenres)
 		})
 
 		r.Route("/auth", func(r chi.Router) {
