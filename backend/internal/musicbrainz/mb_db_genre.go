@@ -17,6 +17,8 @@ type Genre struct {
 	ID       int    `db:"genre_id"`
 	Name     string `db:"genre"`
 	TagCount int    `db:"tag_count"`
+	Source   string `db:"source"`
+	Rank     int    `db:"rn"`
 }
 
 type RecordingGenreRow struct {
@@ -24,6 +26,8 @@ type RecordingGenreRow struct {
 	ID            int    `db:"genre_id"`
 	Name          string `db:"genre"`
 	TagCount      int    `db:"tag_count"`
+	Source        string `db:"source"`
+	Rank          int    `db:"rn"`
 }
 
 func (s *GenreStore) GetGenreByRecordings(context context.Context, recordingMBIDs []string) (map[string][]Genre, error) {
@@ -100,6 +104,8 @@ ORDER BY recording_mbid, tag_count DESC;
 			ID:       row.ID,
 			Name:     row.Name,
 			TagCount: row.TagCount,
+			Rank:     row.Rank,
+			Source:   row.Source,
 		})
 		// fmt.Printf("Debug: RecordingMBID: %s, Genre: %s, TagCount: %d\n", row.RecordingMBID, row.Name, row.TagCount)
 	}

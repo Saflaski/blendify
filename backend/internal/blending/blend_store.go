@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
 )
@@ -28,25 +30,49 @@ type BlendStore struct {
 }
 
 func (r *BlendStore) CacheUserTopGenres(ctx context.Context, user userid, mcs map[string]CatalogueStats, topGenres []string) error {
-	//Uses SQL DB instead of Redis
-	// query := `
-	// 	INSERT INTO
-	// `
 
 	err := r.CacheUserTopGenreNames(ctx, user, topGenres) //Uses redis to cache just the user's top genre names directly
 	if err != nil {
 		return fmt.Errorf(" during caching top genres to redis db, error in caching to redis: %w", err)
 	}
 
-	err = r.CacheUserTopGenresComplete(ctx, user, mcs)
+	err = r.CacheGenres(ctx, mcs)
 	if err != nil {
 		return fmt.Errorf(" during caching top genres to sql db, error in caching to sql: %w", err)
 	}
 	return nil
 }
 
-func (r *BlendStore) CacheUserTopGenresComplete(ctx context.Context, user userid, mcs map[string]CatalogueStats) error {
-	panic("unimplemented")
+func (r *BlendStore) CacheGenres(ctx context.Context, mcs map[string]CatalogueStats) error {
+	rows := [][]any{}
+	for _, catalogueStats := range mcs {
+		for _, genre := range catalogueStats.Genres {
+			rows = append(rows, []any{catalogueStats.PlatformID, genre})
+		}
+	}
+	conn, err := r.sqlClient.Conn(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	err = conn.Raw(func(driverConn any) error {
+		pgxConn := driverConn.(*stdlib.Conn).Conn()
+
+		_, err := pgxConn.CopyFrom(
+			ctx,
+			pgx.Identifier{"recording_genre_cache"},
+			[]string{"recording_mbid", "genre"},
+			pgx.CopyFromRows(rows),
+		)
+		return err
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
 func (r *BlendStore) CacheUserTopGenreNames(ctx context.Context, user userid, topGenres []string) error {
