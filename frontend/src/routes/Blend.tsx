@@ -93,7 +93,6 @@ export function Blend() {
   const [blendId, setBlendId] = useState<string | null>(() =>
     getInitialBlendId(locationState),
   );
-
   const [navLinkId, setNavLinkId] = useState<string | null>(null);
   const [userCardData, setUserCardData] = useState<CardApiResponse>(
     {} as CardApiResponse,
@@ -1203,8 +1202,8 @@ export function Blend() {
                     </button>
                   </div>
 
-                  <div className="flex flex-col max-h-[280px] pt-2 overflow-y-scroll">
-                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6 ">
+                  <div className="flex flex-col max-h-[280px] overflow-y-scroll">
+                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-2 pb-6 ">
                       {genreTracks ? (
                         genreTracks.map((item, index) => (
                           <SplitRatioBar
@@ -1270,7 +1269,7 @@ export function Blend() {
                   </div>
                 ) : userCatalogueArtist3MonthData.length !== 0 ? (
                   <div className="w-full max-h-[280px] overflow-y-scroll">
-                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
+                    <div className="flex flex-col gap-y-4  items-center text-zinc-950 px-2 pt-2 pb-6">
                       {userCatalogueArtist3MonthData.map((item, index) => (
                         <SplitRatioBar
                           key={index}
@@ -1298,7 +1297,7 @@ export function Blend() {
                   </div>
                 ) : userCatalogueArtist1YearData.length !== 0 ? (
                   <div className="w-full max-h-[280px] overflow-y-scroll">
-                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
+                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-2 pb-6">
                       {userCatalogueArtist1YearData.map((item, index) => (
                         <SplitRatioBar
                           key={index}
@@ -1326,7 +1325,7 @@ export function Blend() {
                   </div>
                 ) : userCatalogueArtist1MonthData.length !== 0 ? (
                   <div className="w-full max-h-[280px] overflow-y-scroll">
-                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
+                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-2 pb-6">
                       {userCatalogueArtist1MonthData.map((item, index) => (
                         <SplitRatioBar
                           key={index}
@@ -1385,7 +1384,7 @@ export function Blend() {
                   </div>
                 ) : userCatalogueTrack3MonthData.length !== 0 ? (
                   <div className="w-full max-h-[280px] overflow-y-scroll">
-                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
+                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-2 pb-6">
                       {userCatalogueTrack3MonthData.map((item, index) => (
                         <SplitRatioBar
                           key={index}
@@ -1413,7 +1412,7 @@ export function Blend() {
                   </div>
                 ) : userCatalogueTrack1YearData.length !== 0 ? (
                   <div className="w-full max-h-[280px] overflow-y-scroll">
-                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
+                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-2 pb-6">
                       {userCatalogueTrack1YearData.map((item, index) => (
                         <SplitRatioBar
                           key={index}
@@ -1440,7 +1439,7 @@ export function Blend() {
                   </div>
                 ) : userCatalogueTrack1MonthData.length !== 0 ? (
                   <div className="w-full max-h-[280px] overflow-y-scroll">
-                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-[2px] pb-6">
+                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-2 pb-6">
                       {userCatalogueTrack1MonthData.map((item, index) => (
                         <SplitRatioBar
                           key={index}

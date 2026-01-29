@@ -21,8 +21,8 @@ export const SplitRatioBar: React.FC<SplitRatioBarProps> = ({
   valueB,
   imageUrlA = "https://lastfm.freetls.fastly.net/i/u/avatar170s/4711b0010c2035b2a26777f666cd3f3e.png",
   imageUrlB = "https://cdn-icons-png.flaticon.com/512/25/25231.png",
-  colorA = "bg-[#CDEDF6]",
-  colorB = "bg-[#EF7B45]",
+  colorA = "bg-[#FF8C00]",
+  colorB = "bg-[#00CED1]",
   height = "h-10",
   ArtistUrl,
   Artist,
@@ -35,8 +35,9 @@ export const SplitRatioBar: React.FC<SplitRatioBarProps> = ({
   // console.log("PERCENTS:");
   // console.log(percentA);
   return (
-    <div
-      className={`relative w-full ${height} ring-2  ${colorB} transition-all pointer-events-none`}
+    <button
+      className={`relative w-100/100 ${height} ring-2  ${colorB} 
+transition-all hover:translate-[-3px] hover:shadow-[7px_7px_0_0_black]  ${"active:shadow-[2px_2px_0_0_black] active:translate-[2px] shadow-[4px_4px_0_0_black]"}`}
     >
       <div
         className={`absolute left-0 top-0 h-full ${colorA}`}
@@ -130,7 +131,7 @@ export const SplitRatioBar: React.FC<SplitRatioBarProps> = ({
           </button>
         </span>
       </div>
-    </div>
+    </button>
   );
 };
 
