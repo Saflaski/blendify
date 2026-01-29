@@ -33,15 +33,23 @@ func (r *BlendStore) CacheUserTopGenres(ctx context.Context, user userid, mcs ma
 	// 	INSERT INTO
 	// `
 
-	err := r.CacheUserTopGenresIntoRedis(ctx, user, topGenres) //Uses redis to cache just the user's top genre names directly
+	err := r.CacheUserTopGenreNames(ctx, user, topGenres) //Uses redis to cache just the user's top genre names directly
 	if err != nil {
-		return fmt.Errorf(" during caching top genres to sql db, error in caching to redis: %w", err)
+		return fmt.Errorf(" during caching top genres to redis db, error in caching to redis: %w", err)
 	}
 
+	err = r.CacheUserTopGenresComplete(ctx, user, mcs)
+	if err != nil {
+		return fmt.Errorf(" during caching top genres to sql db, error in caching to sql: %w", err)
+	}
 	return nil
 }
 
-func (r *BlendStore) CacheUserTopGenresIntoRedis(ctx context.Context, user userid, topGenres []string) error {
+func (r *BlendStore) CacheUserTopGenresComplete(ctx context.Context, user userid, mcs map[string]CatalogueStats) error {
+	panic("unimplemented")
+}
+
+func (r *BlendStore) CacheUserTopGenreNames(ctx context.Context, user userid, topGenres []string) error {
 	key := fmt.Sprintf("%s:%s:%s", r.musicPrefix, user, "top_genres")
 	genresBytes, err := utility.ObjectToJSON(topGenres)
 	if err != nil {

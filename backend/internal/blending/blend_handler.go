@@ -102,6 +102,9 @@ func (h *BlendHandler) GetBlendTopGenres(w http.ResponseWriter, r *http.Request)
 
 	timeDuration := blendTimeDuration(response.Get("duration")) //This is not being used for now
 	topGenres, err := h.svc.GetBlendTopGenres(r.Context(), blendId, userA, timeDuration)
+	// for _, gen := range topGenres {
+	// 	glog.Info("Genre: ", gen)
+	// }
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, " could not get top genres. Contact Admin")

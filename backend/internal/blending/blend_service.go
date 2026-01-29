@@ -54,8 +54,8 @@ func (s *BlendService) CalculateIntersectionOfStringSlices(megaslice [][]string)
 	if len(megaslice) == 0 {
 		return []string{}, fmt.Errorf(" Given length 0 for intersection calculation")
 	}
-	// Rock, Pop, Jazz
-	// Jazz, Funk, Pop
+	// "Rock", "Pop", "Jazz", "Classical", "Hip Hop", "Electronic"
+	// "Rock", "Pop", "Country", "Classical", "Reggae", "Electronic"
 	counts := make(map[string]int)
 	for _, subSlice := range megaslice {
 		visited := make(map[string]bool)
@@ -70,11 +70,14 @@ func (s *BlendService) CalculateIntersectionOfStringSlices(megaslice [][]string)
 	intersection := make([]string, 0)
 	totalSlices := len(megaslice)
 
-	for k, count := range counts {
-		if count == totalSlices {
-			intersection = append(intersection, k)
+	seen := make(map[string]bool)
+	for _, item := range megaslice[0] {
+		if !seen[item] && counts[item] == totalSlices {
+			intersection = append(intersection, item)
+			seen[item] = true
 		}
 	}
+
 	return intersection, nil
 }
 
