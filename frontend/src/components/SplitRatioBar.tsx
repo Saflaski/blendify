@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { ur } from "zod/v4/locales";
+import { ChevronDown, ExternalLink } from "lucide-react";
+import LastfmIcon from "@/assets/images/lastfm.svg";
 
 type SplitRatioBarProps = {
   itemName: string;
@@ -121,7 +123,12 @@ export const SplitRatioBar: React.FC<SplitRatioBarProps> = ({
                 rel="noreferrer"
                 className="text-[10px] font-mono font-bold flex items-center gap-1 hover:underline"
               >
-                VIEW DETAILS
+                <img
+                  src={LastfmIcon}
+                  className="h-2.5 w-auto opacity-70"
+                  alt="Lastfm"
+                />
+                <ExternalLink size={10} />
               </a>
             )}
           </div>

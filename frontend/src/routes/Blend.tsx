@@ -894,6 +894,8 @@ export function Blend() {
     }
   };
 
+  const [modeCatalogueGenreFilter, setModeCatalogueGenreFilter] =
+    useState("Inclusive");
   useEffect(() => {
     console.log(
       "BROOO",
@@ -1180,13 +1182,56 @@ export function Blend() {
                         </button>
                       ))}
                     </div>
+                    <button
+                      onClick={() =>
+                        setModeCatalogueGenreFilter(() => {
+                          if (modeCatalogueGenreFilter == "Inclusive") {
+                            return "Exclusive";
+                          } else if (modeCatalogueGenreFilter == "Exclusive") {
+                            return "Inclusive";
+                          } else {
+                            return "?";
+                          }
+                        })
+                      }
+                      className={`absolute left-4 w-auto px-2 h-6 flex items-center justify-center
+                  bg-black  shadow-[2px_2px_0_0_black]
+                  active:translate-[1px] active:shadow-[1px_1px_0_0_black]
+                  transition-all text-white font-[Roboto_Mono] font-medium text-xs`}
+                      aria-label="Toggle genre list height"
+                    >
+                      <p className="pr-1 pl-1.5">{modeCatalogueGenreFilter}</p>
+                    </button>
+
+                    {/* Clear button this  */}
+                    <button
+                      onClick={() => {
+                        setEnabledButtons((prev) => {
+                          const newState = Object.fromEntries(
+                            Object.keys(prev).map((key) => [key, false]),
+                          ) as typeof prev;
+
+                          const songs = getSongsBasedOffGenres([]);
+                          setGenreTracks(songs);
+
+                          return newState;
+                        });
+                      }}
+                      className={`absolute left-30 w-12 h-6 flex items-center justify-center
+                  bg-white  shadow-[2px_2px_0_0_black]
+                  active:translate-[1px] active:shadow-[1px_1px_0_0_black]
+                  transition-all text-black ring-1 font-[Roboto_Mono] font-medium text-xs`}
+                      aria-label="Toggle genre list height"
+                    >
+                      <p className="pr-1 pl-1.5">Clear</p>
+                    </button>
 
                     <button
                       onClick={() => setGenreExpanded((prev) => !prev)}
-                      className={`absolute right-4 w-20 h-8 flex items-center justify-center
+                      className={`absolute right-4 w-18 h-6 flex items-center justify-center
                   bg-black  shadow-[2px_2px_0_0_black]
                   active:translate-[1px] active:shadow-[1px_1px_0_0_black]
-                  transition-all text-white font-[Roboto_Mono] font-medium text-sm`}
+                  transition-all text-white font-[Roboto_Mono] font-medium text-xs`}
                       aria-label="Toggle genre list height"
                     >
                       <p className="pr-1 pl-1.5">
@@ -1202,6 +1247,7 @@ export function Blend() {
                     </button>
                   </div>
 
+                  <HeaderDivider users={users} />
                   <div className="flex flex-col max-h-[280px] overflow-y-scroll">
                     <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-2 pb-6 ">
                       {genreTracks ? (
@@ -1259,6 +1305,7 @@ export function Blend() {
                 />
               </button>
             </div>
+            <HeaderDivider users={users} />
             {currentArtistRange === "3months" && (
               <>
                 {catArt3Month ? (
@@ -1374,6 +1421,7 @@ export function Blend() {
                 ></img>
               </button>
             </div>
+            <HeaderDivider users={users} />
             {currentTrackRange === "3months" && (
               <>
                 {catTrack3Month ? (
@@ -1465,4 +1513,33 @@ export function Blend() {
 
 const fetchBlendPercentage = async (label) => {
   await new Promise((r) => setTimeout(r, 500));
+};
+
+type HeaderDividerProps = {
+  users?: string[];
+};
+export const HeaderDivider = ({ users }: HeaderDividerProps) => {
+  return (
+    <div className="px-1.5 w-full max-w-2xl">
+      <div className="flex justify-between items-center bg-[#e74b28] px-2 py-2 border-2 border-[#202021] font-[Roboto_Mono] uppercase">
+        <a
+          href="https://www.last.fm/user/saflas"
+          className="border-l-[6px] border-[#FF8C00] pb-1 pl-4"
+        >
+          <span className="text-xs font-black text-[#000]  bg-[#F6E8CB] border-1 shadow-[2px_2px_black]  px-1 py-0.5 tracking-tighter">
+            {users ? users[0] : "You"}
+          </span>
+        </a>
+
+        <a
+          href="https://www.last.fm/user/saflas"
+          className="border-r-[6px] border-[#00CED1] pb-1  pr-4 text-right"
+        >
+          <span className="text-xs font-black text-[#000] bg-[#F6E8CB] border-1 shadow-[2px_2px_black]  px-1 py-0.5 tracking-tighter">
+            {users ? users[1] : "You"}
+          </span>
+        </a>
+      </div>
+    </div>
+  );
 };
