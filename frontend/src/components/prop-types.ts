@@ -58,6 +58,8 @@ export const CatalogueBlendSchema = z.object({
   ArtistImageUrl: z.url().optional(),
   EntryUrl: z.url().optional(),
   Playcounts: z.array(z.number()),
+  Genres: z.array(z.string()),
+  // PlatformID: z.string(),
 });
 
 export type CatalogueBlendResponse = z.infer<typeof CatalogueBlendSchema>;

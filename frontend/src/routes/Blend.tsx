@@ -1,7 +1,7 @@
 // import { DropDownMenu } from "../components/blend-options/dropdownmenu";
 import { ControlPanel } from "../components/blend-options/ControlPanel";
 import { useLocation, useNavigate } from "react-router-dom";
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import CardBackground from "@/assets/images/topography.svg";
 import CopyIcon from "@/assets/images/copy.svg";
 import LastfmIcon from "@/assets/images/lastfm.svg";
@@ -67,6 +67,91 @@ function useLocalStorageState<T>(key: string, initialValue: T) {
   }, [key, state]);
 
   return [state, setState] as const;
+}
+
+type BlendId = string;
+type Genre = string;
+
+type CatalogueById = Record<BlendId, CatalogueBlendResponse>;
+
+// Genre -> set of blend IDs
+type BlendsByGenre = Record<Genre, Set<BlendId>>;
+
+function buildGenreIndex(catalogue: CatalogueBlendResponse[]): {
+  catalogueById: CatalogueById;
+  blendsByGenre: BlendsByGenre;
+} {
+  const catalogueById: CatalogueById = {};
+  const blendsByGenre: BlendsByGenre = {};
+
+  for (const blend of catalogue) {
+    const id = blend.Name;
+
+    catalogueById[id] = blend;
+
+    for (const genre of blend.Genres) {
+      if (!blendsByGenre[genre]) {
+        blendsByGenre[genre] = new Set();
+      }
+      blendsByGenre[genre].add(id);
+    }
+  }
+
+  return { catalogueById, blendsByGenre };
+}
+
+function getBlendsByGenre(
+  genre: string,
+  catalogueById: CatalogueById,
+  blendsByGenre: BlendsByGenre,
+): CatalogueBlendResponse[] {
+  const blendIds = blendsByGenre[genre];
+  if (!blendIds) return [];
+
+  return Array.from(blendIds).map((id) => catalogueById[id]);
+}
+
+function getGenresForBlend(blend: CatalogueBlendResponse): string[] {
+  return blend.Genres;
+}
+
+type GenreMatchMode = "OR" | "AND";
+
+function getUnion(
+  genres: string[],
+  blendsByGenre: BlendsByGenre,
+): Set<BlendId> {
+  const union = new Set<BlendId>();
+  for (const genre of genres) {
+    const ids = blendsByGenre[genre] || [];
+    ids.forEach((id) => union.add(id));
+  }
+  return union;
+}
+
+function getIntersection(
+  genres: string[],
+  blendsByGenre: BlendsByGenre,
+): Set<BlendId> {
+  if (genres.some((genre) => !blendsByGenre[genre])) return new Set();
+
+  let intersection = new Set<BlendId>(blendsByGenre[genres[0]]);
+
+  for (let i = 1; i < genres.length; i++) {
+    const currentGenreIds = new Set(blendsByGenre[genres[i]]);
+    const nextIntersection = new Set<BlendId>();
+
+    for (const id of intersection) {
+      if (currentGenreIds.has(id)) {
+        nextIntersection.add(id);
+      }
+    }
+
+    intersection = nextIntersection;
+    if (intersection.size === 0) break;
+  }
+
+  return intersection;
 }
 
 const TOP_GENRE_KEY = "TOP_GENRES";
@@ -820,8 +905,6 @@ export function Blend() {
     setCurrentRangeIndex((prev) => (prev === ranges.length - 1 ? 0 : prev + 1));
   };
 
-  const genres = ["rock"];
-
   const [genreTracks, setGenreTracks] = useState<
     CatalogueBlendResponse[] | undefined
   >([]);
@@ -855,12 +938,6 @@ export function Blend() {
     var songs = getSongsBasedOffGenres(getEnabledGenres());
     setGenreTracks(songs);
     console.log("Songs based off genres: ", songs);
-    console.log(
-      "BRO",
-      userCatalogueTrack1MonthData.filter((item) =>
-        item.Name.includes("Wildflower".toLowerCase()),
-      ),
-    );
   };
 
   useEffect(() => {
@@ -870,32 +947,47 @@ export function Blend() {
     return Object.keys(enabledButtons).filter((genre) => enabledButtons[genre]);
   };
 
-  //MOCK FUNCTION
-  const getSongsBasedOffGenres = (genres: string[]) => {
-    console.log("Getting songs based off genres: ", genres);
-    if (genres.length === 0) {
-      console.log("Not returning any songs");
-      return userCatalogueTrack1YearData; //Or return all
-    } else if (genres.length === 3) {
-      console.log("All genres");
-      return [];
-    } else if (genres.includes("edm") && genres.includes("rock")) {
-      return userCatalogueTrack1YearData.filter((item) =>
-        item.Name.toLowerCase().includes("Drown".toLowerCase()),
-      );
-    } else if (genres.includes("rock")) {
-      return userCatalogueTrack1YearData.filter((item) =>
-        item.Artist?.toLowerCase().includes("Linkin Park".toLowerCase()),
-      );
-    } else if (genres.includes("pop")) {
-      return userCatalogueTrack1YearData.filter((item) =>
-        item.Name.toLowerCase().includes("wildflower".toLowerCase()),
-      );
-    }
-  };
+  function getBlendsByGenres(
+    genres: string[],
+    mode: GenreMatchMode,
+    catalogueById: CatalogueById,
+    blendsByGenre: BlendsByGenre,
+  ): CatalogueBlendResponse[] {
+    if (!genres.length) return [];
+
+    const resultIds =
+      mode === "OR"
+        ? getUnion(genres, blendsByGenre)
+        : getIntersection(genres, blendsByGenre);
+
+    return Array.from(resultIds)
+      .map((id) => catalogueById[id])
+      .filter((blend): blend is CatalogueBlendResponse => !!blend);
+  }
 
   const [modeCatalogueGenreFilter, setModeCatalogueGenreFilter] =
     useState("Inclusive");
+
+  const getSongsBasedOffGenres = (genres: string[]) => {
+    if (genres.length == 0) {
+      return userCatalogueTrack1YearData;
+    }
+    let songs: CatalogueBlendResponse[];
+    if (modeCatalogueGenreFilter == "Inclusive") {
+      songs = getBlendsByGenres(genres, "OR", catalogueById, blendsByGenre);
+    } else if (modeCatalogueGenreFilter == "Exclusive") {
+      songs = getBlendsByGenres(genres, "AND", catalogueById, blendsByGenre);
+    } else {
+      songs = getBlendsByGenres(genres, "AND", catalogueById, blendsByGenre);
+    }
+    return songs;
+  };
+
+  const { catalogueById, blendsByGenre } = useMemo(
+    () => buildGenreIndex(userCatalogueTrack1YearData),
+    [userCatalogueTrack1YearData],
+  );
+
   useEffect(() => {
     console.log(
       "BROOO",
@@ -905,6 +997,7 @@ export function Blend() {
     );
   }, [userCatalogueTrack1YearData]);
   const [genreExpanded, setGenreExpanded] = useState(false);
+
   return (
     <div className="w-full ">
       <div className="w-full md:w-[60%] flex pt-4 flex-col md:flex-row gap-x-5 mx-auto text-center px-4 gap-y-4 md:px-0 py-0 md:py-5">
@@ -1260,6 +1353,7 @@ export function Blend() {
                             valueB={item.Playcounts[1]}
                             ArtistUrl={item.ArtistUrl as string}
                             itemUrl={item.EntryUrl as string}
+                            genres={item.Genres}
                           />
                         ))
                       ) : (
@@ -1326,6 +1420,7 @@ export function Blend() {
                           valueB={item.Playcounts[1]}
                           ArtistUrl={item.ArtistUrl as string}
                           itemUrl={item.EntryUrl as string}
+                          genres={item.Genres}
                         />
                       ))}
                     </div>
@@ -1354,6 +1449,7 @@ export function Blend() {
                           valueB={item.Playcounts[1]}
                           ArtistUrl={item.ArtistUrl as string}
                           itemUrl={item.EntryUrl as string}
+                          genres={item.Genres}
                         />
                       ))}
                     </div>
@@ -1382,6 +1478,7 @@ export function Blend() {
                           valueB={item.Playcounts[1]}
                           ArtistUrl={item.ArtistUrl as string}
                           itemUrl={item.EntryUrl as string}
+                          genres={item.Genres}
                         />
                       ))}
                     </div>
@@ -1442,6 +1539,7 @@ export function Blend() {
                           valueB={item.Playcounts[1]}
                           ArtistUrl={item.ArtistUrl as string}
                           itemUrl={item.EntryUrl as string}
+                          genres={item.Genres}
                         />
                       ))}
                     </div>
@@ -1470,6 +1568,7 @@ export function Blend() {
                           valueB={item.Playcounts[1]}
                           ArtistUrl={item.ArtistUrl as string}
                           itemUrl={item.EntryUrl as string}
+                          genres={item.Genres}
                         />
                       ))}
                     </div>
@@ -1497,6 +1596,7 @@ export function Blend() {
                           valueB={item.Playcounts[1]}
                           ArtistUrl={item.ArtistUrl as string}
                           itemUrl={item.EntryUrl as string}
+                          genres={item.Genres}
                         />
                       ))}
                     </div>

@@ -15,6 +15,7 @@ type SplitRatioBarProps = {
   ArtistUrl: string;
   Artist: string;
   itemUrl: string;
+  genres: string[];
 };
 
 export const SplitRatioBar: React.FC<SplitRatioBarProps> = ({
@@ -29,6 +30,7 @@ export const SplitRatioBar: React.FC<SplitRatioBarProps> = ({
   ArtistUrl,
   Artist,
   itemUrl,
+  genres,
 }) => {
   // var percentA: number = 0.0;
   // var percentB: number = 0.0;
@@ -38,7 +40,7 @@ export const SplitRatioBar: React.FC<SplitRatioBarProps> = ({
   // console.log(percentA);
 
   const [expanded, setExpanded] = useState(false);
-  const genres = ["Genre1", "Genre2"]; //Placeholder
+  //Placeholder
 
   return (
     <div
