@@ -393,7 +393,10 @@ func (s *BlendService) ConvertCatalogueStatsToEntry(aStat CatalogueStats, name s
 		ArtistURL:      aStat.Artist.URL,
 		ArtistImageURL: s.getCatalogueImageURL(aStat.Artist.LFMImages),
 		Playcounts:     []int{countA, countB},
-		Genres:         aStat.Genres,
+	}
+
+	if aStat.Genres != nil {
+		entry.Genres = aStat.Genres
 	}
 	return entry
 }
@@ -1127,7 +1130,7 @@ func (s *BlendService) downloadTopTracks(context context.Context, userName strin
 		context,
 		userName,
 		string(timeDuration),
-		2,
+		6,
 		50,
 	)
 

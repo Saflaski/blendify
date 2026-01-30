@@ -15,7 +15,7 @@ type SplitRatioBarProps = {
   ArtistUrl: string;
   Artist: string;
   itemUrl: string;
-  genres: string[];
+  genres?: string[];
 };
 
 export const SplitRatioBar: React.FC<SplitRatioBarProps> = ({
@@ -103,14 +103,16 @@ export const SplitRatioBar: React.FC<SplitRatioBarProps> = ({
         <div className="p-3 flex flex-col gap-3">
           {/* Genre Tags */}
           <div className="flex flex-wrap gap-2">
-            {genres.map((g) => (
-              <span
-                key={g}
-                className="px-2 py-0.5 bg-white border border-black text-[10px] font-mono font-bold shadow-[2px_2px_0_0_black] hover:bg-yellow-200 transition-colors"
-              >
-                #{g.toUpperCase()}
-              </span>
-            ))}
+            {genres
+              ? genres.map((g) => (
+                  <span
+                    key={g}
+                    className="px-2 py-0.5 bg-white border border-black text-[10px] font-mono font-bold shadow-[2px_2px_0_0_black] hover:bg-yellow-200 transition-colors"
+                  >
+                    #{g.toUpperCase()}
+                  </span>
+                ))
+              : null}
           </div>
 
           {/* Footer Actions */}

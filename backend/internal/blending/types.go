@@ -108,7 +108,7 @@ type TopEntry struct {
 	ArtistURL      string   `json:"ArtistUrl,omitempty"`
 	ArtistImageURL string   `json:"ArtistImageUrl,omitempty"`
 	Playcounts     []int    `json:"Playcounts"`
-	Genres         []string `json:"Genres"`
+	Genres         []string `json:"Genres,omitempty"`
 }
 
 type CatalogueStats = musicapi.CatalogueStats

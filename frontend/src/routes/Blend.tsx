@@ -88,7 +88,7 @@ function buildGenreIndex(catalogue: CatalogueBlendResponse[]): {
     const id = blend.Name;
 
     catalogueById[id] = blend;
-
+    if (!blend.Genres || blend.Genres.length === 0) continue;
     for (const genre of blend.Genres) {
       if (!blendsByGenre[genre]) {
         blendsByGenre[genre] = new Set();
@@ -111,7 +111,9 @@ function getBlendsByGenre(
   return Array.from(blendIds).map((id) => catalogueById[id]);
 }
 
-function getGenresForBlend(blend: CatalogueBlendResponse): string[] {
+function getGenresForBlend(
+  blend: CatalogueBlendResponse,
+): string[] | undefined {
   return blend.Genres;
 }
 
@@ -966,16 +968,16 @@ export function Blend() {
   }
 
   const [modeCatalogueGenreFilter, setModeCatalogueGenreFilter] =
-    useState("Inclusive");
+    useState("OR");
 
   const getSongsBasedOffGenres = (genres: string[]) => {
     if (genres.length == 0) {
       return userCatalogueTrack1YearData;
     }
     let songs: CatalogueBlendResponse[];
-    if (modeCatalogueGenreFilter == "Inclusive") {
+    if (modeCatalogueGenreFilter == "OR") {
       songs = getBlendsByGenres(genres, "OR", catalogueById, blendsByGenre);
-    } else if (modeCatalogueGenreFilter == "Exclusive") {
+    } else if (modeCatalogueGenreFilter == "AND") {
       songs = getBlendsByGenres(genres, "AND", catalogueById, blendsByGenre);
     } else {
       songs = getBlendsByGenres(genres, "AND", catalogueById, blendsByGenre);
@@ -984,7 +986,7 @@ export function Blend() {
   };
 
   const { catalogueById, blendsByGenre } = useMemo(
-    () => buildGenreIndex(userCatalogueTrack1YearData),
+    () => buildGenreIndex(userCatalogueTrack1YearData ?? []),
     [userCatalogueTrack1YearData],
   );
 
@@ -1278,16 +1280,16 @@ export function Blend() {
                     <button
                       onClick={() =>
                         setModeCatalogueGenreFilter(() => {
-                          if (modeCatalogueGenreFilter == "Inclusive") {
-                            return "Exclusive";
-                          } else if (modeCatalogueGenreFilter == "Exclusive") {
-                            return "Inclusive";
+                          if (modeCatalogueGenreFilter == "OR") {
+                            return "AND";
+                          } else if (modeCatalogueGenreFilter == "AND") {
+                            return "OR";
                           } else {
                             return "?";
                           }
                         })
                       }
-                      className={`absolute left-4 w-auto px-2 h-6 flex items-center justify-center
+                      className={`absolute left-4 w-12 px-2 h-6 flex items-center justify-center
                   bg-black  shadow-[2px_2px_0_0_black]
                   active:translate-[1px] active:shadow-[1px_1px_0_0_black]
                   transition-all text-white font-[Roboto_Mono] font-medium text-xs`}
@@ -1310,7 +1312,7 @@ export function Blend() {
                           return newState;
                         });
                       }}
-                      className={`absolute left-30 w-12 h-6 flex items-center justify-center
+                      className={`absolute left-18 w-12 h-6 flex items-center justify-center
                   bg-white  shadow-[2px_2px_0_0_black]
                   active:translate-[1px] active:shadow-[1px_1px_0_0_black]
                   transition-all text-black ring-1 font-[Roboto_Mono] font-medium text-xs`}
@@ -1420,7 +1422,7 @@ export function Blend() {
                           valueB={item.Playcounts[1]}
                           ArtistUrl={item.ArtistUrl as string}
                           itemUrl={item.EntryUrl as string}
-                          genres={item.Genres}
+                          genres={[]}
                         />
                       ))}
                     </div>
@@ -1449,7 +1451,7 @@ export function Blend() {
                           valueB={item.Playcounts[1]}
                           ArtistUrl={item.ArtistUrl as string}
                           itemUrl={item.EntryUrl as string}
-                          genres={item.Genres}
+                          genres={[]}
                         />
                       ))}
                     </div>
@@ -1478,7 +1480,7 @@ export function Blend() {
                           valueB={item.Playcounts[1]}
                           ArtistUrl={item.ArtistUrl as string}
                           itemUrl={item.EntryUrl as string}
-                          genres={item.Genres}
+                          genres={[]}
                         />
                       ))}
                     </div>
@@ -1630,6 +1632,10 @@ export const HeaderDivider = ({ users }: HeaderDividerProps) => {
             {users ? users[0] : "You"}
           </span>
         </a>
+
+        <span className="font-[Roboto_Mono] font-black text-[#F6E8CB] [text-shadow:2px_2px_0_#000] pb-0.5">
+          TRACKS - 12 MONTHS
+        </span>
 
         <a
           href="https://www.last.fm/user/saflas"
