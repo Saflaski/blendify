@@ -30,6 +30,58 @@ type RecordingGenreRow struct {
 	Rank          int    `db:"rn"`
 }
 
+type ArtistGenreRow struct {
+	ArtistMBID string `db:"artist_mbid"`
+	GenreName  string `db:"genre"`
+	TagCount   int    `db:"tag_count"`
+	Rank       int    `db:"rn"`
+}
+
+func (s *GenreStore) GetGenreByArtistMBIDs(context context.Context, artistMBIDs []string) (map[string][]Genre, error) {
+
+	rows := []ArtistGenreRow{}
+	query := `
+	with all_potential_tags as (select 
+	a.gid::text AS artist_mbid,
+	t."name" as genre,
+	t.ref_count as tag_count
+from artist a
+join artist_tag at
+on at.artist = a.id 
+join tag t 
+on at.tag = t.id 
+where a."gid" = any($1::uuid[])
+),
+ranked_tags as (
+	select *, row_number() over (
+		partition by artist_mbid
+		order by tag_count desc, genre asc
+	) as rn
+	from all_potential_tags
+)
+select artist_mbid, genre, tag_count, rn from ranked_tags
+where rn <= 10
+order by artist_mbid, tag_count DESC`
+
+	if err := s.db.SelectContext(context, &rows, query, pq.Array(artistMBIDs)); err != nil {
+		return nil, fmt.Errorf(" error during selectcontext in GetGenreByRecordings: %v", err)
+	}
+
+	result := make(map[string][]Genre)
+
+	for _, row := range rows {
+		result[row.ArtistMBID] = append(result[row.ArtistMBID], Genre{
+			Name:     row.GenreName,
+			TagCount: row.TagCount,
+			Rank:     row.Rank,
+		})
+		// fmt.Printf("Debug: Artist: %s, Genre: %s, TagCount: %d\n", row.ArtistMBID, row.Name, row.TagCount)
+	}
+
+	return result, nil
+
+}
+
 func (s *GenreStore) GetGenreByRecordings(context context.Context, recordingMBIDs []string) (map[string][]Genre, error) {
 	rows := []RecordingGenreRow{}
 

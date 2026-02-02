@@ -1422,7 +1422,7 @@ export function Blend() {
                           valueB={item.Playcounts[1]}
                           ArtistUrl={item.ArtistUrl as string}
                           itemUrl={item.EntryUrl as string}
-                          genres={[]}
+                          genres={item.Genres as string[]}
                         />
                       ))}
                     </div>
@@ -1451,7 +1451,7 @@ export function Blend() {
                           valueB={item.Playcounts[1]}
                           ArtistUrl={item.ArtistUrl as string}
                           itemUrl={item.EntryUrl as string}
-                          genres={[]}
+                          genres={item.Genres as string[]}
                         />
                       ))}
                     </div>
@@ -1480,7 +1480,7 @@ export function Blend() {
                           valueB={item.Playcounts[1]}
                           ArtistUrl={item.ArtistUrl as string}
                           itemUrl={item.EntryUrl as string}
-                          genres={[]}
+                          genres={item.Genres as string[]}
                         />
                       ))}
                     </div>

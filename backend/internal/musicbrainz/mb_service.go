@@ -21,6 +21,12 @@ type TrackInfo struct {
 	Genres        []Genre
 }
 
+type ArtistInfo struct {
+	ArtistName string
+	ArtistMBID string
+	Genres     []Genre
+}
+
 func (s TrackInfo) IsEmpty() bool {
 	return s.RecordingMBID == "" && len(s.Genres) == 0
 }
@@ -44,7 +50,27 @@ func (mb *MBService) GetMBIDFromArtistAndTrackName(context context.Context, arti
 	}, nil
 
 }
+func (mb *MBService) GetMBIDsFromArtistNames(context context.Context, artistNames []string) ([]ArtistInfo, error) {
+	candidates, err := mb.repo.Artist.GetClosestArtistsByName(context, artistNames)
+	if err != nil {
+		return nil, fmt.Errorf("GetMBIDsFromArtistNames error: %v", err)
+	}
 
+	artistMBIDs := make([]string, 0, len(candidates))
+	for _, candidate := range candidates {
+		artistMBIDs = append(artistMBIDs, candidate.ArtistMBID)
+	}
+
+	artistInfos := make([]ArtistInfo, len(candidates))
+	for i := range len(candidates) {
+		artistInfos[i] = ArtistInfo{
+			ArtistName: candidates[i].ArtistName,
+			ArtistMBID: candidates[i].ArtistMBID,
+		}
+	}
+
+	return artistInfos, nil
+}
 func (mb *MBService) GetMBIDsFromArtistAndTrackNames(context context.Context, artistNames []string, trackNames []string) ([]TrackInfo, error) {
 	candidates, err := mb.repo.Recording.GetClosestRecordings(context, trackNames, artistNames)
 	if err != nil {
@@ -79,6 +105,10 @@ func (mb *MBService) GetGenresByRecordingMBID(context context.Context, recording
 		return nil, err
 	}
 	return genresMap[recordingMBID], nil
+}
+
+func (mb *MBService) GetGenreByArtistMBIDs(context context.Context, artistMBIDs []string) (map[string][]Genre, error) {
+	return mb.repo.Genre.GetGenreByArtistMBIDs(context, artistMBIDs)
 }
 
 func (mb *MBService) IsValidMBIDForRecord(context context.Context, mbid string) (bool, error) {

@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/golang/glog"
 	"github.com/google/uuid"
@@ -230,12 +231,12 @@ func (s *BlendService) GetBlendAndRefreshCache(context context.Context, blendId 
 		return DuoBlend{}, fmt.Errorf(" could not get duoblend data: %w", err)
 	}
 
-	//Refresh cache after getting data
-	err = s.RefreshOverallBlendInCache(context, blendId)
-	if err != nil {
-		glog.Infof(" could not refresh overall blend in cache: %w", err)
-		//Not a fatal error
-	}
+	// //Refresh cache after getting data
+	// err = s.RefreshOverallBlendInCache(context, blendId)
+	// if err != nil {
+	// 	glog.Infof(" could not refresh overall blend in cache: %w", err)
+	// 	//Not a fatal error
+	// }
 
 	return duoBlend, nil
 }
@@ -272,6 +273,12 @@ func (s *BlendService) GetDuoBlendData(context context.Context, blendId blendId)
 
 	if err != nil {
 		return DuoBlend{}, fmt.Errorf(" Could not generate blend due to one or more reasons with getting data from db/platform")
+	}
+
+	err = s.repo.AssignOverallBlendToBlend(context, blendId, duoBlend.OverallBlendNum)
+	if err != nil {
+		glog.Infof(" could not assign duoblend integer value during adding users to blend:%s: %w", blendId, err)
+		//This is not a fatal error and we can live without it happening but still need to log
 	}
 
 	return duoBlend, nil
@@ -866,7 +873,18 @@ func (s *BlendService) extractTopGenres(input map[string]CatalogueStats, topN in
 }
 
 func (s *BlendService) cacheLFMData(ctx context.Context, resp complexResponse) error {
-	err := s.repo.CacheUserMusicData(ctx, resp)
+
+	cacheTime := time.Duration(time.Hour * 24 * 1) //1 day default
+	switch resp.duration {
+	case BlendTimeDurationOneMonth:
+		cacheTime *= 2
+	case BlendTimeDurationThreeMonth:
+		cacheTime *= 4
+	case BlendTimeDurationYear:
+		cacheTime *= 5
+	}
+
+	err := s.repo.CacheUserMusicData(ctx, resp, cacheTime)
 	if err != nil {
 		return err
 	}
@@ -992,7 +1010,7 @@ func (s *BlendService) downloadTopX(context context.Context, userName string, ti
 
 func (s *BlendService) downloadTopArtists(context context.Context, userName string, timeDuration blendTimeDuration) (map[string]CatalogueStats, error) {
 
-	artistToPlaybacks := make(map[string]CatalogueStats)
+	artistCatalogues := make(map[string]CatalogueStats)
 	topArtist, err := s.LastFMExternal.GetUserTopArtists(
 		context,
 		userName,
@@ -1002,7 +1020,7 @@ func (s *BlendService) downloadTopArtists(context context.Context, userName stri
 	)
 
 	if err != nil {
-		return artistToPlaybacks, fmt.Errorf("could not extract TopArtists object from lastfm adapter, %w", err)
+		return artistCatalogues, fmt.Errorf("could not extract TopArtists object from lastfm adapter, %w", err)
 	}
 	// for _, v := range topArtist.TopArtists.Artist {
 	// 	playcount, err := strconv.Atoi(v.Playcount)
@@ -1020,7 +1038,7 @@ func (s *BlendService) downloadTopArtists(context context.Context, userName stri
 
 		playcount, err := strconv.Atoi(v.Playcount)
 		if err != nil {
-			return artistToPlaybacks, fmt.Errorf("got unparseable string during string -> int conversation: %w", err)
+			return artistCatalogues, fmt.Errorf("got unparseable string during string -> int conversation: %w", err)
 		}
 
 		imageURL := s.getCatalogueImageURL(v.LFMImages) //Selects a good pic out of the ones given
@@ -1032,11 +1050,20 @@ func (s *BlendService) downloadTopArtists(context context.Context, userName stri
 			Image:       imageURL,
 			PlatformID:  v.MBID,
 		}
-		artistToPlaybacks[v.Name] = catStat
+		artistCatalogues[v.Name] = catStat
 
 	}
 
-	return artistToPlaybacks, nil
+	artistCatalogues, err = s.PopulateArtistMBIDs(context, artistCatalogues)
+	if err != nil {
+		return artistCatalogues, fmt.Errorf(" could not populate artist mbids: %w", err)
+	}
+	artistCatalogues, err = s.PopulateGenresForMapCatStats(context, artistCatalogues, "artist")
+	if err != nil {
+		return artistCatalogues, fmt.Errorf(" could not populate artist genres: %w", err)
+	}
+
+	return artistCatalogues, nil
 }
 
 // ========== Album Blend ==========
@@ -1198,11 +1225,11 @@ func (s *BlendService) downloadTopTracks(context context.Context, userName strin
 
 	}
 
-	trackToPlays, err = s.PopulateMBIDsForMapCatStats(context, trackToPlays)
+	trackToPlays, err = s.PopulateTrackMBIDs(context, trackToPlays)
 	if err != nil {
 		return trackToPlays, fmt.Errorf(" could not populate mbids for map cat stats: %w", err)
 	}
-	trackToPlays, err = s.PopulateGenresForMapCatStats(context, trackToPlays)
+	trackToPlays, err = s.PopulateGenresForMapCatStats(context, trackToPlays, "recording")
 	if err != nil {
 		return trackToPlays, fmt.Errorf(" could not internally populate genres for map cat stats : %w", err)
 	}
@@ -1211,7 +1238,39 @@ func (s *BlendService) downloadTopTracks(context context.Context, userName strin
 	return trackToPlays, nil
 }
 
-func (s *BlendService) PopulateMBIDsForMapCatStats(context context.Context, input map[string]CatalogueStats) (map[string]CatalogueStats, error) {
+func (s *BlendService) PopulateArtistMBIDs(context context.Context, input map[string]CatalogueStats) (map[string]CatalogueStats, error) {
+	artistNames := make([]string, len(input))
+	i := 0
+	for k, _ := range input {
+		artistNames[i] = k
+		i++
+	}
+
+	mbidList, err := s.MBService.GetMBIDsFromArtistNames(context, artistNames)
+	if err != nil {
+		return input, fmt.Errorf(" could not get mbid list from artist: %w", err)
+	}
+
+	for _, v := range mbidList {
+		newMapCatStats, ok := input[v.ArtistName]
+		if !ok {
+			continue
+		}
+
+		newMapCatStats.PlatformID = v.ArtistMBID
+		newMapCatStats.Artist.MBID = v.ArtistMBID
+		newMapCatStats.Artist.Name = v.ArtistName
+		input[v.ArtistName] = newMapCatStats
+
+	}
+
+	if len(mbidList) == 0 {
+		return input, fmt.Errorf(" could not populate any mbids for map cat stats")
+	}
+
+	return input, nil
+}
+func (s *BlendService) PopulateTrackMBIDs(context context.Context, input map[string]CatalogueStats) (map[string]CatalogueStats, error) {
 
 	//Whilst this does not fully populate it as it uses '=' operator on SQL,
 	//we can assume that the data is good enough for our use case
@@ -1271,7 +1330,7 @@ func (s *BlendService) PopulateMBIDsForMapCatStats(context context.Context, inpu
 }
 
 // Need MBIDs to get genres from musicbrainz or else will fail
-func (s *BlendService) PopulateGenresForMapCatStats(context context.Context, input map[string]CatalogueStats) (map[string]CatalogueStats, error) {
+func (s *BlendService) PopulateGenresForMapCatStats(context context.Context, input map[string]CatalogueStats, mode string) (map[string]CatalogueStats, error) {
 	output := make(map[string]CatalogueStats)
 
 	//We are going to pass a list of mbids to musicbrainz service to get genres
@@ -1285,16 +1344,27 @@ func (s *BlendService) PopulateGenresForMapCatStats(context context.Context, inp
 		}
 	}
 
-	mbidsToGenres, err := s.MBService.GetGenresByRecordingMBIDs(context, mbids)
-	if err != nil {
-		return output, fmt.Errorf(" could not get genres by recording mbids: %w", err)
+	genreList := make(map[string][]musicbrainz.Genre)
+	if mode == "recording" {
+		recordingsGenreList, err := s.MBService.GetGenresByRecordingMBIDs(context, mbids)
+		genreList = recordingsGenreList
+		if err != nil {
+			return output, fmt.Errorf(" could not get genres by recording mbids: %w", err)
+		}
+	} else if mode == "artist" {
+		artistGenresList, err := s.MBService.GetGenreByArtistMBIDs(context, mbids)
+		genreList = artistGenresList
+		if err != nil {
+			return output, fmt.Errorf(" could not get genres by recording mbids: %w", err)
+		}
 	}
+
 	for k, v := range input {
 		if v.PlatformID == "" {
 			output[k] = v
 			continue
 		}
-		genreObjects, ok := mbidsToGenres[v.PlatformID]
+		genreObjects, ok := genreList[v.PlatformID]
 		if !ok {
 			output[k] = v
 			continue

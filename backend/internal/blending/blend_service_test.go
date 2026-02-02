@@ -393,14 +393,14 @@ func TestMBService(t *testing.T) {
 		}
 		// ------------------------
 		t.Log("Length of MapCatStats: ", len(trackToPlays))
-		trackToPlays, err = blendService.PopulateMBIDsForMapCatStats(t.Context(), trackToPlays)
+		trackToPlays, err = blendService.PopulateTrackMBIDs(t.Context(), trackToPlays)
 		if err != nil {
 
 			t.Errorf(" could not populate mbids for map cat stats: %v", err)
 		}
 		t.Log("Populated CatalogueStats with MBIDs")
 		t.Log("Populating with Genres")
-		trackToPlays, err = blendService.PopulateGenresForMapCatStats(t.Context(), trackToPlays)
+		trackToPlays, err = blendService.PopulateGenresForMapCatStats(t.Context(), trackToPlays, "recording")
 		assert.NoError(t, err)
 
 		t.Log("Populated CatalogueStats with Genres")
