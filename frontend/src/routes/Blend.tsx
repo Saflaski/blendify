@@ -955,6 +955,7 @@ export function Blend() {
     catalogueById: CatalogueById,
     blendsByGenre: BlendsByGenre,
   ): CatalogueBlendResponse[] {
+    // if (genres.length)
     if (!genres.length) return [];
 
     const resultIds =
@@ -969,6 +970,32 @@ export function Blend() {
 
   const [modeCatalogueGenreFilter, setModeCatalogueGenreFilter] =
     useState("OR");
+
+  const handleGenreModeToggle = () => {
+    setModeCatalogueGenreFilter((prev) => {
+      const enabledGenresLength = getEnabledGenres().length;
+
+      if (enabledGenresLength === 0) {
+        console.log("Genre Mode: Time to do nothing");
+        return prev === "AND" ? "OR" : "AND";
+      }
+
+      const nextMode = prev === "OR" ? "AND" : "OR";
+
+      const catalogue = getBlendsByGenres(
+        getEnabledGenres(),
+        nextMode,
+        catalogueById,
+        blendsByGenre,
+      );
+
+      console.log(`Genre Mode: ${nextMode}`);
+      console.log("Genre Mode: Catalogues: ", catalogue.length);
+
+      setGenreTracks(catalogue);
+      return nextMode;
+    });
+  };
 
   const getSongsBasedOffGenres = (genres: string[]) => {
     if (genres.length == 0) {
@@ -990,14 +1017,6 @@ export function Blend() {
     [userCatalogueTrack1YearData],
   );
 
-  useEffect(() => {
-    console.log(
-      "BROOO",
-      userCatalogueTrack1YearData.filter((item) =>
-        item.Name.toLowerCase().includes("Crawling".toLowerCase()),
-      ),
-    );
-  }, [userCatalogueTrack1YearData]);
   const [genreExpanded, setGenreExpanded] = useState(false);
 
   return (
@@ -1263,7 +1282,7 @@ export function Blend() {
                 </div>
               ) : (
                 <div>
-                  <div className=" pb-10">
+                  <div className=" ">
                     <div
                       className={`flex flex-wrap justify-center flex-row m-2 gap-3 px-[3px] py-2 overflow-y-scroll ${genreExpanded ? "max-h-[260px]" : "max-h-[110px]  "}`}
                     >
@@ -1277,69 +1296,67 @@ export function Blend() {
                         </button>
                       ))}
                     </div>
-                    <button
-                      onClick={() =>
-                        setModeCatalogueGenreFilter(() => {
-                          if (modeCatalogueGenreFilter == "OR") {
-                            return "AND";
-                          } else if (modeCatalogueGenreFilter == "AND") {
-                            return "OR";
-                          } else {
-                            return "?";
-                          }
-                        })
-                      }
-                      className={`absolute left-4 w-12 px-2 h-6 flex items-center justify-center
+
+                    <div className="flex items-center w-full min-w-full pb-1 ring-black pl-1">
+                      <button
+                        onClick={handleGenreModeToggle}
+                        className={` mr-2 w-12 px-2 h-6 flex items-center justify-center
                   bg-black  shadow-[2px_2px_0_0_black]
                   active:translate-[1px] active:shadow-[1px_1px_0_0_black]
                   transition-all text-white font-[Roboto_Mono] font-medium text-xs`}
-                      aria-label="Toggle genre list height"
-                    >
-                      <p className="pr-1 pl-1.5">{modeCatalogueGenreFilter}</p>
-                    </button>
+                        aria-label="Toggle genre list height"
+                      >
+                        <p className="pr-1 pl-1.5">
+                          {modeCatalogueGenreFilter}
+                        </p>
+                      </button>
 
-                    {/* Clear button this  */}
-                    <button
-                      onClick={() => {
-                        setEnabledButtons((prev) => {
-                          const newState = Object.fromEntries(
-                            Object.keys(prev).map((key) => [key, false]),
-                          ) as typeof prev;
+                      {/* Clear button this  */}
+                      <button
+                        onClick={() => {
+                          setEnabledButtons((prev) => {
+                            const newState = Object.fromEntries(
+                              Object.keys(prev).map((key) => [key, false]),
+                            ) as typeof prev;
 
-                          const songs = getSongsBasedOffGenres([]);
-                          setGenreTracks(songs);
+                            const songs = getSongsBasedOffGenres([]);
+                            setGenreTracks(songs);
 
-                          return newState;
-                        });
-                      }}
-                      className={`absolute left-18 w-12 h-6 flex items-center justify-center
+                            return newState;
+                          });
+                        }}
+                        className={` mr-9 w-12 h-6 flex items-center justify-center
                   bg-white  shadow-[2px_2px_0_0_black]
                   active:translate-[1px] active:shadow-[1px_1px_0_0_black]
                   transition-all text-black ring-1 font-[Roboto_Mono] font-medium text-xs`}
-                      aria-label="Toggle genre list height"
-                    >
-                      <p className="pr-1 pl-1.5">Clear</p>
-                    </button>
+                        aria-label="Toggle genre list height"
+                      >
+                        <p className="pr-1 pl-1.5">Clear</p>
+                      </button>
+                      <h1 className="mx-auto text-center font-[Roboto_Mono] text-black font-bold text-lg">
+                        TRACKS
+                      </h1>
 
-                    <button
-                      onClick={() => setGenreExpanded((prev) => !prev)}
-                      className={`absolute right-4 w-18 h-6 flex items-center justify-center
+                      <button
+                        onClick={() => setGenreExpanded((prev) => !prev)}
+                        className={` ml-auto mr-2  w-18 h-6 flex items-center justify-center
                   bg-black  shadow-[2px_2px_0_0_black]
                   active:translate-[1px] active:shadow-[1px_1px_0_0_black]
                   transition-all text-white font-[Roboto_Mono] font-medium text-xs`}
-                      aria-label="Toggle genre list height"
-                    >
-                      <p className="pr-1 pl-1.5">
-                        {genreExpanded ? "Less" : "Expand"}{" "}
-                      </p>
-                      <span
-                        className={`transition-transform duration-300 ${
-                          genreExpanded ? "rotate-180" : "rotate-0"
-                        }`}
+                        aria-label="Toggle genre list height"
                       >
-                        ▼
-                      </span>
-                    </button>
+                        <p className="pr-1 pl-1.5">
+                          {genreExpanded ? "Less" : "Expand"}{" "}
+                        </p>
+                        <span
+                          className={`transition-transform duration-300 ${
+                            genreExpanded ? "rotate-180" : "rotate-0"
+                          }`}
+                        >
+                          ▼
+                        </span>
+                      </button>
+                    </div>
                   </div>
 
                   <HeaderDivider users={users} />
@@ -1634,7 +1651,7 @@ export const HeaderDivider = ({ users }: HeaderDividerProps) => {
         </a>
 
         <span className="font-[Roboto_Mono] font-black text-[#F6E8CB] [text-shadow:2px_2px_0_#000] pb-0.5">
-          TRACKS - 12 MONTHS
+          Last 12 MONTHS
         </span>
 
         <a
