@@ -887,6 +887,12 @@ export function Blend() {
     "12months": "12 MONTHS",
   };
 
+  const trackDataRanges = {
+    "1months": userCatalogueTrack1MonthData,
+    "3months": userCatalogueArtist3MonthData,
+    "12months": userCatalogueTrack1YearData,
+  };
+
   const currentArtistRange = ranges[currentArtistRangeIndex];
   const currentTrackRange = ranges[currentTrackRangeIndex];
   const goPrev = (
@@ -934,13 +940,6 @@ export function Blend() {
     var songs = getSongsBasedOffGenres(getEnabledGenres());
     setGenreTracks(songs);
     console.log("Songs based off genres: ", songs);
-  };
-
-  useEffect(() => {
-    setGenreTracks(userCatalogueTrack1YearData);
-  }, [userCatalogueTrack1YearData]);
-  const getEnabledGenres = () => {
-    return Object.keys(enabledButtons).filter((genre) => enabledButtons[genre]);
   };
 
   function getBlendsByGenres(
@@ -993,7 +992,7 @@ export function Blend() {
 
   const getSongsBasedOffGenres = (genres: string[]) => {
     if (genres.length == 0) {
-      return userCatalogueTrack1YearData;
+      return trackDataRanges[currentArtistRange];
     }
     let songs: CatalogueBlendResponse[];
     if (modeCatalogueGenreFilter == "OR") {
@@ -1006,9 +1005,29 @@ export function Blend() {
     return songs;
   };
 
+  const switchDurationTrackData = useMemo(() => {
+    console.log("Switching Duration: ", currentTrackRange);
+    switch (currentTrackRange) {
+      case "1months":
+        return userCatalogueTrack1MonthData;
+      case "3months":
+        return userCatalogueTrack3MonthData;
+      case "12months":
+        return userCatalogueTrack1YearData;
+      default:
+        return [];
+    }
+  }, [currentTrackRangeIndex]);
+
+  useEffect(() => {
+    setGenreTracks(switchDurationTrackData);
+  }, [currentTrackRange]);
+  const getEnabledGenres = () => {
+    return Object.keys(enabledButtons).filter((genre) => enabledButtons[genre]);
+  };
   const { catalogueById, blendsByGenre } = useMemo(
-    () => buildGenreIndex(userCatalogueTrack1YearData ?? []),
-    [userCatalogueTrack1YearData],
+    () => buildGenreIndex(switchDurationTrackData ?? []),
+    [currentTrackRange],
   );
 
   const [genreExpanded, setGenreExpanded] = useState(false);
