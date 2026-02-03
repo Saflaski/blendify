@@ -1590,7 +1590,7 @@ export const HeaderDivider = ({
       <div className="flex flex-wrap md:flex-nowrap justify-between items-center bg-[#e74b28] px-2 py-2 border-2 border-[#202021] font-[Roboto_Mono] uppercase gap-y-1">
         {/* LEFT USER - Order 1 */}
         <a
-          href="https://www.last.fm/user/saflas"
+          // href="https://www.last.fm/user/saflas"
           className="border-l-[6px] border-[#FF8C00] pb-1 pl-4 order-1"
         >
           <span className="text-xs font-black text-[#000] bg-[#F6E8CB] border-1 shadow-[2px_2px_black] px-1 py-0.5 tracking-tighter">
@@ -1599,7 +1599,7 @@ export const HeaderDivider = ({
         </a>
 
         <a
-          href="https://www.last.fm/user/saflas"
+          // href="https://www.last.fm/user/saflas"
           className="border-r-[6px]  border-[#00CED1] pb-1 pr-4 text-right order-3 md:order-5"
         >
           <span className="text-xs font-black text-[#000] bg-[#F6E8CB] border-1 shadow-[2px_2px_black] px-1 py-0.5 tracking-tighter">
