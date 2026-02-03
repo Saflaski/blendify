@@ -91,8 +91,14 @@ func (s *RecordingStore) GetClosestRecordings(context context.Context, names []s
 
 	queryTwo := `
 	WITH input_pairs AS (
-  SELECT row_number() OVER () AS pair_id, t.name, t.artist
-  FROM unnest($1::text[], $2::text[]) AS t(name, artist)
+  SELECT
+    row_number() OVER () AS pair_id,
+    t.name,
+    t.artist
+  FROM unnest(
+    $1::text[], 
+    $2::text[]
+  ) AS t(name, artist)
 ),
 exact_matches AS (
   SELECT
@@ -100,42 +106,28 @@ exact_matches AS (
     r.gid AS mbid,
     r.name AS rname,
     ac.name AS artist,
-    r.genre_count_cache AS occurrence_count
+    (SELECT count(*) FROM track t WHERE t.recording = r.id) AS occurrence_count
   FROM input_pairs ip
   JOIN recording r
     ON r.name = ip.name
+    AND r."comment" NOT ILIKE 'Live%'
+    AND r.video = false
   JOIN artist_credit ac
-    ON r.artist_credit = ac.id AND ac.name = ip.artist
+    ON r.artist_credit = ac.id 
+    AND ac.name = ip.artist
 ),
-fuzzy_matches AS (
-  SELECT
-    ip.pair_id,
-    r.gid AS mbid,
-    r.name AS rname,
-    ac.name AS artist,
-    r.genre_count_cache AS occurrence_count
-  FROM input_pairs ip
-  LEFT JOIN exact_matches em
-    ON ip.pair_id = em.pair_id
-  JOIN recording r
-    ON r.name % ip.name
-  JOIN artist_credit ac
-    ON r.artist_credit = ac.id AND ac.name % ip.artist
-  WHERE em.pair_id IS NULL
-),
-final as (
-SELECT *
-FROM (
-  SELECT *, ROW_NUMBER() OVER (PARTITION BY pair_id ORDER BY occurrence_count DESC) AS rn
+final AS (
+  SELECT mbid, rname, artist
   FROM (
-    SELECT * FROM exact_matches
-    UNION ALL
-    SELECT * FROM fuzzy_matches
-  ) combined
-) ranked
-WHERE rn = 1
-ORDER BY pair_id)
-select mbid, rname, artist from final;
+    SELECT 
+      *, 
+      ROW_NUMBER() OVER (PARTITION BY pair_id ORDER BY occurrence_count DESC) AS rn
+    FROM exact_matches
+  ) ranked
+  WHERE rn = 1
+  ORDER BY pair_id
+)
+SELECT mbid, rname, artist FROM final;
 	`
 
 	queryThree := `
@@ -187,7 +179,7 @@ select mbid, rname, artist from final;
 		}
 	}
 
-	rows, err := s.db.QueryxContext(context, queryThree, (names), (artistNames))
+	rows, err := s.db.QueryxContext(context, queryTwo, (names), (artistNames))
 	if err != nil {
 		return nil, err
 	}
