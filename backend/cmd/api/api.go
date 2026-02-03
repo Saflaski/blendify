@@ -4,6 +4,7 @@ import (
 	"backend-lastfm/internal/auth"
 	blend "backend-lastfm/internal/blending"
 	musicapi "backend-lastfm/internal/music_api/lastfm"
+	"backend-lastfm/internal/musicbrainz"
 	network "backend-lastfm/internal/network"
 	shared "backend-lastfm/internal/shared"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/golang/glog"
+	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -74,8 +76,21 @@ func (app *application) mount() http.Handler {
 		authCfg,
 	)
 
-	blendRepo := blend.NewRedisStateStore(rdb)
-	blendService := blend.NewBlendService(*blendRepo, *LastFMExternal)
+	MBsqlxDB := sqlx.MustConnect("pgx", os.Getenv("MUSICBRAINZ_DB_DSN"))
+	MBsqlxDB.SetMaxOpenConns(25)
+	MBsqlxDB.SetMaxIdleConns(25)
+	MBsqlxDB.SetConnMaxLifetime(5 * time.Minute)
+
+	BlendifysqlxDB := sqlx.MustConnect("pgx", os.Getenv("BLENDIFY_DB_DSN"))
+	BlendifysqlxDB.SetMaxOpenConns(25)
+	BlendifysqlxDB.SetMaxIdleConns(25)
+	BlendifysqlxDB.SetConnMaxLifetime(5 * time.Minute)
+
+	mbRepo := musicbrainz.NewPostgresMusicBrainzRepo(MBsqlxDB)
+	mbService := musicbrainz.NewMBService(mbRepo)
+
+	blendRepo := blend.NewBlendStore(rdb, BlendifysqlxDB)
+	blendService := blend.NewBlendService(*blendRepo, *LastFMExternal, *mbService)
 	blendHandler := blend.NewBlendHandler(
 		os.Getenv("FRONTEND_URL"),
 		"sid",
@@ -85,6 +100,7 @@ func (app *application) mount() http.Handler {
 
 	sharedService := shared.NewSharedService(authService, blendService)
 	sharedHandler := shared.NewSharedHandler(*sharedService)
+
 	r.Route("/v1", func(r chi.Router) {
 		r.Route("/blend", func(r chi.Router) {
 			r.Use(auth.ValidateCookie(*authHandler, *authService))
@@ -98,6 +114,8 @@ func (app *application) mount() http.Handler {
 			r.Get("/usertopitems", blendHandler.GetUserTopItems)
 			r.Get("/generatelink", blendHandler.GenerateNewLink)
 			r.Get("/userinfo", blendHandler.GetUserInfo)
+			r.Get("/usertopgenres", blendHandler.GetUserTopGenres)
+			r.Get("/blendtopgenres", blendHandler.GetBlendTopGenres)
 		})
 
 		r.Route("/auth", func(r chi.Router) {
@@ -139,6 +157,7 @@ func (app *application) run(h http.Handler) error {
 	glog.Infof("WriteTimeout: %f", srv.WriteTimeout.Seconds())
 	glog.Infof("IdleTimeout: %f", srv.IdleTimeout.Seconds())
 	glog.Infof("Session Valid Time: %s", (time.Duration(app.config.sessionExpiry) * time.Second).String())
+
 	prod, _ := strconv.ParseBool(os.Getenv("PROD"))
 	if prod {
 		for _, o := range strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",") {
@@ -149,6 +168,19 @@ func (app *application) run(h http.Handler) error {
 		}
 	}
 	return srv.ListenAndServe()
+}
+
+func NewDB(dsn string) (*sqlx.DB, error) {
+	db, err := sqlx.Connect("pgx", dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(25)
+	db.SetConnMaxLifetime(5 * time.Minute)
+
+	return db, nil
 }
 
 type config struct {

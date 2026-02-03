@@ -58,6 +58,8 @@ export const CatalogueBlendSchema = z.object({
   ArtistImageUrl: z.url().optional(),
   EntryUrl: z.url().optional(),
   Playcounts: z.array(z.number()),
+  Genres: z.array(z.string()).optional(),
+  // PlatformID: z.string(),
 });
 
 export type CatalogueBlendResponse = z.infer<typeof CatalogueBlendSchema>;
@@ -68,6 +70,10 @@ export const CatalogueTopItemsSchema = z.object({
 
 export type CatalogueTopItemsResponse = z.infer<typeof CatalogueTopItemsSchema>;
 
+export const CatalogueTopGenresSchema = z.array(z.string());
+export type CatalogueTopGenresResponse = z.infer<
+  typeof CatalogueTopGenresSchema
+>;
 // `json:"Name"`
 // URL            string `json:"EntryUrl,omitempty"`
 // ImageURL       string `json:"ImageUrl,omitempty"`

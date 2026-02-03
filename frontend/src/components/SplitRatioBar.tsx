@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { ur } from "zod/v4/locales";
+import { ChevronDown, ExternalLink } from "lucide-react";
+import LastfmIcon from "@/assets/images/lastfm.svg";
 
 type SplitRatioBarProps = {
   itemName: string;
@@ -13,6 +15,7 @@ type SplitRatioBarProps = {
   ArtistUrl: string;
   Artist: string;
   itemUrl: string;
+  genres?: string[];
 };
 
 export const SplitRatioBar: React.FC<SplitRatioBarProps> = ({
@@ -21,12 +24,13 @@ export const SplitRatioBar: React.FC<SplitRatioBarProps> = ({
   valueB,
   imageUrlA = "https://lastfm.freetls.fastly.net/i/u/avatar170s/4711b0010c2035b2a26777f666cd3f3e.png",
   imageUrlB = "https://cdn-icons-png.flaticon.com/512/25/25231.png",
-  colorA = "bg-[#CDEDF6]",
-  colorB = "bg-[#EF7B45]",
+  colorA = "bg-[#FF8C00]",
+  colorB = "bg-[#00CED1]",
   height = "h-10",
   ArtistUrl,
   Artist,
   itemUrl,
+  genres,
 }) => {
   // var percentA: number = 0.0;
   // var percentB: number = 0.0;
@@ -34,101 +38,105 @@ export const SplitRatioBar: React.FC<SplitRatioBarProps> = ({
   const percentA = total === 0 ? 50 : (valueA / total) * 100;
   // console.log("PERCENTS:");
   // console.log(percentA);
+
+  const [expanded, setExpanded] = useState(false);
+  //Placeholder
+
   return (
     <div
-      className={`relative w-full ${height} ring-2  ${colorB} transition-all pointer-events-none`}
+      className={`flex flex-col w-full max-w-2xl  transition-all 
+        
+        ${expanded ? "shadow-[4px_4px_0_0_black] translate-[0px]" : " active:translate-[2px] active:shadow-[2px_2px_0_0_black] hover:translate-[-3px] hover:shadow-[7px_7px_0_0_black]   shadow-[4px_4px_0_0_black]"}
+        ring-2 
+        mb-0 group/container`}
     >
       <div
-        className={`absolute left-0 top-0 h-full ${colorA}`}
-        style={{ width: `${percentA}%` }}
-      />
-
-      <div className="absolute font-[Roboto_Mono] text-xs group bg-stone-800 pointer-events-auto cursor-default text-stone-100 px-1 py-1 font-bold left-2 top-2">
+        onClick={() => setExpanded(!expanded)}
+        className={`relative w-100/100 ${height} cursor-pointer  overflow-hidden  ${colorB} 
+  `}
+      >
         <div
-          className="pointer-events-none
+          className={`absolute left-0 top-0 h-full ${colorA}`}
+          style={{ width: `${percentA}%` }}
+        />
+
+        <div className="absolute font-[Roboto_Mono] text-xs group bg-stone-800 pointer-events-auto cursor-default text-stone-100 px-1 py-1 font-bold left-2 top-2">
+          <div
+            className="pointer-events-none
            absolute -top-0 left-10
           opacity-0 group-hover:opacity-100 
           group-focus:opacity-100 transition
           bg-stone-900 text-stone-100 text-[12px] 
           font-mono px-2 py-0.5 z-50 text-nowrap"
-        >
-          {valueA} plays // {Math.round((valueA * 100) / (valueA + valueB))} %
+          >
+            {valueA} plays // {Math.round((valueA * 100) / (valueA + valueB))} %
+          </div>
+          {valueA}x{/* // {Math.round((valueB * 100) / (valueA + valueB))} % */}
+          {/* </button> */}
         </div>
-        {valueA}x{/* // {Math.round((valueB * 100) / (valueA + valueB))} % */}
-        {/* </button> */}
-      </div>
-      {/* LEFT PIC WITH TOOLTIP */}
-      {/* <div className="absolute left-2 top-2  aspect-square group pointer-events-auto cursor-pointer">
-        <button
-          className="h-6 w-6 ring-2 ring-black"
-          onClick={() => {
-            console.log("LEFT CLICKED");
-            window.open(urlToNavigateA, "_blank");
-          }}
-        >
-          <img src={imageUrlA} alt="A" />
-        </button>
 
-        <div
-          className="pointer-events-none
-           absolute left-1/2 -translate-y-10
-          opacity-0 group-hover:opacity-100 
-          group-focus:opacity-100 transition
-          bg-stone-900 text-stone-100 text-[12px] 
-          font-mono px-2 py-0.5 z-50 text-nowrap"
-        >
-          {valueA} plays // {Math.round((valueA * 100) / (valueA + valueB))} %
-        </div>
-      </div> */}
-
-      {/* <div className="absolute right-2 top-2  aspect-square group pointer-events-auto cursor-pointer">
-        <button
-          className="h-6 w-6 ring-2 ring-black"
-          onClick={() => {
-            console.log("RIGHT CLICKED");
-            window.open(urlToNavigateB, "_blank");
-          }}
-        >
-          <img src={imageUrlB} alt="B" />
-        </button>
-        <div
-          className="pointer-events-none
-           absolute right-1/2 -translate-y-10
-          opacity-0 group-hover:opacity-100 
-          group-focus:opacity-100 transition
-          bg-stone-900 text-stone-100 text-[12px] 
-          font-mono px-2 py-0.5 z-50 text-nowrap"
-        >
-          {valueB} plays // {Math.round((valueB * 100) / (valueA + valueB))} %
-        </div>
-      </div> */}
-
-      <div className="absolute font-[Roboto_Mono] text-xs bg-stone-800 group pointer-events-auto cursor-default text-stone-100 px-1 py-1 font-bold right-2 top-2">
-        <div
-          className="pointer-events-none
+        <div className="absolute font-[Roboto_Mono] text-xs bg-stone-800 group pointer-events-auto cursor-default text-stone-100 px-1 py-1 font-bold right-2 top-2">
+          <div
+            className="pointer-events-none
            absolute  -top-0 right-10
           opacity-0 group-hover:opacity-100 
           group-focus:opacity-100 transition
           bg-stone-900 text-stone-100 text-[12px] 
           font-mono px-2 py-0.5 z-50 text-nowrap"
-        >
-          {valueB} plays // {Math.round((valueB * 100) / (valueA + valueB))} %
-        </div>
-        {valueB}x{/* // {Math.round((valueB * 100) / (valueA + valueB))} % */}
-        {/* </button> */}
-      </div>
-
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-sm font-mono font-bold text-stone-900 tracking-tight">
-          <button
-            onClick={
-              itemUrl != null ? () => window.open(itemUrl, "_blank") : undefined
-            }
           >
+            {valueB} plays // {Math.round((valueB * 100) / (valueA + valueB))} %
+          </div>
+          {valueB}x{/* // {Math.round((valueB * 100) / (valueA + valueB))} % */}
+          {/* </button> */}
+        </div>
+
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-sm font-mono font-bold text-stone-900 tracking-tight">
             {itemName != Artist ? Artist + " - " : ""}
             {itemName}
-          </button>
-        </span>
+          </span>
+        </div>
+      </div>
+      <div
+        className={` overflow-hidden transition-all border-black bg-stone-50  ${expanded ? " max-h-40 opacity-100 border-t-2" : "max-h-0 opacity-0"}`}
+      >
+        <div className="p-3 flex flex-col gap-3">
+          {/* Genre Tags */}
+          <div className="flex flex-wrap gap-2">
+            {genres
+              ? genres.map((g) => (
+                  <span
+                    key={g}
+                    className="px-2 py-0.5 bg-white border border-black text-[10px] font-mono font-bold shadow-[2px_2px_0_0_black] hover:bg-yellow-200 transition-colors"
+                  >
+                    #{g.toUpperCase()}
+                  </span>
+                ))
+              : null}
+          </div>
+
+          {/* Footer Actions */}
+          <div className="flex justify-between items-center border-t border-black/10 pt-2">
+            <div className="text-[10px] font-mono text-stone-500 uppercase">
+              Combined Impact: {total} Plays
+            </div>
+            {itemUrl && (
+              <a
+                href={itemUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[10px] font-mono font-bold flex items-center gap-1 hover:underline"
+              >
+                <img
+                  src={LastfmIcon}
+                  className="h-2.5 w-auto opacity-70"
+                  alt="Lastfm"
+                />
+                <ExternalLink size={10} />
+              </a>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

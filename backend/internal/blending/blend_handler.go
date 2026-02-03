@@ -66,6 +66,77 @@ func (h *BlendHandler) GetUserTopItems(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(topItems)
 
 }
+
+func (h *BlendHandler) GetBlendTopGenres(w http.ResponseWriter, r *http.Request) {
+
+	glog.Info("Entered GetBlendTopGenres")
+	userA, err := h.GetUserIdFromContext(r.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, " could not validate session id during generating new link. Contact Admin")
+		glog.Error("Error during generating new link, %w", err)
+		return
+	}
+
+	response := r.URL.Query()
+	glog.Info(response)
+
+	blendId := blendId(response.Get("blendId"))
+
+	ok, err := h.svc.AuthoriseBlend(r.Context(), blendId, userA)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, "Could not interpret find userid. Either try deleting all cookies and trying again or contact admin")
+		glog.Errorf("Could not find userid in repo, %s -> %s", userA, blendId)
+		return
+	}
+
+	defer r.Body.Close()
+
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, " User does not exist in this blend. Please try accepting invite again.")
+		glog.Infof("User unauth access %s -> %s", userA, blendId)
+		return
+	}
+
+	timeDuration := blendTimeDuration(response.Get("duration")) //This is not being used for now
+	topGenres, err := h.svc.GetBlendTopGenres(r.Context(), blendId, userA, timeDuration)
+	// for _, gen := range topGenres {
+	// 	glog.Info("Genre: ", gen)
+	// }
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, " could not get top genres. Contact Admin")
+		glog.Error("Error during getting top genres for blend:%s, %w", userA, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(topGenres)
+
+}
+
+func (h *BlendHandler) GetUserTopGenres(w http.ResponseWriter, r *http.Request) {
+	glog.Info("Entered GetUserTopGenres")
+	userA, err := h.GetUserIdFromContext(r.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, " could not validate session id during generating new link. Contact Admin")
+		glog.Error("Error during generating new link, %w", err)
+		return
+	}
+
+	topGenres, err := h.svc.GetUserTopGenres(r.Context(), userA)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, " could not get top genres. Contact Admin")
+		glog.Error("Error during getting top genres for user:%s, %w", userA, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(topGenres)
+}
+
 func (h *BlendHandler) GetUserBlends(w http.ResponseWriter, r *http.Request) {
 	userA, err := h.GetUserIdFromContext(r.Context())
 	if err != nil {
