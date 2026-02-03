@@ -835,12 +835,34 @@ export function Blend() {
       .filter((blend): blend is CatalogueBlendResponse => !!blend);
   }
 
-  const [modeCatalogueGenreFilter, setModeCatalogueGenreFilter] =
+  const [modeTrackCatalogueGenreFilter, setModeTrackCatalogueGenreFilter] =
+    useState("OR");
+  const [modeArtistCatalogueGenreFilter, setModeArtistCatalogueGenreFilter] =
     useState("OR");
 
-  const handleGenreModeToggle = () => {
+  const handleGenreModeToggle = (mode: "artist" | "track") => {
+    const isTrack = mode === "artist" ? false : true;
+    const setModeCatalogueGenreFilter = isTrack
+      ? setModeTrackCatalogueGenreFilter
+      : setModeArtistCatalogueGenreFilter;
+    let enabledButtons;
+    let catalogueById;
+    let blendsByGenre;
+    let setGenreCatalogue;
+    if (isTrack) {
+      enabledButtons = enabledTrackButtons;
+      catalogueById = trackCatalogueById;
+      blendsByGenre = trackBlendsByGenre;
+      setGenreCatalogue = setGenreTracks;
+    } else {
+      enabledButtons = enabledArtistButtons;
+      catalogueById = artistCatalogueById;
+      blendsByGenre = artistBlendsByGenre;
+      setGenreCatalogue = setGenreArtists;
+    }
+
     setModeCatalogueGenreFilter((prev) => {
-      const enabledGenresLength = getEnabledGenres(enabledTrackButtons).length;
+      const enabledGenresLength = getEnabledGenres(enabledButtons).length;
 
       if (enabledGenresLength === 0) {
         console.log("Genre Mode: Time to do nothing");
@@ -850,16 +872,16 @@ export function Blend() {
       const nextMode = prev === "OR" ? "AND" : "OR";
 
       const catalogue = getBlendsByGenres(
-        getEnabledGenres(enabledTrackButtons),
+        getEnabledGenres(enabledButtons),
         nextMode,
-        trackCatalogueById,
-        trackBlendsByGenre,
+        catalogueById,
+        blendsByGenre,
       );
 
       console.log(`Genre Mode: ${nextMode}`);
       console.log("Genre Mode: Catalogues: ", catalogue.length);
 
-      setGenreTracks(catalogue);
+      setGenreCatalogue(catalogue);
       return nextMode;
     });
   };
@@ -874,17 +896,19 @@ export function Blend() {
     let currentRange;
     let catalogueById;
     let blendsByGenre;
-
+    let modeCatalogueGenreFilter;
     if (isTrack) {
       dataRanges = trackDataRanges;
       currentRange = currentTrackRange;
       catalogueById = trackCatalogueById;
       blendsByGenre = trackBlendsByGenre;
+      modeCatalogueGenreFilter = modeTrackCatalogueGenreFilter;
     } else {
       dataRanges = artistDataRanges;
       currentRange = currentArtistRange;
       catalogueById = artistCatalogueById;
       blendsByGenre = artistBlendsByGenre;
+      modeCatalogueGenreFilter = modeArtistCatalogueGenreFilter;
     }
     if (genres.length == 0) {
       return dataRanges[currentRange];
@@ -1240,14 +1264,16 @@ export function Blend() {
                   {/* Intersection vs Union */}
                   <div className="flex items-center w-full min-w-full pb-2 ring-black pl-1">
                     <button
-                      onClick={handleGenreModeToggle}
+                      onClick={() => handleGenreModeToggle("track")}
                       className={` mr-2 w-12 px-2 h-6 flex items-center justify-center
                   bg-black  shadow-[2px_2px_0_0_black]
                   active:translate-[1px] active:shadow-[1px_1px_0_0_black]
                   transition-all text-white font-[Roboto_Mono] font-medium text-xs`}
                       aria-label="Toggle genre list height"
                     >
-                      <p className="pr-1 pl-1.5">{modeCatalogueGenreFilter}</p>
+                      <p className="pr-1 pl-1.5">
+                        {modeTrackCatalogueGenreFilter}
+                      </p>
                     </button>
 
                     {/* Clear button this  */}
@@ -1330,27 +1356,30 @@ export function Blend() {
             </div>
             <div className="flex items-center justify-center gap-4 mb-2 "></div>
             <div className="flex items-center w-full min-w-full pb-2 ring-black pl-1">
-              {/* <button
-                onClick={handleGenreModeToggle}
+              <button
+                onClick={() => handleGenreModeToggle("artist")}
                 className={` mr-2 w-12 px-2 h-6 flex items-center justify-center
                   bg-black  shadow-[2px_2px_0_0_black]
                   active:translate-[1px] active:shadow-[1px_1px_0_0_black]
                   transition-all text-white font-[Roboto_Mono] font-medium text-xs`}
-                aria-label="Toggle genre list height"
+                aria-label="Toggle artist genre list height"
               >
-                <p className="pr-1 pl-1.5">{modeCatalogueGenreFilter}</p>
-              </button> */}
+                <p className="pr-1 pl-1.5">{modeArtistCatalogueGenreFilter}</p>
+              </button>
 
               {/* Clear button this  */}
-              {/* <button
+              <button
                 onClick={() => {
-                  setEnabledTrackButtons((prev) => {
+                  setEnabledArtistButtons((prev) => {
                     const newState = Object.fromEntries(
                       Object.keys(prev).map((key) => [key, false]),
                     ) as typeof prev;
 
-                    const songs = getSongsBasedOffGenres([]);
-                    setGenreTracks(songs);
+                    const catalogues = getCataloguesBasedOffGenres(
+                      [],
+                      "artist",
+                    );
+                    setGenreArtists(catalogues);
 
                     return newState;
                   });
@@ -1362,7 +1391,7 @@ export function Blend() {
                 aria-label="Toggle genre list height"
               >
                 <p className="pr-1 pl-1.5">Clear</p>
-              </button> */}
+              </button>
 
               <h1 className="mx-auto text-center font-[Roboto_Mono] text-black font-black text-lg">
                 ARTISTS
