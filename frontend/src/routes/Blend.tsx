@@ -970,6 +970,14 @@ export function Blend() {
   );
 
   useEffect(() => {
+    setGenreTracks(switchDurationTrackData);
+  }, [currentTrackRange]);
+
+  useEffect(() => {
+    setGenreArtists(switchDurationArtistData);
+  }, [currentArtistRange]);
+
+  useEffect(() => {
     setTrackGenreData(Object.keys(trackBlendsByGenre));
     console.log("Changing track genre data: ", trackBlendsByGenre.length);
   }, [trackBlendsByGenre]);
