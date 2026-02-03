@@ -1,7 +1,7 @@
 // import { DropDownMenu } from "../components/blend-options/dropdownmenu";
 import { ControlPanel } from "../components/blend-options/ControlPanel";
 import { useLocation, useNavigate } from "react-router-dom";
-import React, { useRef, useState, useEffect, useMemo } from "react";
+import React, { useRef, useState, useEffect, useMemo, Dispatch } from "react";
 import CardBackground from "@/assets/images/topography.svg";
 import CopyIcon from "@/assets/images/copy.svg";
 import LastfmIcon from "@/assets/images/lastfm.svg";
@@ -881,16 +881,10 @@ export function Blend() {
   const [currentArtistRangeIndex, setCurrentArtistRangeIndex] = useState(0);
   const [currentTrackRangeIndex, setCurrentTrackRangeIndex] = useState(0);
 
-  const artistRangeLabel = {
-    "1months": "ARTIST - LAST 1 MONTH",
-    "3months": "ARTIST - LAST 3 MONTHS",
-    "12months": "ARTIST - LAST 12 MONTHS",
-  };
-
-  const trackRangeLabel = {
-    "1months": "TRACK - LAST 1 MONTH",
-    "3months": "TRACK - LAST 3 MONTHS",
-    "12months": "TRACK - LAST 12 MONTHS",
+  const durationRangeLabel = {
+    "1months": "1 MONTH",
+    "3months": "3 MONTHS",
+    "12months": "12 MONTHS",
   };
 
   const currentArtistRange = ranges[currentArtistRangeIndex];
@@ -1297,7 +1291,7 @@ export function Blend() {
                       ))}
                     </div>
 
-                    <div className="flex items-center w-full min-w-full pb-1 ring-black pl-1">
+                    <div className="flex items-center w-full min-w-full pb-2 ring-black pl-1">
                       <button
                         onClick={handleGenreModeToggle}
                         className={` mr-2 w-12 px-2 h-6 flex items-center justify-center
@@ -1333,7 +1327,8 @@ export function Blend() {
                       >
                         <p className="pr-1 pl-1.5">Clear</p>
                       </button>
-                      <h1 className="mx-auto text-center font-[Roboto_Mono] text-black font-bold text-lg">
+
+                      <h1 className="mx-auto text-center font-[Roboto_Mono] text-black font-black text-lg">
                         TRACKS
                       </h1>
 
@@ -1358,30 +1353,14 @@ export function Blend() {
                       </button>
                     </div>
                   </div>
-
-                  <HeaderDivider users={users} />
-                  <div className="flex flex-col max-h-[280px] overflow-y-scroll">
-                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-2 pb-6 ">
-                      {genreTracks ? (
-                        genreTracks.map((item, index) => (
-                          <SplitRatioBar
-                            key={index}
-                            itemName={item.Name}
-                            Artist={item.Artist as string}
-                            valueA={item.Playcounts[0]}
-                            valueB={item.Playcounts[1]}
-                            ArtistUrl={item.ArtistUrl as string}
-                            itemUrl={item.EntryUrl as string}
-                            genres={item.Genres}
-                          />
-                        ))
-                      ) : (
-                        <p className="text-black font-[Roboto_Mono]">
-                          No Music Found
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                  <HeaderDivider
+                    users={users}
+                    title={durationRangeLabel[currentTrackRange]}
+                    goPrev={goPrev}
+                    goNext={goNext}
+                    setCurrentTypeRangeIndex={setCurrentTrackRangeIndex}
+                  />
+                  <ListOfSongs genreTracks={genreTracks} />
                 </div>
               )}
             </div>
@@ -1389,36 +1368,18 @@ export function Blend() {
 
           {/* New experimental dropdown bit */}
           <section className="w-full flex flex-col ring-2 p-2 ring-black">
-            <div className="flex items-center justify-center gap-4 mb-4 ">
-              <button
-                onClick={() => goPrev(setCurrentArtistRangeIndex)}
-                className="text-xl font-bold text-black hover:opacity-70"
-                aria-label="Previous range"
-              >
-                <img
-                  src={BackArrow}
-                  className="ring-2 pr-1.5 hover:bg-gray-200 bg-white px-1"
-                  alt="Previous"
-                ></img>
-              </button>
-
+            <div className="flex items-center justify-center gap-4 mb-2 ">
               <h2 className="text-lg font-bold text-black text-center min-w-[220px]">
-                {artistRangeLabel[currentArtistRange]}
+                ARTIST
               </h2>
-
-              <button
-                onClick={() => goNext(setCurrentArtistRangeIndex)}
-                className="text-xl font-bold text-black hover:opacity-70"
-                aria-label="Next range"
-              >
-                <img
-                  src={FrontArrow}
-                  className="ring-2 px-1 hover:bg-gray-200 bg-white pl-1.5"
-                  alt="Next"
-                />
-              </button>
             </div>
-            <HeaderDivider users={users} />
+            <HeaderDivider
+              users={users}
+              title={durationRangeLabel[currentArtistRange]}
+              goPrev={goPrev}
+              goNext={goNext}
+              setCurrentTypeRangeIndex={setCurrentArtistRangeIndex}
+            />
             {currentArtistRange === "3months" && (
               <>
                 {catArt3Month ? (
@@ -1508,36 +1469,18 @@ export function Blend() {
           </section>
 
           <section className="w-full flex flex-col ring-2 p-2 ring-black">
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <button
-                onClick={() => goPrev(setCurrentTrackRangeIndex)}
-                className="text-xl font-bold text-black hover:opacity-70"
-                aria-label="Previous range"
-              >
-                <img
-                  src={BackArrow}
-                  className="ring-2 pr-1.5 hover:bg-gray-200 bg-white px-1"
-                  alt="Previous"
-                ></img>
-              </button>
-
+            <div className="flex items-center justify-center gap-4 mb-2">
               <h2 className="text-lg font-bold text-black text-center min-w-[220px]">
-                {trackRangeLabel[currentTrackRange]}
+                TRACKS
               </h2>
-
-              <button
-                onClick={() => goNext(setCurrentTrackRangeIndex)}
-                className="text-xl font-bold text-black hover:opacity-70"
-                aria-label="Next range"
-              >
-                <img
-                  src={FrontArrow}
-                  className="ring-2 px-1 hover:bg-gray-200 bg-white pl-1.5"
-                  alt="Next"
-                ></img>
-              </button>
             </div>
-            <HeaderDivider users={users} />
+            <HeaderDivider
+              users={users}
+              title={durationRangeLabel[currentTrackRange]}
+              goNext={goNext}
+              goPrev={goPrev}
+              setCurrentTypeRangeIndex={setCurrentTrackRangeIndex}
+            />
             {currentTrackRange === "3months" && (
               <>
                 {catTrack3Month ? (
@@ -1634,34 +1577,103 @@ const fetchBlendPercentage = async (label) => {
   await new Promise((r) => setTimeout(r, 500));
 };
 
+type ListOfSongsProps = {
+  genreTracks?: CatalogueBlendResponse[];
+};
+export const ListOfSongs = ({ genreTracks }: ListOfSongsProps) => {
+  return (
+    <div className="flex flex-col max-h-[280px] overflow-y-scroll">
+      <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-2 pb-6 ">
+        {genreTracks ? (
+          genreTracks.map((item, index) => (
+            <SplitRatioBar
+              key={index}
+              itemName={item.Name}
+              Artist={item.Artist as string}
+              valueA={item.Playcounts[0]}
+              valueB={item.Playcounts[1]}
+              ArtistUrl={item.ArtistUrl as string}
+              itemUrl={item.EntryUrl as string}
+              genres={item.Genres}
+            />
+          ))
+        ) : (
+          <p className="text-black font-[Roboto_Mono]">No Music Found</p>
+        )}
+      </div>
+    </div>
+  );
+};
+
 type HeaderDividerProps = {
   users?: string[];
+  title: string;
+  goPrev: (
+    setCurrentTypeRangeIndex: (value: React.SetStateAction<number>) => void,
+  ) => void;
+  goNext: (
+    setCurrentTypeRangeIndex: (value: React.SetStateAction<number>) => void,
+  ) => void;
+  setCurrentTypeRangeIndex: Dispatch<React.SetStateAction<number>>;
 };
-export const HeaderDivider = ({ users }: HeaderDividerProps) => {
+export const HeaderDivider = ({
+  users,
+  title,
+  goPrev,
+  setCurrentTypeRangeIndex,
+  goNext,
+}: HeaderDividerProps) => {
   return (
-    <div className="px-1.5 w-full max-w-2xl">
-      <div className="flex justify-between items-center bg-[#e74b28] px-2 py-2 border-2 border-[#202021] font-[Roboto_Mono] uppercase">
+    <div className="px-1.5 mb-0.5 w-full max-w-2xl">
+      <div className="flex flex-wrap md:flex-nowrap justify-between items-center bg-[#e74b28] px-2 py-2 border-2 border-[#202021] font-[Roboto_Mono] uppercase gap-y-1">
+        {/* LEFT USER - Order 1 */}
         <a
           href="https://www.last.fm/user/saflas"
-          className="border-l-[6px] border-[#FF8C00] pb-1 pl-4"
+          className="border-l-[6px] border-[#FF8C00] pb-1 pl-4 order-1"
         >
-          <span className="text-xs font-black text-[#000]  bg-[#F6E8CB] border-1 shadow-[2px_2px_black]  px-1 py-0.5 tracking-tighter">
-            {users ? users[0] : "You"}
+          <span className="text-xs font-black text-[#000] bg-[#F6E8CB] border-1 shadow-[2px_2px_black] px-1 py-0.5 tracking-tighter">
+            {users ? users[0] : "Someone"}
           </span>
         </a>
 
-        <span className="font-[Roboto_Mono] font-black text-[#F6E8CB] [text-shadow:2px_2px_0_#000] pb-0.5">
-          Last 12 MONTHS
-        </span>
-
         <a
           href="https://www.last.fm/user/saflas"
-          className="border-r-[6px] border-[#00CED1] pb-1  pr-4 text-right"
+          className="border-r-[6px]  border-[#00CED1] pb-1 pr-4 text-right order-3 md:order-5"
         >
-          <span className="text-xs font-black text-[#000] bg-[#F6E8CB] border-1 shadow-[2px_2px_black]  px-1 py-0.5 tracking-tighter">
+          <span className="text-xs font-black text-[#000] bg-[#F6E8CB] border-1 shadow-[2px_2px_black] px-1 py-0.5 tracking-tighter">
             {users ? users[1] : "You"}
           </span>
         </a>
+
+        <span className="font-[Roboto_Mono] md:text-[16px] text-lg font-black text-[#F6E8CB] [text-shadow:2px_2px_0_#000] order-2  text-center md:w-auto md:order-3">
+          {title}
+        </span>
+
+        <div className="flex order-4  w-full  items-center justify-center md:scale-100  gap-6 mt-1 md:contents">
+          <button
+            onClick={() => goPrev(setCurrentTypeRangeIndex)}
+            className="text-xl  font-bold text-black hover:opacity-70 md:order-2"
+            aria-label="Previous range"
+          >
+            <img
+              src={BackArrow}
+              className="ring-1 h-6  shadow-[2px_2px_black] active:shadow-[1px_1px_black] active:translate-[1px] transition-all hover:bg-gray-200 bg-white px-1"
+              alt="Previous"
+            />
+          </button>
+
+          <button
+            onClick={() => goNext(setCurrentTypeRangeIndex)}
+            className="text-xl  font-bold text-black hover:opacity-70 md:order-4"
+            aria-label="Next range"
+          >
+            <img
+              src={FrontArrow}
+              className="ring-1 h-6 shadow-[2px_2px_black] active:shadow-[1px_1px_black] active:translate-[1px] transition-all hover:bg-gray-200 bg-white px-1"
+              alt="Next"
+            />
+          </button>
+        </div>
       </div>
     </div>
   );
