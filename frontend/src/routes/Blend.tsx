@@ -942,20 +942,12 @@ export function Blend() {
   const switchDurationTrackData = useMemo(() => {
     console.log("Switching Track Duration: ", currentTrackRange);
     return trackDataRanges[currentTrackRange];
-  }, [currentTrackRangeIndex]);
+  }, [currentTrackRangeIndex, catalogueLoading]);
 
   const switchDurationArtistData = useMemo(() => {
     console.log("Switching Artist Duration: ", currentArtistRange);
     return artistDataRanges[currentArtistRange];
-  }, [currentArtistRangeIndex]);
-
-  useEffect(() => {
-    setGenreTracks(switchDurationTrackData);
-  }, [currentTrackRange]);
-
-  useEffect(() => {
-    setGenreArtists(switchDurationArtistData);
-  }, [currentArtistRange]);
+  }, [currentArtistRangeIndex, catalogueLoading]);
 
   const getEnabledGenres = (enabledButtons) => {
     return Object.keys(enabledButtons).filter((genre) => enabledButtons[genre]);
@@ -966,7 +958,7 @@ export function Blend() {
     blendsByGenre: trackBlendsByGenre,
   } = useMemo(
     () => buildGenreIndex(switchDurationTrackData ?? []),
-    [currentTrackRange],
+    [currentTrackRange, catalogueLoading],
   );
 
   const {
@@ -974,12 +966,12 @@ export function Blend() {
     blendsByGenre: artistBlendsByGenre,
   } = useMemo(
     () => buildGenreIndex(switchDurationArtistData ?? []),
-    [currentArtistRange],
+    [currentArtistRange, catalogueLoading],
   );
 
   useEffect(() => {
     setTrackGenreData(Object.keys(trackBlendsByGenre));
-    console.log("Changing track genre data");
+    console.log("Changing track genre data: ", trackBlendsByGenre.length);
   }, [trackBlendsByGenre]);
 
   useEffect(() => {
@@ -989,6 +981,13 @@ export function Blend() {
 
   const [trackGenreExpanded, setTrackGenreExpanded] = useState(false);
   const [artistGenreExpanded, setArtistGenreExpanded] = useState(false);
+
+  useEffect(() => {
+    setGenreArtists(userCatalogueArtist1MonthData);
+    setGenreTracks(userCatalogueTrack1MonthData);
+    // setTrackGenreData(Object.keys(trackBlendsByGenre));
+    // setArtistGenreData(Object.keys(artistBlendsByGenre));
+  }, [catalogueLoading]);
 
   return (
     <div className="w-full ">
