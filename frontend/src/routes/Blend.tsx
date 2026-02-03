@@ -10,7 +10,6 @@ import FrontArrow from "@/assets/images/arrow_front.svg";
 import "@/assets/styles/index.css";
 import { toBlob } from "html-to-image";
 
-import { chromium, firefox, webkit, BrowserType } from "playwright";
 import {
   ControlPanelProps,
   CardApiResponse,
@@ -22,32 +21,11 @@ import {
   CatalogueTopGenresResponse,
   CatalogueTopGenresSchema,
 } from "../components/prop-types";
-import { set, z } from "zod";
 import {
   SplitRatioBar,
   SplitRatioBarSkeleton,
 } from "../components/SplitRatioBar";
 import { API_BASE_URL } from "../constants";
-
-// type ControlPanelProps = {
-//   setBlendPercent: (num: number) => void;
-//   blendApiResponse: BlendApiResponse;
-// };
-
-// type BlendApiResponse = {
-//   usernames: string[];
-//   overallBlendNum: number;
-//   ArtistBlend: TypeBlend;
-//   AlbumBlend: TypeBlend;
-//   TrackBlend: TypeBlend;
-// };
-// type MetricKey = keyof BlendApiResponse;
-
-// type TypeBlend = {
-//   OneMonth: number;
-//   ThreeMonth: number;
-//   OneYear: number;
-// };
 
 function useLocalStorageState<T>(key: string, initialValue: T) {
   const [state, setState] = useState<T>(() => {
@@ -74,47 +52,27 @@ type Genre = string;
 
 type CatalogueById = Record<BlendId, CatalogueBlendResponse>;
 
-// Genre -> set of blend IDs
 type BlendsByGenre = Record<Genre, Set<BlendId>>;
 
-function buildGenreIndex(catalogue: CatalogueBlendResponse[]): {
-  catalogueById: CatalogueById;
-  blendsByGenre: BlendsByGenre;
-} {
-  const catalogueById: CatalogueById = {};
-  const blendsByGenre: BlendsByGenre = {};
+function buildGenreIndex(catalogue: CatalogueBlendResponse[]) {
+  const catalogueById: Record<string, CatalogueBlendResponse> = {};
+  const blendsByGenre: Record<string, Set<string>> = {};
 
-  for (const blend of catalogue) {
-    const id = blend.Name;
+  for (const item of catalogue) {
+    const id = item.Name;
+    catalogueById[id] = item;
 
-    catalogueById[id] = blend;
-    if (!blend.Genres || blend.Genres.length === 0) continue;
-    for (const genre of blend.Genres) {
-      if (!blendsByGenre[genre]) {
-        blendsByGenre[genre] = new Set();
+    if (item.Genres?.length) {
+      for (const genre of item.Genres) {
+        if (!blendsByGenre[genre]) {
+          blendsByGenre[genre] = new Set();
+        }
+        blendsByGenre[genre].add(id);
       }
-      blendsByGenre[genre].add(id);
     }
   }
 
   return { catalogueById, blendsByGenre };
-}
-
-function getBlendsByGenre(
-  genre: string,
-  catalogueById: CatalogueById,
-  blendsByGenre: BlendsByGenre,
-): CatalogueBlendResponse[] {
-  const blendIds = blendsByGenre[genre];
-  if (!blendIds) return [];
-
-  return Array.from(blendIds).map((id) => catalogueById[id]);
-}
-
-function getGenresForBlend(
-  blend: CatalogueBlendResponse,
-): string[] | undefined {
-  return blend.Genres;
 }
 
 type GenreMatchMode = "OR" | "AND";
@@ -156,7 +114,8 @@ function getIntersection(
   return intersection;
 }
 
-const TOP_GENRE_KEY = "TOP_GENRES";
+const TOP_TRACK_GENRE_KEY = "TOP_TRACK_GENRES";
+const TOP_ARTIST_GENRE_KEY = "TOP_ARTIST_GENRES";
 const ARTIST_3_MONTH_KEY = "ARTIST_3_MONTH_KEY";
 const TRACK_3_MONTH_KEY = "TRACK_3_MONTH_KEY";
 const ARTIST_12_MONTH_KEY = "ARTIST_12_MONTH_KEY";
@@ -211,9 +170,11 @@ export function Blend() {
   const [userATopItemsLoading, setUserATopItemsLoading] = useState(true);
   const [userBTopItemsLoading, setUserBTopItemsLoading] = useState(true);
 
-  const [genreData, setGenreData] =
-    useLocalStorageState<CatalogueTopGenresResponse>(TOP_GENRE_KEY, []);
-  const [genreLoading, setGenreLoading] = useState(false);
+  const [trackGenreData, setTrackGenreData] =
+    useLocalStorageState<CatalogueTopGenresResponse>(TOP_TRACK_GENRE_KEY, []);
+  const [artistGenreData, setArtistGenreData] =
+    useLocalStorageState<CatalogueTopGenresResponse>(TOP_ARTIST_GENRE_KEY, []);
+  // const [genreLoading, setGenreLoading] = useState(false);
 
   // const [userATopArtists, setUserATopArtists] = useLocalStorageState<string[]>(
   //   USER_A_TOP_ARTISTS_KEY,
@@ -376,7 +337,7 @@ export function Blend() {
       try {
         setCardLoading(true);
         setCatalogueLoading(true);
-        setGenreLoading(true);
+        // setGenreLoading(true);
 
         await Promise.all([
           getCatalogueBlendData(
@@ -436,7 +397,7 @@ export function Blend() {
         ]);
 
         await getCardBlendData(); // runs AFTER all catalogue calls
-        await getTopMutualGenreData();
+        // await getTopMutualGenreData();
         setCatArt1Year(false);
         setCatArt3Month(false);
         setCatTrack1Year(false);
@@ -452,45 +413,45 @@ export function Blend() {
     loadAllCatalogueData();
   }, [blendId]);
 
-  const getTopMutualGenreData = async () => {
-    console.log("Getting data for top mutual genre");
+  // const getTopMutualGenreData = async () => {
+  //   console.log("Getting data for top mutual genre");
 
-    try {
-      const encodedValue = encodeURIComponent(blendId as string);
-      const res = await fetch(
-        `${API_BASE_URL}/blend/blendtopgenres?blendId=${encodedValue}`,
-        {
-          method: "GET",
-          credentials: "include",
-        },
-      );
+  //   try {
+  //     const encodedValue = encodeURIComponent(blendId as string);
+  //     const res = await fetch(
+  //       `${API_BASE_URL}/blend/blendtopgenres?blendId=${encodedValue}`,
+  //       {
+  //         method: "GET",
+  //         credentials: "include",
+  //       },
+  //     );
 
-      if (res.status == 401) {
-        navigate(
-          `/login?redirectTo=${encodeURIComponent(location.pathname + location.search)}`,
-        );
-        return;
-      }
+  //     if (res.status == 401) {
+  //       navigate(
+  //         `/login?redirectTo=${encodeURIComponent(location.pathname + location.search)}`,
+  //       );
+  //       return;
+  //     }
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(data.message || "Blend ID is invalid.");
-        setGenreLoading(false);
-        return;
-      }
+  //     if (!res.ok) {
+  //       const data = await res.json().catch(() => ({}));
+  //       setError(data.message || "Blend ID is invalid.");
+  //       // setGenreLoading(false);
+  //       return;
+  //     }
 
-      const data = await res.json();
-      console.log("Genre data received:", data);
-      const userData = CatalogueTopGenresSchema.parse(data);
-      console.log("Parsed genre data:", userData);
-      setGenreData(userData);
-      setGenreLoading(false);
-    } catch (err) {
-      console.error(err);
-      setError("Something went wrong. Please try again.");
-      setGenreLoading(false);
-    }
-  };
+  //     const data = await res.json();
+  //     console.log("Genre data received:", data);
+  //     const userData = CatalogueTopGenresSchema.parse(data);
+  //     console.log("Parsed genre data:", userData);
+  //     // setGenreData(userData);
+  //     // setGenreLoading(false);
+  //   } catch (err) {
+  //     console.error(err);
+  //     setError("Something went wrong. Please try again.");
+  //     // setGenreLoading(false);
+  //   }
+  // };
   // console.log("Getting data for blendId (1): ", blendId);
   const getCardBlendData = async () => {
     console.log("Getting data for blendId (2): ", blendId);
@@ -692,94 +653,6 @@ export function Blend() {
     }
   };
 
-  // useEffect(() => {
-  //   console.log("Loading user catalogue artist blend data:");
-
-  //   if (!blendId) {
-  //     setError("Could not get blendid.");
-  //     console.log("Blend ID is null, cannot get data?");
-  //     return;
-  //   }
-
-  //   cardLoading
-  //     ? getCatalogueBlendData(
-  //         "3month",
-  //         "artist",
-  //         blendId,
-  //         setUserCatalogueArtist3MonthData,
-  //         setCatArt3Month,
-  //         setError,
-  //       )
-  //     : null;
-  // }, [blendId]);
-
-  // useEffect(() => {
-  //   console.log("Loading user catalogue artist blend data:");
-
-  //   if (!blendId) {
-  //     setError("Could not get blendid.");
-  //     console.log("Blend ID is null, cannot get data?");
-  //     return;
-  //   }
-
-  //   cardLoading
-  //     ? getCatalogueBlendData(
-  //         "3month",
-  //         "track",
-  //         blendId,
-  //         setUserCatalogueTrack3MonthData,
-  //         setCatTrack3Month,
-  //         setError,
-  //       )
-  //     : null;
-  // }, [blendId]);
-
-  // useEffect(() => {
-  //   console.log("Loading user catalogue artist blend data:");
-
-  //   if (!blendId) {
-  //     setError("Could not get blendid.");
-  //     console.log("Blend ID is null, cannot get data?");
-  //     return;
-  //   }
-
-  //   cardLoading
-  //     ? getCatalogueBlendData(
-  //         "12month",
-  //         "artist",
-  //         blendId,
-  //         setUserCatalogueArtist1YearData,
-  //         setCatArt1Year,
-  //         setError,
-  //       )
-  //     : null;
-  // }, [blendId]);
-
-  // useEffect(() => {
-  //   console.log("Loading user catalogue artist blend data:");
-
-  //   if (!blendId) {
-  //     setError("Could not get blendid.");
-  //     console.log("Blend ID is null, cannot get data?");
-  //     return;
-  //   }
-
-  //   cardLoading
-  //     ? getCatalogueBlendData(
-  //         "12month",
-  //         "track",
-  //         blendId,
-  //         setUserCatalogueTrack1YearData,
-  //         setCatTrack1Year,
-  //         setError,
-  //       )
-  //     : null;
-  // }, [blendId]);
-
-  // useEffect(() => {
-  //   if catalogueLoading
-  // }, [catalogueLoading])
-
   // ----- Copy button functionality -----
   const captureRef = useRef(null); //Div to be captured
   const [isCapturing, setIsCapturing] = useState(false); //To hide the button during screenshot
@@ -874,10 +747,8 @@ export function Blend() {
     setOpenSection((prev) => (prev === section ? null : section));
   };
 
-  type ArtistRange = "1months" | "3months" | "12months";
-  type TrackRange = "1months" | "3months" | "12months";
-  const ranges: ArtistRange[] = ["1months", "3months", "12months"];
-  const trackRanges: TrackRange[] = ["1months", "3months", "12months"];
+  type DurationRange = "1months" | "3months" | "12months";
+  const ranges: DurationRange[] = ["1months", "3months", "12months"];
   const [currentArtistRangeIndex, setCurrentArtistRangeIndex] = useState(0);
   const [currentTrackRangeIndex, setCurrentTrackRangeIndex] = useState(0);
 
@@ -889,8 +760,14 @@ export function Blend() {
 
   const trackDataRanges = {
     "1months": userCatalogueTrack1MonthData,
-    "3months": userCatalogueArtist3MonthData,
+    "3months": userCatalogueTrack3MonthData,
     "12months": userCatalogueTrack1YearData,
+  };
+
+  const artistDataRanges = {
+    "1months": userCatalogueArtist1MonthData,
+    "3months": userCatalogueArtist3MonthData,
+    "12months": userCatalogueArtist1YearData,
   };
 
   const currentArtistRange = ranges[currentArtistRangeIndex];
@@ -911,35 +788,32 @@ export function Blend() {
     CatalogueBlendResponse[] | undefined
   >([]);
 
-  const [enabledButtons, setEnabledButtons] = useState({});
-  // useEffect(() => {
-  //   const genre = genres[0];
-  //   setEnabledButtons({ [genre]: true });
-  // }, []);
-  const toggleButton = (genre) => {
-    //If there is only 1 genre enabled, do not allow disabling it
-    // if (enabledButtons[genre] && getEnabledGenres().length <= 1) { //UNCOMMENT IF YOU ALWAYS WANT ONE ENABLED
-    //   return;
-    // }
+  const [genreArtists, setGenreArtists] = useState<
+    CatalogueBlendResponse[] | undefined
+  >([]);
+
+  const [enabledTrackButtons, setEnabledTrackButtons] = useState({});
+  const [enabledArtistButtons, setEnabledArtistButtons] = useState({});
+
+  const toggleButtonGeneral = (genre: string, type: "artist" | "track") => {
+    const isTrack = type === "track";
+    const setEnabledButtons = isTrack
+      ? setEnabledTrackButtons
+      : setEnabledArtistButtons;
+
     setEnabledButtons((prev) => {
       const newState = { ...prev, [genre]: !prev[genre] };
-      console.log(
-        "Enabled buttons:",
-        Object.keys(newState).filter((g) => newState[g]),
-      );
+      const activeGenres = Object.keys(newState).filter((g) => newState[g]);
+      const catalogues = getCataloguesBasedOffGenres(activeGenres, type);
 
-      // Update genreTracks based on new state
-      const songs = getSongsBasedOffGenres(
-        Object.keys(newState).filter((g) => newState[g]),
-      );
-      setGenreTracks(songs);
-      console.log("User 1 year track data", userCatalogueTrack1YearData);
+      if (isTrack) {
+        setGenreTracks(catalogues);
+      } else {
+        setGenreArtists(catalogues);
+      }
+
       return newState;
     });
-    console.log("Enabled buttons: ", getEnabledGenres());
-    var songs = getSongsBasedOffGenres(getEnabledGenres());
-    setGenreTracks(songs);
-    console.log("Songs based off genres: ", songs);
   };
 
   function getBlendsByGenres(
@@ -966,7 +840,7 @@ export function Blend() {
 
   const handleGenreModeToggle = () => {
     setModeCatalogueGenreFilter((prev) => {
-      const enabledGenresLength = getEnabledGenres().length;
+      const enabledGenresLength = getEnabledGenres(enabledTrackButtons).length;
 
       if (enabledGenresLength === 0) {
         console.log("Genre Mode: Time to do nothing");
@@ -976,10 +850,10 @@ export function Blend() {
       const nextMode = prev === "OR" ? "AND" : "OR";
 
       const catalogue = getBlendsByGenres(
-        getEnabledGenres(),
+        getEnabledGenres(enabledTrackButtons),
         nextMode,
-        catalogueById,
-        blendsByGenre,
+        trackCatalogueById,
+        trackBlendsByGenre,
       );
 
       console.log(`Genre Mode: ${nextMode}`);
@@ -990,47 +864,107 @@ export function Blend() {
     });
   };
 
-  const getSongsBasedOffGenres = (genres: string[]) => {
-    if (genres.length == 0) {
-      return trackDataRanges[currentArtistRange];
-    }
-    let songs: CatalogueBlendResponse[];
-    if (modeCatalogueGenreFilter == "OR") {
-      songs = getBlendsByGenres(genres, "OR", catalogueById, blendsByGenre);
-    } else if (modeCatalogueGenreFilter == "AND") {
-      songs = getBlendsByGenres(genres, "AND", catalogueById, blendsByGenre);
+  const getCataloguesBasedOffGenres = (
+    genres: string[],
+    type: "artist" | "track",
+  ) => {
+    const isTrack = type == "artist" ? false : true;
+
+    let dataRanges;
+    let currentRange;
+    let catalogueById;
+    let blendsByGenre;
+
+    if (isTrack) {
+      dataRanges = trackDataRanges;
+      currentRange = currentTrackRange;
+      catalogueById = trackCatalogueById;
+      blendsByGenre = trackBlendsByGenre;
     } else {
-      songs = getBlendsByGenres(genres, "AND", catalogueById, blendsByGenre);
+      dataRanges = artistDataRanges;
+      currentRange = currentArtistRange;
+      catalogueById = artistCatalogueById;
+      blendsByGenre = artistBlendsByGenre;
     }
-    return songs;
+    if (genres.length == 0) {
+      return dataRanges[currentRange];
+    }
+    let catalogues: CatalogueBlendResponse[];
+    if (modeCatalogueGenreFilter == "OR") {
+      catalogues = getBlendsByGenres(
+        genres,
+        "OR",
+        catalogueById,
+        blendsByGenre,
+      );
+    } else if (modeCatalogueGenreFilter == "AND") {
+      catalogues = getBlendsByGenres(
+        genres,
+        "AND",
+        catalogueById,
+        blendsByGenre,
+      );
+    } else {
+      catalogues = getBlendsByGenres(
+        genres,
+        "AND",
+        catalogueById,
+        blendsByGenre,
+      );
+    }
+    return catalogues;
   };
 
   const switchDurationTrackData = useMemo(() => {
-    console.log("Switching Duration: ", currentTrackRange);
-    switch (currentTrackRange) {
-      case "1months":
-        return userCatalogueTrack1MonthData;
-      case "3months":
-        return userCatalogueTrack3MonthData;
-      case "12months":
-        return userCatalogueTrack1YearData;
-      default:
-        return [];
-    }
+    console.log("Switching Track Duration: ", currentTrackRange);
+    return trackDataRanges[currentTrackRange];
   }, [currentTrackRangeIndex]);
+
+  const switchDurationArtistData = useMemo(() => {
+    console.log("Switching Artist Duration: ", currentArtistRange);
+    return artistDataRanges[currentArtistRange];
+  }, [currentArtistRangeIndex]);
 
   useEffect(() => {
     setGenreTracks(switchDurationTrackData);
   }, [currentTrackRange]);
-  const getEnabledGenres = () => {
+
+  useEffect(() => {
+    setGenreArtists(switchDurationArtistData);
+  }, [currentArtistRange]);
+
+  const getEnabledGenres = (enabledButtons) => {
     return Object.keys(enabledButtons).filter((genre) => enabledButtons[genre]);
   };
-  const { catalogueById, blendsByGenre } = useMemo(
+
+  const {
+    catalogueById: trackCatalogueById,
+    blendsByGenre: trackBlendsByGenre,
+  } = useMemo(
     () => buildGenreIndex(switchDurationTrackData ?? []),
     [currentTrackRange],
   );
 
-  const [genreExpanded, setGenreExpanded] = useState(false);
+  const {
+    catalogueById: artistCatalogueById,
+    blendsByGenre: artistBlendsByGenre,
+  } = useMemo(
+    () => buildGenreIndex(switchDurationArtistData ?? []),
+    [currentArtistRange],
+  );
+
+  useEffect(() => {
+    setTrackGenreData(Object.keys(trackBlendsByGenre));
+    console.log("Changing track genre data");
+  }, [trackBlendsByGenre]);
+
+  useEffect(() => {
+    setArtistGenreData(Object.keys(artistBlendsByGenre));
+    console.log("Changing artist genre data");
+  }, [artistBlendsByGenre]);
+
+  const [trackGenreExpanded, setTrackGenreExpanded] = useState(false);
+  const [artistGenreExpanded, setArtistGenreExpanded] = useState(false);
 
   return (
     <div className="w-full ">
@@ -1039,7 +973,7 @@ export function Blend() {
 
         {/* <div className="md:flex md:flex-wrap pr-2 mt-8 lg:grid lg:grid-cols-2 "> Old*/}
         {/* LEFT CONTENT AREA */}
-        {/* This was card bit was enhanced from its previous version with AI. I am not that artistic to have come up with it myself lmao. */}
+        {/* This card bit was enhanced from its previous version with AI. I am not that artistic to have come up with it myself lmao. */}
         <div className="  md:w-[40%] flex flex-col flex-wrap items-center justify-baseline gap-y-5">
           <div
             className={`text-black font-[Roboto_Mono] italic    ${!catalogueLoading && !cardLoading ? "hidden" : "lg:hidden block"} `}
@@ -1287,110 +1221,172 @@ export function Blend() {
           {/* New genre thingy  */}
           <section className="w-full flex flex-col mb-6 ">
             <div className="relative flex flex-col justify-center ring-2 p-2 ring-black   ">
-              {genreLoading ? (
-                <div className="flex flex-col gap-y-4 items-center">
-                  {[...Array(3)].map((_, index) => (
-                    <SplitRatioBarSkeleton key={index} />
-                  ))}
-                </div>
-              ) : (
-                <div>
-                  <div className=" ">
-                    <div
-                      className={`flex flex-wrap justify-center flex-row m-2 gap-3 px-[3px] py-2 overflow-y-scroll ${genreExpanded ? "max-h-[260px]" : "max-h-[110px]  "}`}
-                    >
-                      {genreData.map((genre) => (
-                        <button
-                          key={genre}
-                          onClick={() => toggleButton(genre)}
-                          className={`flex flex-row group capitalize relative w-auto h-10 min-w-5 text-sm font-[Roboto_Mono] font-medium select-none ${"active:shadow-[2px_2px_0_0_black] active:translate-[2px] shadow-[4px_4px_0_0_black]"} ${enabledButtons[genre] ? "bg-[#D84727] text-slate-100 outline-[#000000]" : "bg-white text-slate-950 outline-black "}  p-3 outline-2 transition-all flex flex-col items-center justify-center gap-1`}
-                        >
-                          {genre}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="flex items-center w-full min-w-full pb-2 ring-black pl-1">
+              <div>
+                <div className=" ">
+                  <div
+                    className={`flex flex-wrap justify-center flex-row m-2 gap-3 px-[3px] py-2 overflow-y-scroll ${trackGenreExpanded ? "max-h-[260px]" : "max-h-[110px]  "}`}
+                  >
+                    {trackGenreData.map((genre) => (
                       <button
-                        onClick={handleGenreModeToggle}
-                        className={` mr-2 w-12 px-2 h-6 flex items-center justify-center
-                  bg-black  shadow-[2px_2px_0_0_black]
-                  active:translate-[1px] active:shadow-[1px_1px_0_0_black]
-                  transition-all text-white font-[Roboto_Mono] font-medium text-xs`}
-                        aria-label="Toggle genre list height"
+                        key={genre}
+                        onClick={() => toggleButtonGeneral(genre, "track")}
+                        className={`flex flex-row group capitalize relative w-auto h-10 min-w-5 text-sm font-[Roboto_Mono] font-medium select-none ${"active:shadow-[2px_2px_0_0_black] active:translate-[2px] shadow-[4px_4px_0_0_black]"} ${enabledTrackButtons[genre] ? "bg-[#D84727] text-slate-100 outline-[#000000]" : "bg-white text-slate-950 outline-black "}  p-3 outline-2 transition-all flex flex-col items-center justify-center gap-1`}
                       >
-                        <p className="pr-1 pl-1.5">
-                          {modeCatalogueGenreFilter}
-                        </p>
+                        {genre}
                       </button>
-
-                      {/* Clear button this  */}
-                      <button
-                        onClick={() => {
-                          setEnabledButtons((prev) => {
-                            const newState = Object.fromEntries(
-                              Object.keys(prev).map((key) => [key, false]),
-                            ) as typeof prev;
-
-                            const songs = getSongsBasedOffGenres([]);
-                            setGenreTracks(songs);
-
-                            return newState;
-                          });
-                        }}
-                        className={` mr-9 w-12 h-6 flex items-center justify-center
-                  bg-white  shadow-[2px_2px_0_0_black]
-                  active:translate-[1px] active:shadow-[1px_1px_0_0_black]
-                  transition-all text-black ring-1 font-[Roboto_Mono] font-medium text-xs`}
-                        aria-label="Toggle genre list height"
-                      >
-                        <p className="pr-1 pl-1.5">Clear</p>
-                      </button>
-
-                      <h1 className="mx-auto text-center font-[Roboto_Mono] text-black font-black text-lg">
-                        TRACKS
-                      </h1>
-
-                      <button
-                        onClick={() => setGenreExpanded((prev) => !prev)}
-                        className={` ml-auto mr-2  w-18 h-6 flex items-center justify-center
-                  bg-black  shadow-[2px_2px_0_0_black]
-                  active:translate-[1px] active:shadow-[1px_1px_0_0_black]
-                  transition-all text-white font-[Roboto_Mono] font-medium text-xs`}
-                        aria-label="Toggle genre list height"
-                      >
-                        <p className="pr-1 pl-1.5">
-                          {genreExpanded ? "Less" : "Expand"}{" "}
-                        </p>
-                        <span
-                          className={`transition-transform duration-300 ${
-                            genreExpanded ? "rotate-180" : "rotate-0"
-                          }`}
-                        >
-                          ▼
-                        </span>
-                      </button>
-                    </div>
+                    ))}
                   </div>
-                  <HeaderDivider
-                    users={users}
-                    title={durationRangeLabel[currentTrackRange]}
-                    goPrev={goPrev}
-                    goNext={goNext}
-                    setCurrentTypeRangeIndex={setCurrentTrackRangeIndex}
-                  />
-                  <ListOfSongs genreTracks={genreTracks} />
+
+                  {/* Intersection vs Union */}
+                  <div className="flex items-center w-full min-w-full pb-2 ring-black pl-1">
+                    <button
+                      onClick={handleGenreModeToggle}
+                      className={` mr-2 w-12 px-2 h-6 flex items-center justify-center
+                  bg-black  shadow-[2px_2px_0_0_black]
+                  active:translate-[1px] active:shadow-[1px_1px_0_0_black]
+                  transition-all text-white font-[Roboto_Mono] font-medium text-xs`}
+                      aria-label="Toggle genre list height"
+                    >
+                      <p className="pr-1 pl-1.5">{modeCatalogueGenreFilter}</p>
+                    </button>
+
+                    {/* Clear button this  */}
+                    <button
+                      onClick={() => {
+                        setEnabledTrackButtons((prev) => {
+                          const newState = Object.fromEntries(
+                            Object.keys(prev).map((key) => [key, false]),
+                          ) as typeof prev;
+
+                          const songs = getCataloguesBasedOffGenres(
+                            [],
+                            "track",
+                          );
+                          setGenreTracks(songs);
+
+                          return newState;
+                        });
+                      }}
+                      className={` mr-9 w-12 h-6 flex items-center justify-center
+                      bg-white  shadow-[2px_2px_0_0_black]
+                      active:translate-[1px] active:shadow-[1px_1px_0_0_black]
+                      transition-all text-black ring-1 font-[Roboto_Mono] font-medium text-xs`}
+                      aria-label="Toggle genre list height"
+                    >
+                      <p className="pr-1 pl-1.5">Clear</p>
+                    </button>
+
+                    <h1 className="mx-auto text-center font-[Roboto_Mono] text-black font-black text-lg">
+                      TRACKS
+                    </h1>
+
+                    <button
+                      onClick={() => setTrackGenreExpanded((prev) => !prev)}
+                      className={` ml-auto mr-2  w-18 h-6 flex items-center justify-center
+                      bg-black  shadow-[2px_2px_0_0_black]
+                      active:translate-[1px] active:shadow-[1px_1px_0_0_black]
+                      transition-all text-white font-[Roboto_Mono] font-medium text-xs`}
+                      aria-label="Toggle genre list height"
+                    >
+                      <p className="pr-1 pl-1.5">
+                        {trackGenreExpanded ? "Less" : "Expand"}{" "}
+                      </p>
+                      <span
+                        className={`transition-transform duration-300 ${
+                          trackGenreExpanded ? "rotate-180" : "rotate-0"
+                        }`}
+                      >
+                        ▼
+                      </span>
+                    </button>
+                  </div>
                 </div>
-              )}
+                <HeaderDivider
+                  users={users}
+                  title={durationRangeLabel[currentTrackRange]}
+                  goPrev={goPrev}
+                  goNext={goNext}
+                  setCurrentTypeRangeIndex={setCurrentTrackRangeIndex}
+                />
+                <ListOfSongs genreCatalogues={genreTracks} />
+              </div>
             </div>
           </section>
 
           {/* New experimental dropdown bit */}
           <section className="w-full flex flex-col ring-2 p-2 ring-black">
-            <div className="flex items-center justify-center gap-4 mb-2 ">
-              <h2 className="text-lg font-bold text-black text-center min-w-[220px]">
-                ARTIST
-              </h2>
+            <div
+              className={`flex flex-wrap justify-center flex-row m-2 gap-3 px-[3px] py-2 overflow-y-scroll ${artistGenreExpanded ? "max-h-[260px]" : "max-h-[110px]  "}`}
+            >
+              {artistGenreData.map((genre) => (
+                <button
+                  key={genre}
+                  onClick={() => toggleButtonGeneral(genre, "artist")}
+                  className={`flex flex-row group capitalize relative w-auto h-10 min-w-5 text-sm font-[Roboto_Mono] font-medium select-none ${"active:shadow-[2px_2px_0_0_black] active:translate-[2px] shadow-[4px_4px_0_0_black]"} ${enabledArtistButtons[genre] ? "bg-[#D84727] text-slate-100 outline-[#000000]" : "bg-white text-slate-950 outline-black "}  p-3 outline-2 transition-all flex flex-col items-center justify-center gap-1`}
+                >
+                  {genre}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center justify-center gap-4 mb-2 "></div>
+            <div className="flex items-center w-full min-w-full pb-2 ring-black pl-1">
+              {/* <button
+                onClick={handleGenreModeToggle}
+                className={` mr-2 w-12 px-2 h-6 flex items-center justify-center
+                  bg-black  shadow-[2px_2px_0_0_black]
+                  active:translate-[1px] active:shadow-[1px_1px_0_0_black]
+                  transition-all text-white font-[Roboto_Mono] font-medium text-xs`}
+                aria-label="Toggle genre list height"
+              >
+                <p className="pr-1 pl-1.5">{modeCatalogueGenreFilter}</p>
+              </button> */}
+
+              {/* Clear button this  */}
+              {/* <button
+                onClick={() => {
+                  setEnabledTrackButtons((prev) => {
+                    const newState = Object.fromEntries(
+                      Object.keys(prev).map((key) => [key, false]),
+                    ) as typeof prev;
+
+                    const songs = getSongsBasedOffGenres([]);
+                    setGenreTracks(songs);
+
+                    return newState;
+                  });
+                }}
+                className={` mr-9 w-12 h-6 flex items-center justify-center
+                      bg-white  shadow-[2px_2px_0_0_black]
+                      active:translate-[1px] active:shadow-[1px_1px_0_0_black]
+                      transition-all text-black ring-1 font-[Roboto_Mono] font-medium text-xs`}
+                aria-label="Toggle genre list height"
+              >
+                <p className="pr-1 pl-1.5">Clear</p>
+              </button> */}
+
+              <h1 className="mx-auto text-center font-[Roboto_Mono] text-black font-black text-lg">
+                ARTISTS
+              </h1>
+
+              <button
+                onClick={() => setArtistGenreExpanded((prev) => !prev)}
+                className={` ml-auto mr-2  w-18 h-6 flex items-center justify-center
+                      bg-black  shadow-[2px_2px_0_0_black]
+                      active:translate-[1px] active:shadow-[1px_1px_0_0_black]
+                      transition-all text-white font-[Roboto_Mono] font-medium text-xs`}
+                aria-label="Toggle genre list height"
+              >
+                <p className="pr-1 pl-1.5">
+                  {artistGenreExpanded ? "Less" : "Expand"}{" "}
+                </p>
+                <span
+                  className={`transition-transform duration-300 ${
+                    artistGenreExpanded ? "rotate-180" : "rotate-0"
+                  }`}
+                >
+                  ▼
+                </span>
+              </button>
             </div>
             <HeaderDivider
               users={users}
@@ -1399,95 +1395,11 @@ export function Blend() {
               goNext={goNext}
               setCurrentTypeRangeIndex={setCurrentArtistRangeIndex}
             />
-            {currentArtistRange === "3months" && (
-              <>
-                {catArt3Month ? (
-                  <div className="flex flex-col gap-y-4 items-center">
-                    {[...Array(3)].map((_, index) => (
-                      <SplitRatioBarSkeleton key={index} />
-                    ))}
-                  </div>
-                ) : userCatalogueArtist3MonthData.length !== 0 ? (
-                  <div className="w-full max-h-[280px] overflow-y-scroll">
-                    <div className="flex flex-col gap-y-4  items-center text-zinc-950 px-2 pt-2 pb-6">
-                      {userCatalogueArtist3MonthData.map((item, index) => (
-                        <SplitRatioBar
-                          key={index}
-                          itemName={item.Name}
-                          Artist={item.Artist as string}
-                          valueA={item.Playcounts[0]}
-                          valueB={item.Playcounts[1]}
-                          ArtistUrl={item.ArtistUrl as string}
-                          itemUrl={item.EntryUrl as string}
-                          genres={item.Genres as string[]}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </>
-            )}
 
-            {currentArtistRange === "12months" && (
-              <>
-                {catArt1Year ? (
-                  <div className="flex flex-col gap-y-4 items-center">
-                    {[...Array(3)].map((_, index) => (
-                      <SplitRatioBarSkeleton key={index} />
-                    ))}
-                  </div>
-                ) : userCatalogueArtist1YearData.length !== 0 ? (
-                  <div className="w-full max-h-[280px] overflow-y-scroll">
-                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-2 pb-6">
-                      {userCatalogueArtist1YearData.map((item, index) => (
-                        <SplitRatioBar
-                          key={index}
-                          itemName={item.Name}
-                          Artist={item.Artist as string}
-                          valueA={item.Playcounts[0]}
-                          valueB={item.Playcounts[1]}
-                          ArtistUrl={item.ArtistUrl as string}
-                          itemUrl={item.EntryUrl as string}
-                          genres={item.Genres as string[]}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </>
-            )}
-
-            {currentArtistRange === "1months" && (
-              <>
-                {catArt1Month ? (
-                  <div className="flex flex-col gap-y-4 items-center">
-                    {[...Array(3)].map((_, index) => (
-                      <SplitRatioBarSkeleton key={index} />
-                    ))}
-                  </div>
-                ) : userCatalogueArtist1MonthData.length !== 0 ? (
-                  <div className="w-full max-h-[280px] overflow-y-scroll">
-                    <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-2 pb-6">
-                      {userCatalogueArtist1MonthData.map((item, index) => (
-                        <SplitRatioBar
-                          key={index}
-                          itemName={item.Name}
-                          Artist={item.Artist as string}
-                          valueA={item.Playcounts[0]}
-                          valueB={item.Playcounts[1]}
-                          ArtistUrl={item.ArtistUrl as string}
-                          itemUrl={item.EntryUrl as string}
-                          genres={item.Genres as string[]}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </>
-            )}
+            <ListOfSongs genreCatalogues={genreArtists} />
           </section>
 
-          <section className="w-full flex flex-col ring-2 p-2 ring-black">
+          {/* <section className="w-full flex flex-col ring-2 p-2 ring-black">
             <div className="flex items-center justify-center gap-4 mb-2">
               <h2 className="text-lg font-bold text-black text-center min-w-[220px]">
                 TRACKS
@@ -1585,7 +1497,7 @@ export function Blend() {
                 ) : null}
               </>
             )}
-          </section>
+          </section> */}
         </div>
       </div>
     </div>
@@ -1597,9 +1509,11 @@ const fetchBlendPercentage = async (label) => {
 };
 
 type ListOfSongsProps = {
-  genreTracks?: CatalogueBlendResponse[];
+  genreCatalogues?: CatalogueBlendResponse[];
 };
-export const ListOfSongs = ({ genreTracks }: ListOfSongsProps) => {
+export const ListOfSongs = ({
+  genreCatalogues: genreTracks,
+}: ListOfSongsProps) => {
   return (
     <div className="flex flex-col max-h-[280px] overflow-y-scroll">
       <div className="flex flex-col gap-y-4 items-center text-zinc-950 px-2 pt-2 pb-6 ">
