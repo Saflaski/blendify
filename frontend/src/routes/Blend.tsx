@@ -338,6 +338,7 @@ export function Blend() {
         setCardLoading(true);
         setCatalogueLoading(true);
         // setGenreLoading(true);
+        await getCardBlendData(); // runs BEFORE all catalogue calls
 
         await Promise.all([
           getCatalogueBlendData(
@@ -396,7 +397,6 @@ export function Blend() {
           ),
         ]);
 
-        await getCardBlendData(); // runs AFTER all catalogue calls
         // await getTopMutualGenreData();
         setCatArt1Year(false);
         setCatArt3Month(false);

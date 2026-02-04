@@ -138,6 +138,7 @@ func (h *BlendHandler) GetUserTopGenres(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *BlendHandler) GetUserBlends(w http.ResponseWriter, r *http.Request) {
+	glog.Info("Entered GetUserBlends")
 	userA, err := h.GetUserIdFromContext(r.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -211,6 +212,7 @@ func (h *BlendHandler) GetBlendHealth(w http.ResponseWriter, r *http.Request) {
 
 func (h *BlendHandler) GetBlendedEntryData(w http.ResponseWriter, r *http.Request) {
 	// /?blendId=&category=&timeDuration=&type=
+	glog.Info("Entered GetBlendedEntryData")
 	response := r.URL.Query()
 
 	blendId := blendId(response.Get("blendId"))
