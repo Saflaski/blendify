@@ -92,7 +92,7 @@ func (r *BlendStore) GetCachedUserTopGenres(ctx context.Context, user userid) ([
 	key := fmt.Sprintf("%s:%s:%s", r.musicPrefix, user, "top_genres")
 	result, err := r.redisClient.Get(ctx, key).Result()
 	if err == redis.Nil {
-		glog.Infof("Top Genres Cache Miss for user: %s", user)
+		glog.Infof("Top Genres Cache Miss for user ")
 		return nil, nil
 	}
 	if err != nil {
@@ -104,7 +104,7 @@ func (r *BlendStore) GetCachedUserTopGenres(ctx context.Context, user userid) ([
 	if err != nil {
 		return nil, fmt.Errorf(" during extracting top genres cache from redis, error in decoding from json: %w", err)
 	}
-	glog.Infof("Top Genres Cache Hit for user: %s", user)
+	glog.Infof("Top Genres Cache Hit for user ")
 
 	return topGenres, nil
 }
@@ -146,8 +146,8 @@ func (r *BlendStore) GetFromCacheTopX(context context.Context, userName string, 
 
 	Result, err := r.redisClient.Get(context, key).Result()
 	if err == redis.Nil {
-		glog.Infof("Cache Miss: %s - %s - %s", userName, timeDuration, category)
-		glog.Infof("Key looked for: %s", key)
+		glog.Infof("Cache Miss: %s - %s", timeDuration, category)
+		// glog.Infof("Key looked for: %s", key)
 		return nil, nil
 	}
 	if err != nil {

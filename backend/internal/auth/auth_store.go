@@ -145,7 +145,7 @@ func (r *AuthStateStore) DeleteUser(ctx context.Context, userid string) error {
 
 	//Delete LFM connection
 	platform_name, err := r.GetLFMByUserId(ctx, userid)
-	glog.Info(userid)
+	// glog.Info(userid)
 	if err != nil {
 		glog.Errorf(" during deletion of user auth level, could not find lfm by userid")
 	}
@@ -187,8 +187,8 @@ func (r *AuthStateStore) DeleteUser(ctx context.Context, userid string) error {
 	//Delete User
 	userKey := fmt.Sprintf("%s:%s", r.prefixUser, userid)
 	_, err = r.client.Del(commandContext, userKey).Result()
-	glog.Infof("GDPR Auth level erasure complete: \nuser_id: %s \nsid_count: %d\ntimestamp (UTC): %s", userid, len(sids), time.Now().UTC())
-
+	// glog.Infof("DEBUG - GDPR Auth level erasure complete: \nuser_id: %s \nsid_count: %d\ntimestamp (UTC): %s", userid, len(sids), time.Now().UTC())
+	glog.Infof("GDPR Auth level erasure complete")
 	return err
 }
 
@@ -259,7 +259,7 @@ func (r *AuthStateStore) queueAddNewSidListWithScoreCmd(pipe redis.Pipeliner, us
 
 func (r *AuthStateStore) AddUserIdToLFMIndex(context context.Context, userid, lfmName string) error {
 	key := fmt.Sprintf("%s:%s", r.prefixLFMToUser, lfmName)
-	glog.Info("Set lfm username")
+	// glog.Info("Set lfm username")
 	return r.client.Set(context, key, userid, 0).Err()
 }
 

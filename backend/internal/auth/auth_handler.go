@@ -220,14 +220,14 @@ func (h *AuthHandler) HandleAPIValidation(w http.ResponseWriter, r *http.Request
 				fmt.Fprintf(w, "Cookie Valid")
 				return
 			} else { //Cookie expired or DB mismatch
-				glog.Infof("Cookie invalid or expired for request from %s. UA: %s", r.RemoteAddr, r.UserAgent())
+				// glog.Infof("DEBUG - Cookie invalid or expired for request from %s. UA: %s", r.RemoteAddr, r.UserAgent())
 				w.WriteHeader(http.StatusUnauthorized)
 				fmt.Fprintf(w, "Cookie Expired or Invalid")
 			}
 		}
 	} else {
 		//No cookie found or invalid cookie
-		glog.Infof("No cookie found for request from %s. UA: %s", r.RemoteAddr, r.UserAgent())
+		// glog.Infof("DEBUG - No cookie found for request from %s. UA: %s", r.RemoteAddr, r.UserAgent())
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintf(w, "No Cookie Found")
 		return

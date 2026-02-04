@@ -579,18 +579,18 @@ func (s *BlendService) AddOrMakeBlendFromLink(context context.Context, userA use
 		return "", fmt.Errorf(" error during checking if blendlink existed: %w", err)
 
 	}
-	glog.Infof("Found blend from link: %s", link)
+	// glog.Infof("Found blend from link: %s", link)
 	if id == "" { //No link found
 		//TODO : THIS IS MAKING PROBLEMS
 		userB, err := s.repo.GetLinkCreator(context, link) //Fetch user who created link
 		if err != nil {
 			return "", fmt.Errorf(" error during getting user (creator) from link : %w", err)
 		}
-		glog.Infof("Blend created by: %s", userB)
+		// glog.Infof("Blend created by: %s", userB)
 
 		//Safety net to make sure userA != userB
 		if userB == userA {
-			glog.Info("Same user nvm")
+			// glog.Info("Same user nvm")
 			return "0", nil //0 is code for consuming user being the same user as creating user
 		}
 
@@ -627,10 +627,10 @@ func (s *BlendService) AddOrMakeBlendFromLink(context context.Context, userA use
 			if err != nil {
 				return "", fmt.Errorf(" could not add user to blend: %w", err)
 			}
-			glog.Infof("User does not exist in blend. Adding %s", userA)
+			// glog.Infof("User does not exist in blend. Adding %s", userA)
 			return id, nil
 		} else {
-			glog.Infof("User already exists in blend")
+			// glog.Infof("User already exists in blend")
 			//Nothing to see here, just return the existing blend id
 			return id, nil
 		}
@@ -819,9 +819,9 @@ func (s *BlendService) GetNewDataForUser(ctx context.Context, user userid) error
 			if err != nil {
 				return fmt.Errorf(" could not extract top genres from redis cache: %w", err)
 			}
-			for _, genre := range topGenres {
-				glog.Infof("User: %s Top Genre from REDIS: %s", resp.user, genre)
-			}
+			// for _, genre := range topGenres {
+			// 	glog.Infof("User: %s Top Genre from REDIS: %s", resp.user, genre)
+			// }
 		}
 	}
 	return nil
@@ -916,8 +916,8 @@ func (s *BlendService) GetBlend(context context.Context, userA userid, userB use
 	// 	return 0, fmt.Errorf("could not extract username from UUID of user with ID: %s, %w", userA, err)
 	// }
 
-	glog.Info("Calculating blend for users: ", userA, " + ", userB, " category: ",
-		category, " timeDuration: ", timeDuration)
+	// glog.Info("Calculating blend for users: ", userA, " + ", userB, " category: ",
+	// category, " timeDuration: ", timeDuration)
 
 	switch category {
 	case BlendCategoryArtist:
@@ -975,7 +975,7 @@ func (s *BlendService) getTopX(context context.Context, userid userid, timeDurat
 		// }
 		return dbResp, nil
 	} else { //Cache miss
-		glog.Info("Cache miss on user %s", userid)
+		// glog.Info("Cache miss on user %s", userid)
 		platformUsername, err := s.getLFM(context, string(userid))
 		if err != nil {
 			return nil, fmt.Errorf(" could get platform username from given userid:%s with err: %w", userid, err)

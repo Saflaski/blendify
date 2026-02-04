@@ -3,12 +3,10 @@ package auth
 import (
 	"context"
 	"net/http"
-
-	"github.com/golang/glog"
 )
 
 func ValidateCookie(h AuthHandler, s AuthService) func(next http.Handler) http.Handler {
-	glog.Info("Validating cookie")
+	// glog.Info("Validating cookie")
 	ctx := context.Background()
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

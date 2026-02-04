@@ -49,7 +49,7 @@ func (h *BlendHandler) GetUserTopItems(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := r.URL.Query()
-	glog.Info(response)
+	// glog.Info(response)
 
 	category := blendCategory(response.Get("category"))
 	timeDuration := blendTimeDuration(response.Get("duration"))
@@ -79,7 +79,7 @@ func (h *BlendHandler) GetBlendTopGenres(w http.ResponseWriter, r *http.Request)
 	}
 
 	response := r.URL.Query()
-	glog.Info(response)
+	// glog.Info(response)
 
 	blendId := blendId(response.Get("blendId"))
 
@@ -96,7 +96,7 @@ func (h *BlendHandler) GetBlendTopGenres(w http.ResponseWriter, r *http.Request)
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintf(w, " User does not exist in this blend. Please try accepting invite again.")
-		glog.Infof("User unauth access %s -> %s", userA, blendId)
+		// glog.Infof("User unauth access %s -> %s", userA, blendId)
 		return
 	}
 
@@ -264,7 +264,7 @@ func (h *BlendHandler) GetBlendPageData(w http.ResponseWriter, r *http.Request) 
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintf(w, " User does not exist in this blend. Please try accepting invite again.")
-		glog.Infof("User unauth access %s -> %s", id, blendId)
+		// glog.Infof("User unauth access %s -> %s", id, blendId)
 		return
 	}
 
@@ -380,7 +380,7 @@ func (h *BlendHandler) AddBlendFromInviteLink(w http.ResponseWriter, r *http.Req
 	}
 
 	// _ = blendId
-	glog.Infof("Blend Link Value: %s, User: %s", blendLinkValue, userA)
+	// glog.Infof("Blend Link Value: %s, User: %s", blendLinkValue, userA)
 
 	w.WriteHeader(http.StatusOK)
 	resp := map[string]string{

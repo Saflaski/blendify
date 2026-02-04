@@ -100,7 +100,7 @@ func (s *AuthService) MakeNewUser(context context.Context, validationSid string,
 	}
 
 	if res == uuid.Nil { //We did not find an existing username
-		glog.Info("Generating full new user")
+		// glog.Info("Generating full new user")
 		newuuid := uuid.New()
 		err = s.repo.MakeNewUser(context, validationSid, userName, newuuid)
 
@@ -109,7 +109,7 @@ func (s *AuthService) MakeNewUser(context context.Context, validationSid string,
 		return newuuid, err
 	} else {
 		//Assign new SID to user
-		glog.Info("Found existing user, just assigning sid to existing user then")
+		// glog.Info("Found existing user, just assigning sid to existing user then")
 		err := s.repo.AddNewSidToExistingUser(context, res, validationSid)
 		if err != nil {
 			return res, fmt.Errorf(" could not add new sid to existing user: %s with err: %w", res.String(), err)
