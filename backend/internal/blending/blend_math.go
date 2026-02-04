@@ -5,8 +5,6 @@ import (
 	"maps"
 	"math"
 	"slices"
-
-	"github.com/golang/glog"
 )
 
 func GetLogCombinedScore(a, b int) float64 {
@@ -110,7 +108,7 @@ func combineNumbersWithWeights(inputsAndWeights ...int) (int, error) {
 		if v > max {
 			max = v
 		}
-		glog.Info(v)
+		// glog.Info(v)
 	}
 	weightSum := 0
 	for _, w := range inputsAndWeights[numInputs:] {
