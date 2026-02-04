@@ -174,16 +174,21 @@ export function Home() {
     tracks: 0,
   });
   return (
-    <div className="min-h-screen w-full flex items-start justify-center py-5 font-[Roboto_Mono]">
+    <div className="min-h-screen w-full flex items-start dark:text-white justify-center py-5 font-[Roboto_Mono]">
       <div
-        className={`w-full max-w-xl slate-bg  border border-slate-300 px-5 py-6 flex flex-col gap-y-4 text-slate-900`}
+        className={`w-full max-w-xl bg-[#F3ECDC] dark:bg-[#242321] 
+          dark:shadow-[3px_3px_#F6E8CB] shadow-[3px_3px_#000]  dark:border-[#EED5A0]
+           border-2 border-black px-5 py-6 flex flex-col gap-y-4 
+           text-slate-900 dark:text-[#dfdcd7]`}
       >
         <header className="w-full flex flex-col gap-1">
           {!statLoading ? (
             <section className="w-full flex flex-col gap-4 mb-6">
               <h1 className="text-3xl font-bold tracking-tight">
                 Hi,{" "}
-                <span className="text-slate-600">{userName.toUpperCase()}</span>
+                <span className="text-slate-600 dark:text-slate-50">
+                  {userName.toUpperCase()}
+                </span>
               </h1>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -229,7 +234,7 @@ export function Home() {
           )}
           <h1 className="text-xl font-semibold tracking-tight">Your blends</h1>
 
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-slate-300">
             Paste a Blendify link from someone to start a blend
           </p>
           <section className="w-full">
@@ -237,7 +242,7 @@ export function Home() {
           </section>
 
           <div className="w-1/2 border-t my-4 mx-auto justify-center"></div>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500  dark:text-slate-300">
             Generate a Blendify link and send it to someone
           </p>
           <section>
@@ -296,23 +301,34 @@ function ListOfBlends({
 
     return (
       <div w-full>
-        <h3 className="text-xs pl-2 font-bold  text-gray-700 mb-2">{title}</h3>
+        <h3 className="text-xs pl-2 font-bold dark:text-gray-100  text-gray-700 mb-2">
+          {title}
+        </h3>
         <div className="space-y-1">
           {blendsArray.map((blend) => (
             <div
               key={blend.blendid}
-              className="flex overflow-hidden w-full group relative"
+              className="flex overflow-hidden shadow-[2px_2px_black] 
+              active:shadow-[0px_0px_black] active:translate-0.5
+              hover:translate-[-2px] hover:shadow-[4px_4px_black]
+              dark:shadow-[2px_2px_#F6E8CB] dark:active:shadow-[0px_0px_#F6E8CB]
+              dark:hover:shadow-[4px_4px_#F6E8CB]
+              transition-all
+              bg-[#00CED1] dark:bg-[#d84827] dark:text-black
+              border-1  border-[#000] dark:border-[#FFF] group relative"
             >
               <button
-                className=" flex flex-1 w-full text-left items-center transition-all duration-300 ease-in-out
-            justify-between border border-slate-200 px-3 py-2 hover:bg-slate-50"
+                className=" flex flex-1 w-full text-left transition-all duration-300 ease-in-out
+            justify-between  dark:border-slate-200 border-r border-slate-700 px-3 py-2
+            items-stretch overflow-hidden
+             hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-black dark:hover:text-white"
                 onClick={() => funcNav(blend.blendid)}
               >
                 <span className="truncate font-['Roboto_Mono'] text-sm">
                   {blend.user.join(" + ")} // {blend.value}%
                 </span>
 
-                <span className="text-[12px] text-right text-slate-400 ml-2 shrink-0">
+                <span className="text-[12px] text-right text-slate-800 dark:text-slate-300   ml-2 shrink-0">
                   {daysAgo(blend.timestamp) === 0
                     ? "added today"
                     : `added ${daysAgo(blend.timestamp)}d ago`}
@@ -324,38 +340,23 @@ function ListOfBlends({
                   handleDelete(blend.blendid);
                 }}
                 className="
-                        translate-x-0
-                opacity-100
-                w-auto
-                pl-1
-                pointer-events-auto
-                text-xs
-                text-white
-                transition-all duration-100 ease-in-out
 
-                lg:-translate-x-4
-                lg:opacity-0
-                lg:w-0
-                lg:pointer-events-none
-
-                lg:group-hover:opacity-100
-                lg:group-hover:translate-x-0
-                lg:group-hover:pointer-events-auto
-                lg:group-hover:w-auto
-                lg:group-hover:px-1
-
-                lg:group-focus-within:opacity-100
-                lg:group-focus-within:translate-x-0
-                lg:group-focus-within:pointer-events-auto
-                lg:group-focus-within:w-auto
-
-                lg:hover:bg-red-100
-                lg:hover:border
-                lg:focus:border
-
+                flex items-center justify-center
+      bg-red-50 dark:bg-slate-100
+      text-white
+      transition-all duration-200 ease-in-out
+      
+      w-10 opacity-100 pointer-events-auto border-y border-r border-slate-200
+      
+      lg:w-0 lg:opacity-0 lg:pointer-events-none lg:border-none
+      lg:group-hover:w-10 lg:group-hover:opacity-100 lg:group-hover:pointer-events-auto lg:group-hover:border-y lg:group-hover:border-r lg:group-hover:border-slate-200
+      lg:group-focus-within:w-10 lg:group-focus-within:opacity-100 lg:group-focus-within:pointer-events-auto
+      
+      hover:bg-red-100 dark:hover:bg-red-500
+      
         "
               >
-                <img src={Delete} className="bg-inherit" alt="Go to blend" />
+                <img src={Delete} className="" alt="Delete Blend" />
               </button>
             </div>
           ))}
@@ -495,7 +496,11 @@ function AddNewBlendBar({ AddBlend }) {
   return (
     <div className="flex  w-full gap-2">
       <div
-        className={`flex w-full border border-slate-600 bg-white px-3 py-2 text-xs font-['Roboto_Mono'] focus:outline-none focus:border-slate-900`}
+        className={`flex w-full border border-slate-600
+            dark:bg-[#1a1917] dark:border-slate-50 dark:text-white
+            text-black bg-white  px-3 py-2 text-xs font-['Roboto_Mono']
+            shadow-[2px_2px_#000] dark:shadow-[2px_2px_#F6E8CB] 
+            focus:outline-none focus:border-slate-900`}
       >
         <textarea
           name="newBlend"
@@ -503,7 +508,10 @@ function AddNewBlendBar({ AddBlend }) {
           value={value}
           onChange={(e) => setValue(e.target.value)}
           rows={1}
-          className="resize-none w-full focus:outline-none overflow-hidden text-nowrap flex
+          className="resize-none w-full dark:text-white dark:border-slate-50
+          
+           dark:bg-inherit bg-white text-black focus:outline-none 
+           overflow-hidden text-nowrap flex
          
           "
         ></textarea>
@@ -518,9 +526,17 @@ function AddNewBlendBar({ AddBlend }) {
 
       <button
         onClick={() => AddBlend(value)}
-        className={`border home-slate-button   border-slate-900  px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide  focus:outline-none focus:border-black`}
+        className={`border 
+          text-black
+          transition-all duration-100
+        border-slate-900 bg-[#D84727] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
+        active:shadow-none active:translate-x-[2px] active:translate-y-[2px]
+        dark:border-[#e6e1d7] dark:bg-[#242321] dark:text-[#e6e1d7] dark:shadow-[3px_3px_0px_0px_#F6E8CB]
+        dark:active:shadow-none
+          px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide  
+          focus:outline-none focus:border-black`}
       >
-        Add
+        ADD
       </button>
     </div>
   );
@@ -553,45 +569,58 @@ function GenerateLink() {
   };
 
   return (
-    <div className="flex w-full gap-2">
+    <div className="flex w-full gap-3 items-center">
       <textarea
         name="newLink"
         value={link}
         readOnly={true}
         rows={1}
-        className="flex-1 text-[11px] sm:text-xs resize-none overflow-hidden text-nowrap  border opacity-90 border-slate-300 bg-slate-50 focus:outline-none focus:ring-0 focus:border-slate-300 px-3 py-2 text-xs font-['Roboto_Mono'] cursor-default"
-      ></textarea>
+        className="flex-1 text-[11px] sm:text-xs resize-none overflow-hidden text-nowrap 
+      transition-all duration-200
+      bg-[#f8f3e9] border-slate-900 dark:border-1 text-slate-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+       dark:bg-slate-700 dark:border-[#e6e1d7] dark:text-[#e6e1d7] dark:shadow-[2px_2px_0px_0px_#F6E8CB]
+      focus:outline-none px-3 py-2 font-mono cursor-default"
+      />
 
-      <div className="relative">
+      <div className="relative flex gap-2">
         {copied && (
-          <div
-            className="absolute right-14.5 bg-gray-500 text-white 
-        text-[10px] px-2 py-0.5 shadow animate-fade-in-out"
-          >
+          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 dark:bg-[#F6E8CB] text-white dark:text-black text-[10px] px-2 py-1 rounded shadow-lg">
             Copied!
           </div>
         )}
+
         <button
           onClick={handleCopy}
-          className={`flex items-center justify-center border border-slate-900 home-slate-button px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide  focus:outline-none focus:border-black`}
+          className="flex items-center justify-center border transition-all duration-100
+        border-slate-900 bg-[#D84727] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+        active:shadow-none active:translate-x-[2px] active:translate-y-[2px]
+        dark:border-[#e6e1d7] dark:bg-[#242321] dark:shadow-[2px_2px_0px_0px_#F6E8CB]
+        dark:active:shadow-none
+        px-4 py-2"
         >
           <svg
+            className="fill-slate-900 dark:fill-[#F6E8CB]"
             xmlns="http://www.w3.org/2000/svg"
             height="18px"
             viewBox="0 -960 960 960"
-            width="24px"
-            fill="#F6E8CB"
+            width="18px"
           >
             <path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z" />
           </svg>
         </button>
+
+        <button
+          onClick={handleGenerateLink}
+          className="border font-mono text-xs font-bold tracking-widest transition-all duration-100
+        border-slate-900 bg-[#D84727] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
+        active:shadow-none active:translate-x-[2px] active:translate-y-[2px]
+        dark:border-[#e6e1d7] dark:bg-[#242321] dark:text-[#e6e1d7] text-black dark:shadow-[3px_3px_0px_0px_#F6E8CB]
+        dark:active:shadow-none
+        px-4 py-2"
+        >
+          REFRESH
+        </button>
       </div>
-      <button
-        onClick={handleGenerateLink}
-        className={`border border-slate-900 px-4 py-2 text-xs font-['Roboto_Mono'] home-slate-button  font-bold tracking-wide  focus:outline-none focus:border-black`}
-      >
-        Refresh
-      </button>
     </div>
   );
 }

@@ -5,6 +5,9 @@ import HomeIcon from "@/assets/images/home.svg";
 import MenuIcon from "@assets/images/menu.svg";
 import BlendifyWhiteIcon from "@/assets/images/blendifyIconWhite.svg";
 import BlendifyIcon from "@/assets/images/blendifyIcon.svg";
+
+import DarkModeToggle from "./DarkModeToggle";
+
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -143,20 +146,19 @@ export function Navbar() {
                   funcName={null}
                   text="About"
                 />
-
                 <DropDownItem
                   page="/privacy"
                   setOpen={setOpen}
                   funcName={null}
                   text="Privacy"
                 />
-
                 <DropDownItem
                   page="/login"
                   funcName={handleLogOut}
                   setOpen={setOpen}
                   text="Log Out"
                 />
+                <DarkModeToggle />
               </ul>
             </div>
           )}

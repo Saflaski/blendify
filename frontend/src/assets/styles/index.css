@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Quantico:ital,wght@0,400;0,700;1,400;1,700&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
+
 @import "tailwindcss";
 
 @font-face {
@@ -102,7 +103,7 @@ main > * {
   margin: 0 0 0 0;
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #f8f3e9;
+  /* background-color: #f8f3e9; */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -112,7 +113,7 @@ main > * {
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: #f8f3e9;
+  /* background-color: #f8f3e9; */
   box-sizing: border-box;
 }
 
@@ -247,10 +248,6 @@ title {
   word-wrap: break-word; 
 } */
 
-btn-spotify {
-  background-clip: padding-box;
-}
-
 .navbar {
   background-color: #1a1a1a;
 }
@@ -337,15 +334,6 @@ button {
   }
 }
 
-button:hover {
-  border-color: #646cff;
-}
-
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
 /* @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
@@ -389,25 +377,3 @@ button:focus-visible {
     margin: 0 auto; /* Center the subheading */
   }
 }
-
-button:hover {
-  border-color: #646cff;
-}
-
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-/* @media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-} */

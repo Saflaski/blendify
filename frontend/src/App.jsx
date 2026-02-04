@@ -9,7 +9,6 @@ import { Layout } from "./Layout";
 import { authLoader } from "./utils/authLoader";
 import { Home } from "./routes/Home";
 import { Account } from "./routes/Account";
-
 const router = createBrowserRouter([
   {
     element: <Layout />,
