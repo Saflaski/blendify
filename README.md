@@ -7,10 +7,12 @@
 ## Features
 
 - **Taste Blending** – Merge multiple users’ song preferences into one catalogue
+- **Genre specific blends** - Browse mutual top artists/songs filtered through top mutual genres
 - **Cross platform** - Blendify is platform agnostic, and music tastes can be extracted through LastFM or directly.
 - **Dynamic Updates** – Automatically adapts as tastes change  
 - **Web-Based** – No installation required
 - **Minmal user authentication** - Authenticate once via last.fm and you're good go
+
 
 ---
 ## Screenshots
@@ -19,7 +21,7 @@
 
 ### Blend page
 
-<img width="1297" height="791" alt="blendify_blend_page" src="https://github.com/user-attachments/assets/34096ada-1c45-4f55-9552-0088c9c42655" />
+<img width="1466" height="795" alt="blendify_blend_page" src="https://github.com/user-attachments/assets/d699d256-2d72-4812-bf1e-dff6c4c7d75e" />
 
 ---
 ## How It Works
@@ -45,4 +47,4 @@
 - Generate playlists that can be automatically saved to Spotify/LastFM/Youtube etc
 - More data about each artist/song and more direct comparisons between users
 - Group blends
-- Genre specific blends
+
