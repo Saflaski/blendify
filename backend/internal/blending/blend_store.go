@@ -385,6 +385,20 @@ var durationPrefix = map[blendTimeDuration]string{
 	BlendTimeDurationYear:       "one_year",
 }
 
+func (r *BlendStore) CacheUserMusicDataV2(context context.Context, user userid, category blendCategory, duration blendTimeDuration, data map[string]CatalogueStats, cacheTime time.Duration) error {
+	key := fmt.Sprintf("%s:%s:%s:%s", r.musicPrefix, user, categoryPrefix[category], durationPrefix[duration])
+
+	jsonBytes, err := utility.ObjectToJSON(data)
+	if err != nil {
+		return fmt.Errorf(" during caching to db, error in encoding to json: %w", err)
+	}
+	err = r.redisClient.Set(context, key, jsonBytes, cacheTime).Err()
+	if err != nil {
+		return fmt.Errorf(" during caching to db, could not set json map in db: %w", err)
+	}
+	return nil
+}
+
 func (r *BlendStore) CacheUserMusicData(context context.Context, resp complexResponse, cacheTime time.Duration) error {
 	key := fmt.Sprintf("%s:%s:%s:%s", r.musicPrefix, resp.user, categoryPrefix[resp.category], durationPrefix[resp.duration])
 
