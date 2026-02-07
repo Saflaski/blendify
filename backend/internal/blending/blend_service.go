@@ -253,10 +253,10 @@ func (s *BlendService) GetDuoBlendData(context context.Context, blendId blendId)
 		return DuoBlend{}, nil
 	}
 
-	err = s.PopulateUsersByBlend(context, blendId)
-	if err != nil {
-		return DuoBlend{}, fmt.Errorf(" Could not populate user data: %w", err)
-	}
+	// err = s.PopulateUsersByBlend(context, blendId)
+	// if err != nil {
+	// 	return DuoBlend{}, fmt.Errorf(" Could not populate user data: %w", err)
+	// }
 
 	// individualUserData := make([]IndividualUserData, len(userids))
 	// errSum := 0
@@ -780,7 +780,7 @@ func (s *BlendService) GetNewDataForUser(ctx context.Context, user userid) error
 						err:      err,
 					}
 					fmt.Println("Caching data for user:", resp.user, " duration:", resp.duration, " category:", resp.category)
-					err = s.cacheLFMData(ctx, resp)
+					err = s.cacheLFMData(ctx, user, resp.category, resp.duration, resp.data)
 					if err != nil {
 						resp.err = fmt.Errorf(" error during caching lfm data: %w", err)
 					}
@@ -872,10 +872,10 @@ func (s *BlendService) extractTopGenres(input map[string]CatalogueStats, topN in
 	return topGenres
 }
 
-func (s *BlendService) cacheLFMData(ctx context.Context, resp complexResponse) error {
+func (s *BlendService) cacheLFMData(ctx context.Context, user userid, category blendCategory, duration blendTimeDuration, data map[string]CatalogueStats) error {
 
 	cacheTime := time.Duration(time.Hour * 24 * 1) //1 day default
-	switch resp.duration {
+	switch duration {
 	case BlendTimeDurationOneMonth:
 		cacheTime *= 2
 	case BlendTimeDurationThreeMonth:
@@ -884,7 +884,16 @@ func (s *BlendService) cacheLFMData(ctx context.Context, resp complexResponse) e
 		cacheTime *= 5
 	}
 
-	err := s.repo.CacheUserMusicData(ctx, resp, cacheTime)
+	glog.Info("Caching data: \n", " duration:", duration, " category:", category, " with cache time (hours):", cacheTime.Hours())
+
+	err := s.repo.CacheUserMusicDataV2(
+		ctx,
+		user,
+		category,
+		duration,
+		data,
+		cacheTime,
+	)
 	if err != nil {
 		return err
 	}
@@ -984,6 +993,12 @@ func (s *BlendService) getTopX(context context.Context, userid userid, timeDurat
 		lfmResp, err := s.downloadTopX(context, platformUsername, timeDuration, category)
 		if err != nil {
 			return nil, fmt.Errorf(" did not download %s %s properly: %w", timeDuration, category, err)
+		}
+
+		//Cache the downloaded data
+		cacheErr := s.cacheLFMData(context, userid, category, timeDuration, lfmResp)
+		if cacheErr != nil {
+			return nil, fmt.Errorf(" error during caching lfm data: %w", cacheErr)
 		}
 
 		if len(lfmResp) == 0 {
