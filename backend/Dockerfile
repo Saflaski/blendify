@@ -1,4 +1,4 @@
-FROM golang:1.24.0-alpine AS builder
+FROM golang:1.24.5-alpine AS builder
 WORKDIR /app
 
 COPY go.mod go.sum ./
@@ -15,6 +15,7 @@ FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /app/app .
 COPY .env .env
+
 
 EXPOSE 3000
 CMD ["./app", "-logtostderr=true"]
