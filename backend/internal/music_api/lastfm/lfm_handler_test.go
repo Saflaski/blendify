@@ -9,7 +9,54 @@ import (
 	"testing"
 
 	"github.com/joho/godotenv"
+	"github.com/stretchr/testify/assert"
 )
+
+func BenchmarkUserTopTracks(b *testing.B) {
+	lfm_adapter := NewLastFMExternalAdapter(
+		os.Getenv("LASTFM_API_KEY"),
+		"https://ws.audioscrobbler.com/2.0/",
+		true,
+		10,
+	)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := lfm_adapter.GetUserTopTracks(
+			b.Context(),
+			"saflas",
+			"3month",
+			1,
+			50,
+		)
+		if err != nil {
+			b.Errorf("Expected no error, got %q", err)
+		}
+	}
+}
+
+func BenchmarkAsyncUserTopTracks(b *testing.B) {
+	lfm_adapter := NewLastFMExternalAdapter(
+		os.Getenv("LASTFM_API_KEY"),
+		"https://ws.audioscrobbler.com/2.0/",
+		true,
+		10,
+	)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := lfm_adapter.GetUserTopTracksAsync(
+			b.Context(),
+			"saflas",
+			"3month",
+			1,
+			50,
+		)
+		if err != nil {
+			b.Errorf("Expected no error, got %q", err)
+		}
+	}
+}
 
 func TestEndpoints(t *testing.T) {
 
@@ -162,6 +209,54 @@ func TestEndpoints(t *testing.T) {
 		}
 		// t.Error(fmt.Sprint(len(TopArtistResponse.TopArtists.Artist)))
 
+	})
+
+	t.Run("Get UserTopTracks Async", func(t *testing.T) {
+		res, err := apiHandler.GetUserTopTracksAsync(
+			t.Context(),
+			"saflas",
+			"3month",
+			7,
+			50,
+		)
+
+		assert.NoError(t, err, "Expected no error, got %q", err)
+		t.Log(res)
+	})
+
+	t.Run("Get UserTopTracks", func(t *testing.T) {
+		res, err := apiHandler.GetUserTopTracks(
+			t.Context(),
+			"saflas",
+			"3month",
+			7,
+			50,
+		)
+
+		assert.NoError(t, err, "Expected no error, got %q", err)
+		t.Log(res)
+	})
+
+	t.Run("See if async and seq UserTopTracks are equal", func(t *testing.T) {
+		res, err := apiHandler.GetUserTopTracksAsync(
+			t.Context(),
+			"saflas",
+			"3month",
+			3,
+			50,
+		)
+
+		res2, err2 := apiHandler.GetUserTopTracks(
+			t.Context(),
+			"saflas",
+			"3month",
+			3,
+			50,
+		)
+
+		assert.NoError(t, err, "Expected no error, got %q", err)
+		assert.NoError(t, err2, "Expected no error, got %q", err2)
+		assert.Equal(t, res, res2, "Expected async and sequential results to be equal")
 	})
 
 }

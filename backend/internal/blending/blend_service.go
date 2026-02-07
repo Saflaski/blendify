@@ -1011,7 +1011,15 @@ func (s *BlendService) downloadTopX(context context.Context, userName string, ti
 func (s *BlendService) downloadTopArtists(context context.Context, userName string, timeDuration blendTimeDuration) (map[string]CatalogueStats, error) {
 
 	artistCatalogues := make(map[string]CatalogueStats)
-	topArtist, err := s.LastFMExternal.GetUserTopArtists(
+	// topArtist, err := s.LastFMExternal.GetUserTopArtists(
+	// 	context,
+	// 	userName,
+	// 	string(timeDuration),
+	// 	4,
+	// 	50,
+	// )
+
+	topArtist, err := s.LastFMExternal.GetUserTopArtistsAsync(
 		context,
 		userName,
 		string(timeDuration),
@@ -1087,11 +1095,18 @@ func (s *BlendService) getAlbumBlend(context context.Context, userA, userB useri
 
 func (s *BlendService) downloadTopAlbums(context context.Context, userName string, timeDuration blendTimeDuration) (map[string]CatalogueStats, error) {
 	albumToPlays := make(map[string]CatalogueStats, 50)
-	topAlbums, err := s.LastFMExternal.GetUserTopAlbums(
+	// topAlbums, err := s.LastFMExternal.GetUserTopAlbums(
+	// 	context,
+	// 	userName,
+	// 	string(timeDuration),
+	// 	2,
+	// 	50,
+	// )
+	topAlbums, err := s.LastFMExternal.GetUserTopAlbumsAsync(
 		context,
 		userName,
 		string(timeDuration),
-		1,
+		2,
 		50,
 	)
 
@@ -1153,7 +1168,15 @@ func (s *BlendService) downloadTopTracks(context context.Context, userName strin
 
 	// TIMEDURATION DOESNT WORK
 	// ------------------------
-	topTracks, err := s.LastFMExternal.GetUserTopTracks(
+	// topTracks, err := s.LastFMExternal.GetUserTopTracks(
+	// 	context,
+	// 	userName,
+	// 	string(timeDuration),
+	// 	6,
+	// 	50,
+	// )
+
+	topTracks, err := s.LastFMExternal.GetUserTopTracksAsync(
 		context,
 		userName,
 		string(timeDuration),

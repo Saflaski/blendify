@@ -7,9 +7,11 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/golang/glog"
+	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 )
 
@@ -295,6 +297,196 @@ func (h *LastFMAPIExternal) GetUserTopTracks(context context.Context, userName s
 			Track: completeTracks,
 		},
 	}, nil
+}
+
+func (h *LastFMAPIExternal) GetUserTopTracksAsync(context context.Context, userName string, period string, maxPages int, limit int) (UserTopTracks, error) {
+	if maxPages == 0 {
+		maxPages = 1
+	}
+	if limit == 0 {
+		limit = 50
+	}
+	topTracks := make([]UserTopTracks, 0, maxPages)
+	completeTracks := make([]Track, 0, maxPages*limit)
+	var wg sync.WaitGroup
+	// c := make(chan UserTopTracks, maxPages)
+	g, ctx := errgroup.WithContext(context)
+	g.SetLimit(4)
+	var mu sync.Mutex
+	for page := 1; page <= maxPages; page++ {
+		page := page //Loop variable - so that the function doesnt see the final loop variable accidentally
+		wg.Add(1)
+
+		g.Go(func() error {
+			extraURLParams := map[string]string{
+				"method": "user.gettoptracks",
+				"user":   userName,
+				"period": string(period),
+				"page":   strconv.Itoa(page),
+				"limit":  strconv.Itoa(limit),
+			}
+
+			resp, err := h.MakeRequest(ctx, extraURLParams)
+			if err != nil {
+				return fmt.Errorf("UserTopTracks makeRequest Error: %v", err)
+			}
+			defer resp.Body.Close()
+			nextTopTracks, err := utility.Decode[UserTopTracks](resp)
+			if err != nil {
+				return err
+			}
+
+			topTracks = append(topTracks, nextTopTracks)
+			tracks := nextTopTracks.TopTracks.Track
+			if len(tracks) == 0 {
+				fmt.Println("No more tracks to fetch.")
+				return nil
+			}
+			mu.Lock()
+			completeTracks = append(completeTracks, tracks...)
+			mu.Unlock()
+			fmt.Println("Fetched page ", page)
+			return nil
+
+		})
+
+	}
+
+	if err := g.Wait(); err != nil {
+		return UserTopTracks{}, fmt.Errorf("Error in goroutines: %v", err)
+	}
+	return UserTopTracks{
+		TopTracks: TopTracks{
+			Track: completeTracks,
+		},
+	}, nil
+
+}
+
+func (h *LastFMAPIExternal) GetUserTopArtistsAsync(context context.Context, userName string, period string, maxPages int, limit int) (UserTopArtists, error) {
+	if maxPages == 0 {
+		maxPages = 1
+	}
+	if limit == 0 {
+		limit = 50
+	}
+	topArtists := make([]UserTopArtists, 0, maxPages)
+	completeArtists := make([]Artist, 0, maxPages*limit)
+	var wg sync.WaitGroup
+	g, ctx := errgroup.WithContext(context)
+	g.SetLimit(4)
+	var mu sync.Mutex
+	for page := 1; page <= maxPages; page++ {
+		page := page
+		wg.Add(1)
+
+		g.Go(func() error {
+			extraURLParams := map[string]string{
+				"method": "user.gettopartists",
+				"user":   userName,
+				"period": string(period),
+				"page":   strconv.Itoa(page),
+				"limit":  strconv.Itoa(limit),
+			}
+
+			resp, err := h.MakeRequest(ctx, extraURLParams)
+			if err != nil {
+				return fmt.Errorf("UserTopArtists makeRequest Error: %v", err)
+			}
+			defer resp.Body.Close()
+			nextTopArtists, err := utility.Decode[UserTopArtists](resp)
+			if err != nil {
+				return err
+			}
+
+			topArtists = append(topArtists, nextTopArtists)
+			artists := nextTopArtists.TopArtists.Artist
+			if len(artists) == 0 {
+				fmt.Println("No more artists to fetch.")
+				return nil
+			}
+			mu.Lock()
+			completeArtists = append(completeArtists, artists...)
+			mu.Unlock()
+			fmt.Println("Fetched page ", page)
+			return nil
+
+		})
+
+	}
+
+	if err := g.Wait(); err != nil {
+		return UserTopArtists{}, fmt.Errorf("Error in goroutines: %v", err)
+	}
+	return UserTopArtists{
+		TopArtists: TopArtists{
+			Artist: completeArtists,
+		},
+	}, nil
+
+}
+
+func (h *LastFMAPIExternal) GetUserTopAlbumsAsync(context context.Context, userName string, period string, maxPages int, limit int) (UserTopAlbums, error) {
+	if maxPages == 0 {
+		maxPages = 1
+	}
+	if limit == 0 {
+		limit = 50
+	}
+	topAlbums := make([]UserTopAlbums, 0, maxPages)
+	completeAlbums := make([]Album, 0, maxPages*limit)
+	var wg sync.WaitGroup
+	g, ctx := errgroup.WithContext(context)
+	g.SetLimit(4)
+	var mu sync.Mutex
+	for page := 1; page <= maxPages; page++ {
+		page := page
+		wg.Add(1)
+
+		g.Go(func() error {
+			extraURLParams := map[string]string{
+				"method": "user.gettopalbums",
+				"user":   userName,
+				"period": string(period),
+				"page":   strconv.Itoa(page),
+				"limit":  strconv.Itoa(limit),
+			}
+
+			resp, err := h.MakeRequest(ctx, extraURLParams)
+			if err != nil {
+				return fmt.Errorf("UserTopAlbums Async makeRequest Error: %v", err)
+			}
+			defer resp.Body.Close()
+			nextTopAlbums, err := utility.Decode[UserTopAlbums](resp)
+			if err != nil {
+				return err
+			}
+
+			topAlbums = append(topAlbums, nextTopAlbums)
+			albums := nextTopAlbums.TopAlbums.Album
+			if len(albums) == 0 {
+				fmt.Println("No more albums to fetch.")
+				return nil
+			}
+			mu.Lock()
+			completeAlbums = append(completeAlbums, albums...)
+			mu.Unlock()
+			fmt.Println("Fetched page ", page)
+			return nil
+
+		})
+
+	}
+
+	if err := g.Wait(); err != nil {
+		return UserTopAlbums{}, fmt.Errorf("Error in goroutines: %v", err)
+	}
+	return UserTopAlbums{
+		TopAlbums: TopAlbums{
+			Album: completeAlbums,
+		},
+	}, nil
+
 }
 
 func (h *LastFMAPIExternal) MakeRequest(ctx context.Context, extraURLParams map[string]string) (*http.Response, error) {
