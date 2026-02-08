@@ -1013,8 +1013,8 @@ export function Blend() {
             <p
               className={`${showHint ? "hidden" : "block"} text-sm transition ease-in`}
             >
-              First blend? This might take a bit while we fetch all your music
-              data (and stay nice to the Last.fm API).
+              Sometimes it takes a while to fetch all your data (while staying
+              nice to LastFM).
             </p>
           </div>
           {/* Player card */}
@@ -1244,8 +1244,8 @@ export function Blend() {
             <p
               className={`${showHint ? "hidden" : "block"} text-sm transition ease-in`}
             >
-              First blend? This might take a bit while we fetch all your music
-              data (and stay nice to the Last.fm API).
+              Sometimes it takes a while to fetch all your data (while staying
+              nice to LastFM).
             </p>
           </div>
 

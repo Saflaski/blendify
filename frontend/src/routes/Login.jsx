@@ -50,7 +50,6 @@ function loginButton(platform) {
       wrapperClass: "mx-3",
     },
     construction: {
-      src: UnderConstruction,
       alt: "Construction Logo",
       wrapperClass: "mx-3",
     },
@@ -68,23 +67,32 @@ function loginButton(platform) {
         md:w-[15em] md:h-[4em]
         border border-black
         bg-white
+        text-black
+        font-bold
+        font-md
+        font-[Roboto_Mono]
         p-[3px]
         overflow-hidden
         shadow-[4px_4px_0_0_#e0ad46]
-        transition-all duration-75 ease-in-out
         flex items-center justify-center
         cursor-pointer
         hover:shadow-[2px_2px_0_0_#000]
+        hover:translate-[2px]
+        transition-all duration-100 ease-in-out
         active:translate-x-[1px] active:translate-y-[1px]
       "
       onClick={config.handleFunc}
     >
       <div className={config.wrapperClass}>
-        <img
-          src={config.src}
-          alt={config.alt}
-          className="object-center image-render-pixel bg-white my-40"
-        />
+        {platform !== "construction" ? (
+          <img
+            src={config.src ? config.src : null}
+            alt={config.alt}
+            className="object-center image-render-pixel bg-white my-40"
+          />
+        ) : (
+          "More Coming Soon"
+        )}
       </div>
     </button>
   );
