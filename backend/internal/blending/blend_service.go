@@ -579,30 +579,30 @@ func (s *BlendService) AddOrMakeBlendFromLink(context context.Context, userA use
 		return "", fmt.Errorf(" error during checking if blendlink existed: %w", err)
 
 	}
-	// glog.Infof("Found blend from link: %s", link)
-	if id == "" { //No link found
+	glog.Infof("Found blend from link: %s", link)
+	if id == "" { //It's not an existing blend. Go forth with making a new blend
 		//TODO : THIS IS MAKING PROBLEMS
 		userB, err := s.repo.GetLinkCreator(context, link) //Fetch user who created link
 		if err != nil {
 			return "", fmt.Errorf(" error during getting user (creator) from link : %w", err)
 		}
-		// glog.Infof("Blend created by: %s", userB)
+		glog.Infof("Blend created by: %s", userB)
 
 		//Safety net to make sure userA != userB
 		if userB == userA {
-			// glog.Info("Same user nvm")
+			glog.Info("Same user nvm")
 			return "0", nil //0 is code for consuming user being the same user as creating user
 		}
 
 		// TEMPORARY LIMIT FOR NUM USERS WHO CAN BE IN A BLEND
-		userids, err := s.repo.GetUsersFromBlend(context, id)
-		if err != nil {
-			return "", fmt.Errorf(" error getting users from blend id: %s, err: %w", id, err)
-		}
-		if len(userids)+1 > BLEND_USER_LIMIT {
-			glog.Info("Tried to add too many users to blend")
-			return "-1", nil
-		}
+		// userids, err := s.repo.GetUsersFromBlend(context, id)
+		// if err != nil {
+		// 	return "", fmt.Errorf(" error getting users from blend id: %s, err: %w", id, err)
+		// }
+		// if len(userids)+1 > BLEND_USER_LIMIT {
+		// 	glog.Info("Tried to add too many users to blend")
+		// 	return "-1", nil
+		// }
 
 		// This fetched user + the user who resulted in this function being called are
 		// now the first two users of this new blend
@@ -639,7 +639,17 @@ func (s *BlendService) AddOrMakeBlendFromLink(context context.Context, userA use
 }
 
 func (s *BlendService) AddUsersToBlend(context context.Context, id blendId, userids []userid) error {
-	err := s.repo.AddUsersToBlend(context, id, userids)
+	// TEMPORARY LIMIT FOR NUM USERS WHO CAN BE IN A BLEND
+	userids, err := s.repo.GetUsersFromBlend(context, id)
+	if err != nil {
+		return fmt.Errorf(" error getting users from blend id: %s, err: %w", id, err)
+	}
+	if len(userids)+1 > BLEND_USER_LIMIT {
+		glog.Info("Tried to add too many users to blend")
+		return nil
+	}
+
+	err = s.repo.AddUsersToBlend(context, id, userids)
 	if err != nil {
 		return fmt.Errorf(" could not add user to blend: %w", err)
 	}
