@@ -1,4 +1,4 @@
-FROM golang:1.24.5-alpine AS builder
+FROM golang:1.24.4-alpine AS builder
 WORKDIR /app
 
 COPY go.mod go.sum ./
@@ -8,7 +8,7 @@ COPY cmd ./cmd
 COPY internal ./internal
 
 
-RUN go build -o app ./cmd/api
+RUN go build -v -o app ./cmd/api
 
 FROM alpine:latest
 
