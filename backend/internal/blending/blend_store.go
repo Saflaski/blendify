@@ -5,7 +5,6 @@ import (
 	"backend-lastfm/internal/utility"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -279,8 +278,8 @@ func (r *BlendStore) GetUsersFromBlend(context context.Context, id blendId) ([]u
 		}
 		return users, nil
 	} else {
-		var ErrNoUsersForBlend = errors.New("no users for blend")
-		return nil, ErrNoUsersForBlend
+		// var ErrNoUsersForBlend = errors.New("no users for blend")
+		return nil, nil
 	}
 
 }

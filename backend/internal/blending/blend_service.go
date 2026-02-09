@@ -640,11 +640,11 @@ func (s *BlendService) AddOrMakeBlendFromLink(context context.Context, userA use
 
 func (s *BlendService) AddUsersToBlend(context context.Context, id blendId, userids []userid) error {
 	// TEMPORARY LIMIT FOR NUM USERS WHO CAN BE IN A BLEND
-	userids, err := s.repo.GetUsersFromBlend(context, id)
+	blendusers, err := s.repo.GetUsersFromBlend(context, id)
 	if err != nil {
 		return fmt.Errorf(" error getting users from blend id: %s, err: %w", id, err)
 	}
-	if len(userids)+1 > BLEND_USER_LIMIT {
+	if len(blendusers)+len(userids) > BLEND_USER_LIMIT {
 		glog.Info("Tried to add too many users to blend")
 		return nil
 	}
