@@ -741,16 +741,10 @@ export function Blend() {
 
   type OpenSection = "3months" | "12months" | null;
 
-  const [openSection, setOpenSection] = useState<OpenSection>("3months");
-
-  const toggleSection = (section: OpenSection) => {
-    setOpenSection((prev) => (prev === section ? null : section));
-  };
-
   type DurationRange = "1months" | "3months" | "12months";
   const ranges: DurationRange[] = ["1months", "3months", "12months"];
-  const [currentArtistRangeIndex, setCurrentArtistRangeIndex] = useState(0);
-  const [currentTrackRangeIndex, setCurrentTrackRangeIndex] = useState(0);
+  const [currentArtistRangeIndex, setCurrentArtistRangeIndex] = useState(1);
+  const [currentTrackRangeIndex, setCurrentTrackRangeIndex] = useState(1);
 
   const durationRangeLabel = {
     "1months": "1 MONTH",
@@ -991,10 +985,8 @@ export function Blend() {
   const [artistGenreExpanded, setArtistGenreExpanded] = useState(false);
 
   useEffect(() => {
-    setGenreArtists(userCatalogueArtist1MonthData);
-    setGenreTracks(userCatalogueTrack1MonthData);
-    // setTrackGenreData(Object.keys(trackBlendsByGenre));
-    // setArtistGenreData(Object.keys(artistBlendsByGenre));
+    setGenreArtists(artistDataRanges[ranges[currentArtistRangeIndex]]);
+    setGenreTracks(trackDataRanges[ranges[currentTrackRangeIndex]]);
   }, [catalogueLoading]);
 
   return (
