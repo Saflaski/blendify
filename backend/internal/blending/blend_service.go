@@ -185,13 +185,13 @@ func (s *BlendService) GetUserBlends(context context.Context, user userid) (Blen
 		blendAccumulator[i].BlendId = string(v)
 		blendUsers, err := s.repo.GetUsersFromBlend(context, v)
 		if err != nil {
-			return Blends{}, fmt.Errorf(" could not find blendusers from blendid %s : %w", v, err)
+			return Blends{}, fmt.Errorf(" could not find blendusers from blendid %s : %v", v, err)
 		}
 		blendPlatformUsernames := make([]platformid, len(blendUsers))
 		for j, v_2 := range blendUsers {
 			platformUser, err := s.repo.GetLFMByUserId(context, string(v_2))
 			if err != nil {
-				return Blends{}, fmt.Errorf(" could not extract platformid from userid %s : %w", v_2, err)
+				return Blends{}, fmt.Errorf(" could not extract platformid from userid %s for blendId: %s with requesting user: %s: %v", v_2, v, user, err)
 			}
 			blendPlatformUsernames[j] = platformid(platformUser)
 
