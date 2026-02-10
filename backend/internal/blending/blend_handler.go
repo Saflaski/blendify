@@ -160,6 +160,43 @@ func (h *BlendHandler) GetUserBlends(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (h *BlendHandler) GetPermanentLink(w http.ResponseWriter, r *http.Request) {
+	glog.Info("Entered GetPermanentLink")
+
+	userA, err := h.GetUserIdFromContext(r.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, " could not validate session id during generating new link. Contact Admin")
+		glog.Error("Error during generating new link, %w", err)
+	}
+
+	link, err := h.svc.GetPermanentLinkForUser(r.Context(), userA)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error during getting permanent link. Contact Admin")
+		glog.Error("Error during getting permanent link, %w", err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	response := map[string]string{"permaLinkId": string(link)}
+	json.NewEncoder(w).Encode(response)
+
+}
+
+// func (h *BlendHandler) UsePermanentLink(w http.ResponseWriter, r *http.Request) {
+// 	glog.Info("Entered UsePermanentLink")
+
+// 	linkResponse, err := utility.DecodeRequest[responseStruct](r)
+// 	if err != nil {
+// 		w.WriteHeader(http.StatusInternalServerError)
+// 		fmt.Fprintf(w, "Could not decode Permanent Link")
+// 		return
+// 	}
+
+// 	permaLinkValue := blendLinkValue(linkResponse.Value)
+
+// }
+
 func (h *BlendHandler) GenerateNewLink(w http.ResponseWriter, r *http.Request) {
 	//Extract cookie?
 	glog.Info("Entered GenerateNewLink")

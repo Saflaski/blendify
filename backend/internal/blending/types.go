@@ -7,6 +7,7 @@ import (
 
 type blendId string
 type blendLinkValue string
+type permaLinkValue string
 
 type userid string
 

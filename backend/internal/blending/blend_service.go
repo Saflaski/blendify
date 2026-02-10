@@ -15,12 +15,40 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/google/uuid"
+	gonanoid "github.com/matoous/go-nanoid/v2"
 )
 
 type BlendService struct {
 	repo           *BlendStore
 	LastFMExternal *musicapi.LastFMAPIExternal
 	MBService      *musicbrainz.MBService
+}
+
+func (s *BlendService) GetPermanentLinkForUser(context context.Context, userA userid) (permaLinkValue, error) {
+
+	//Check if the user has a current permanent link
+	link, err := s.repo.GetPermanentLinkByUser(context, userA)
+	if err != nil {
+		return "", fmt.Errorf(" could not get permanent link from userid %s due to repo error: %w", userA, err)
+	}
+
+	if link != "" {
+		//Return existing link
+		return link, nil
+	} else {
+		//Make new permanent link
+		linkID, err := gonanoid.New(10)
+
+		if err != nil {
+			return "", fmt.Errorf(" could not generate new permanent link from userid %s due to nanoid error: %w", userA, err)
+		}
+		newLinkValue := permaLinkValue(linkID)
+		err = s.repo.AssignPermanentLinkToUser(context, userA, newLinkValue)
+		if err != nil {
+			return "", fmt.Errorf(" could not assign new permanent link from userid %s due to repo error: %w", userA, err)
+		}
+		return newLinkValue, nil
+	}
 }
 
 func (s *BlendService) GetBlendTopGenres(context context.Context, blendId blendId, userA userid, timeDuration blendTimeDuration) ([]string, error) {

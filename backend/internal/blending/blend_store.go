@@ -29,6 +29,44 @@ type BlendStore struct {
 	blendIndexPrefix string
 }
 
+func (r *BlendStore) GetPermanentLinkByUser(context context.Context, userA userid) (permaLinkValue, error) {
+	key := fmt.Sprintf("%s:%s", r.userPrefix, string(userA))
+	res, err := r.redisClient.HGet(context, key, "Perma Invite").Result()
+	if err != nil {
+		return "", fmt.Errorf(" could not fetch blend's permalink from user in redis: %w", err)
+	} else {
+		return permaLinkValue(res), nil
+	}
+}
+
+func (r *BlendStore) GetUserByPermanentLink(context context.Context, linkValue permaLinkValue) (userid, error) {
+	keyIndex := fmt.Sprintf("%s:%s:%s", r.blendPrefix, "perma_invite", string(linkValue))
+	res, err := r.redisClient.Get(context, keyIndex).Result()
+	if err != nil {
+		return "", fmt.Errorf(" could not fetch blend's user from permalink in redis: %w", err)
+	} else {
+		return userid(res), nil
+	}
+}
+
+func (r *BlendStore) AssignPermanentLinkToUser(context context.Context, userA userid, newLinkValue permaLinkValue) error {
+	key := fmt.Sprintf("%s:%s", r.userPrefix, string(userA))
+	keyIndex := fmt.Sprintf("%s:%s:%s", r.blendPrefix, "perma_invite", string(newLinkValue))
+
+	pipe := r.redisClient.TxPipeline()
+	pipe.Set(context, keyIndex, string(userA), 0)
+	pipe.HSet(context, key,
+		"Perma Invite", string(userA),
+	)
+
+	_, err := pipe.Exec(context)
+	if err != nil {
+		return fmt.Errorf(" could not set blend's user from permalink into redis: %w", err)
+	} else {
+		return nil
+	}
+}
+
 func (r *BlendStore) CacheUserTopGenres(ctx context.Context, user userid, mcs map[string]CatalogueStats, topGenres []string) error {
 
 	err := r.CacheUserTopGenreNames(ctx, user, topGenres) //Uses redis to cache just the user's top genre names directly
