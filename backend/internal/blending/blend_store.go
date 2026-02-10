@@ -32,7 +32,7 @@ type BlendStore struct {
 func (r *BlendStore) GetPermanentLinkByUser(context context.Context, userA userid) (permaLinkValue, error) {
 	key := fmt.Sprintf("%s:%s", r.userPrefix, string(userA))
 	res, err := r.redisClient.HGet(context, key, "Perma Invite").Result()
-	if err != nil {
+	if err != nil && err != redis.Nil {
 		return "", fmt.Errorf(" could not fetch blend's permalink from user in redis: %w", err)
 	} else {
 		return permaLinkValue(res), nil
@@ -54,10 +54,10 @@ func (r *BlendStore) AssignPermanentLinkToUser(context context.Context, userA us
 	keyIndex := fmt.Sprintf("%s:%s:%s", r.blendPrefix, "perma_invite", string(newLinkValue))
 
 	pipe := r.redisClient.TxPipeline()
-	pipe.Set(context, keyIndex, string(userA), 0)
 	pipe.HSet(context, key,
-		"Perma Invite", string(userA),
+		"Perma Invite", string(newLinkValue),
 	)
+	pipe.Set(context, keyIndex, string(userA), 0)
 
 	_, err := pipe.Exec(context)
 	if err != nil {

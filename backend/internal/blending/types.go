@@ -16,6 +16,7 @@ type blendTimeDuration string
 
 type responseStruct struct {
 	Value string `json:"value"`
+	Type  string `json:"type"`
 }
 
 type deleteStruct struct {

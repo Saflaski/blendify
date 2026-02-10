@@ -364,28 +364,6 @@ func (h *BlendHandler) GetBlendPageData(w http.ResponseWriter, r *http.Request) 
 func (h *BlendHandler) AddBlendFromInviteLink(w http.ResponseWriter, r *http.Request) {
 	// /add
 	glog.Info("Entered AddBlendFromInviteLink")
-
-	blendResponse, err := utility.DecodeRequest[responseStruct](r)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, "Could not decode Invite Link for new blend")
-		return
-	}
-
-	blendLinkValue := blendLinkValue(blendResponse.Value)
-	if blendResponse.Value == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "Did not add blendlink value")
-		return
-	}
-
-	// cookie, err := r.Cookie(h.sessionIdCookieName)
-	// if err != nil {
-	// 	//Something must have gone wrong during runtime for this error to happen
-	// 	w.WriteHeader(http.StatusInternalServerError)
-	// 	fmt.Fprintf(w, "Error during post-validation cookie extraction. Contact Admin")
-	// 	glog.Error("Error during post-validation cookie extraction, %w", err)
-	// }
 	userA, err := h.GetUserIdFromContext(r.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -393,38 +371,81 @@ func (h *BlendHandler) AddBlendFromInviteLink(w http.ResponseWriter, r *http.Req
 		glog.Errorf("Could not parse userid from context")
 		return
 	}
+	blendResponse, err := utility.DecodeRequest[responseStruct](r)
+	//Check if it's a permalink
+	// var mode string
+	var temporaryLinkValue blendLinkValue
+	var permanentLinkValue permaLinkValue
 
-	//Validate link?
-
-	blendId, err := h.svc.AddOrMakeBlendFromLink(r.Context(), userA, blendLinkValue)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, " Could not add/make blend from link: %s", err)
-		glog.Errorf(" Could not add make/blend from link : %s from user :%s and error: %s", blendLinkValue, userA, err)
+	typeLink := blendResponse.Type
+	if typeLink != "" {
+		linkValueString := blendResponse.Value
+		glog.Infof("Invite link type param: %s", typeLink)
+		switch typeLink {
+		case "temporary":
+			// mode = "templink"
+			temporaryLinkValue = blendLinkValue(linkValueString)
+			glog.Info("Adding blend from temporarylink mode from %s", userA)
+		case "permanent":
+			// mode = "permalink"
+			permanentLinkValue = permaLinkValue(linkValueString)
+			glog.Info("Adding blend from permalink mode from %s", userA)
+		}
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "Did not add blendlink value")
+		glog.Info("Recieved bad request for adding blend from invite link from user (no type): %s", userA)
 		return
 	}
 
-	if blendId == "0" { //Code for user trying to make blend with themselves
+	var blendId blendId
+	var finalValue string
+	switch blendResponse.Type {
+	case "temporary":
+		blendId, err = h.svc.AddOrMakeBlendFromLink(r.Context(), userA, temporaryLinkValue)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, " Could not add/make blend from temporary link: %s", err)
+			glog.Errorf(" Could not add make/blend from temporary link : %s from user :%s and error: %s", temporaryLinkValue, userA, err)
+			return
+		}
+		finalValue = string(temporaryLinkValue)
+
+	case "permanent":
+		blendId, err = h.svc.MakeBlendFromPermaLink(r.Context(), userA, permanentLinkValue)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, " Could not add/make blend from permanent link: %s", err)
+			glog.Errorf(" Could not add make/blend from permanent link : %s from user :%s and error: %s", temporaryLinkValue, userA, err)
+			return
+		}
+		finalValue = string(permanentLinkValue)
+
+	}
+
+	glog.Info("Here - blendId got is: %s", blendId)
+
+	switch blendId {
+	case "0": //Code for user trying to make blend with themselves
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, " Cannot make blend with yourself: %s", err)
-		glog.Errorf(" User tried to make blend with themselves : %s :%s", blendLinkValue, userA)
+		glog.Errorf(" User tried to make blend with themselves : %s :%s", finalValue, userA)
 		return
-	} else if blendId == "-1" {
+	case "-1":
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, " Cannot add more than 2 users to blend: %s", err)
-		glog.Errorf(" Not enough space on blend : %s :%s", blendLinkValue, userA)
+		glog.Errorf(" Not enough space on blend : %s :%s", finalValue, userA)
 		return
 	}
 
-	// _ = blendId
-	// glog.Infof("Blend Link Value: %s, User: %s", blendLinkValue, userA)
+	glog.Info("Here - successfully added blend from invite link for user: %s", userA)
 
-	w.WriteHeader(http.StatusOK)
 	resp := map[string]string{
 		"blendId": string(blendId),
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(resp)
 }
 

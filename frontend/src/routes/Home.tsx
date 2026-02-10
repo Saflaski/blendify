@@ -58,6 +58,9 @@ export function Home() {
     // let value: any;
     const parsedGivenURL = new URL(givenURL);
     const invite = parsedGivenURL.searchParams.get("invite");
+
+    if (invite === "") {
+    }
     let value: number;
 
     try {
@@ -76,6 +79,7 @@ export function Home() {
         credentials: "include",
         body: JSON.stringify({
           value: invite,
+          type: "temporary",
         }),
       });
       if (!response.ok)

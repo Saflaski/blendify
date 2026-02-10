@@ -218,48 +218,6 @@ export function Blend() {
     }
   }, [location.state, navigate, location.pathname]);
 
-  // useEffect(() => {
-  //   const state = location.state as LocationState | null;
-
-  //   // 1. Consume navigation state
-  //   if (state?.id === "blendid" && state.value) {
-  //     const newBlendId = state.value;
-
-  //     console.log("Setting blendId from location state:", newBlendId);
-  //     setBlendId(newBlendId);
-
-  //     // 🔥 IMPORTANT: clear location.state so it doesn't re-run
-  //     navigate(location.pathname, { replace: true });
-
-  //     return;
-  //   }
-
-  //   if (state?.id === "linkid" && state.value) {
-  //     const newLinkId = state.value;
-
-  //     console.log("Setting navLinkId from location state:", newLinkId);
-  //     setNavLinkId(newLinkId);
-  //     setBlendId(null);
-
-  //     // 🔥 clear navigation state here too
-  //     navigate(location.pathname, { replace: true });
-
-  //     return;
-  //   }
-
-  //   // 2. Fallback to localStorage
-  //   const storedBlendId = localStorage.getItem(BLEND_ID_KEY);
-  //   if (storedBlendId) {
-  //     console.log("Setting blendId from localStorage:", storedBlendId);
-  //     setBlendId(storedBlendId);
-  //     return;
-  //   }
-
-  //   // 3. Final fallback
-  //   console.log("No blendId found, setting null");
-  //   setBlendId(null);
-  // }, [location.state, navigate, location.pathname]);
-
   console.log("NavLinkId state: ", navLinkId);
   useEffect(() => {
     console.log("BlendId after checking 3 places: ", blendId);
@@ -291,7 +249,7 @@ export function Blend() {
               "Content-Type": "application/json",
             },
             credentials: "include",
-            body: JSON.stringify({ value: invite }),
+            body: JSON.stringify({ value: invite, type: "temporary" }),
           });
 
           if (res.status == 401) {

@@ -596,6 +596,30 @@ func (s *BlendService) AuthoriseBlend(context context.Context, blendId blendId, 
 	return ok, err
 }
 
+func (s *BlendService) MakeBlendFromPermaLink(context context.Context, userA userid, link permaLinkValue) (blendId, error) {
+
+	//First get blend link from permanent link
+	userB, err := s.repo.GetUserByPermanentLink(context, link) //Fetch user who created link
+	if err != nil {
+		return "", fmt.Errorf(" error during getting user (creator) from link : %w", err)
+	}
+	glog.Infof("Blend created by: %s", userB)
+
+	//Safety net to make sure userA != userB
+	if userB == userA {
+		glog.Info("Same user nvm")
+		return "0", nil //0 is code for consuming user being the same user as creating user
+	}
+
+	id, err := s.GenerateNewBlendId(context, []userid{userA, userB}) //Should this make the whole blend or?
+	if err != nil {
+		return "", fmt.Errorf(" error during making a blend with users %s and %s: %w", userA, userB, err)
+	}
+	glog.Infof("Generating new blend: %s", id)
+
+	return id, nil
+}
+
 func (s *BlendService) AddOrMakeBlendFromLink(context context.Context, userA userid, link blendLinkValue) (blendId, error) {
 
 	//First check if this is an existing invite link

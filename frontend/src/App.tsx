@@ -1,4 +1,5 @@
 import "/src/assets/styles/App.css";
+import React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Login } from "./routes/Login";
 import { Blend } from "./routes/Blend";
@@ -9,6 +10,7 @@ import { Layout } from "./Layout";
 import { authLoader } from "./utils/authLoader";
 import { Home } from "./routes/Home";
 import { Account } from "./routes/Account";
+import { InviteRedirect } from "./routes/InviteRedirect";
 
 const router = createBrowserRouter([
   {
@@ -20,6 +22,11 @@ const router = createBrowserRouter([
       // { path: "/", element: <Home /> },
       { path: "/", element: <Home />, loader: authLoader },
       // { path: "/home/", element: <Home /> },
+      {
+        path: "/invite/:inviteCode",
+        element: <InviteRedirect />,
+        loader: authLoader,
+      },
       { path: "/blend", element: <Blend /> },
       { path: "/home", element: <Home />, loader: authLoader },
       { path: "/account", element: <Account />, loader: authLoader },
