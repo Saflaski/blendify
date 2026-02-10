@@ -646,7 +646,7 @@ func (s *BlendService) AddUsersToBlend(context context.Context, id blendId, user
 	}
 	if len(blendusers)+len(userids) > BLEND_USER_LIMIT {
 		glog.Info("Tried to add too many users to blend")
-		return nil
+		return fmt.Errorf(" adding too many users to blend id: %s with new userids %s , err: %w", id, userids, err)
 	}
 
 	err = s.repo.AddUsersToBlend(context, id, userids)
