@@ -48,7 +48,7 @@ export function InviteRedirect() {
 
         console.log("Adding new blend from Blend Add URL Value:", blendId);
         localStorage.setItem(BLEND_ID_KEY, blendId);
-        navigate("/blend");
+        // navigate("/blend");
         // navigate("/blend", {
         //   state: { id: data.blendId },
         //   replace: true,

@@ -110,7 +110,7 @@ func (app *application) mount() http.Handler {
 			// r.Post("/add/{permaLink}", blendHandler.AddBlendFromInviteLink)
 			r.With(httprate.Limit(
 				1,
-				3*time.Second,
+				1*time.Second,
 			)).Post("/add", blendHandler.AddBlendFromInviteLink)
 			r.Post("/delete", blendHandler.DeleteBlend)
 			r.Get("/carddata", blendHandler.GetBlendPageData)

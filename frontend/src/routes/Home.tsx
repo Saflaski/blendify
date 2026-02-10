@@ -57,9 +57,19 @@ export function Home() {
     let url: URL | RequestInfo;
     // let value: any;
     const parsedGivenURL = new URL(givenURL);
-    const invite = parsedGivenURL.searchParams.get("invite");
-
-    if (invite === "") {
+    const inviteValue = parsedGivenURL.searchParams.get("invite");
+    let inviteCode: string | undefined;
+    let mode: string;
+    console.log("GIVEN URL: ", givenURL);
+    if (inviteValue == null) {
+      //Try parsing the url for a perma link
+      const segments = parsedGivenURL.pathname.split("/").filter(Boolean);
+      inviteCode = segments.pop();
+      console.log("Perm invite code:", inviteCode);
+      mode = "permanent";
+    } else {
+      inviteCode = inviteValue ?? undefined;
+      mode = "temporary";
     }
     let value: number;
 
@@ -78,8 +88,8 @@ export function Home() {
         },
         credentials: "include",
         body: JSON.stringify({
-          value: invite,
-          type: "temporary",
+          value: inviteCode,
+          type: mode,
         }),
       });
       if (!response.ok)
@@ -96,7 +106,6 @@ export function Home() {
     } catch (err) {
       console.error("API error:", err);
       return;
-    } finally {
     }
   }
 
