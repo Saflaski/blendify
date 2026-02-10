@@ -15,6 +15,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httprate"
 	"github.com/golang/glog"
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
@@ -107,13 +108,19 @@ func (app *application) mount() http.Handler {
 			// r.Get("/new", blendHandler.GetBlendPercentage)
 			r.Get("/health", blendHandler.GetBlendHealth)
 			// r.Post("/add/{permaLink}", blendHandler.AddBlendFromInviteLink)
-			r.Post("/add", blendHandler.AddBlendFromInviteLink)
+			r.With(httprate.Limit(
+				1,
+				3*time.Second,
+			)).Post("/add", blendHandler.AddBlendFromInviteLink)
 			r.Post("/delete", blendHandler.DeleteBlend)
 			r.Get("/carddata", blendHandler.GetBlendPageData)
 			r.Get("/cataloguedata", blendHandler.GetBlendedEntryData)
 			r.Get("/userblends", blendHandler.GetUserBlends)
 			r.Get("/usertopitems", blendHandler.GetUserTopItems)
-			r.Get("/generatelink", blendHandler.GenerateNewLink)
+			r.With(httprate.Limit(
+				5,
+				5*time.Second,
+			)).Get("/generatelink", blendHandler.GenerateNewLink)
 			r.Get("/getpermalink", blendHandler.GetPermanentLink)
 			r.Get("/userinfo", blendHandler.GetUserInfo)
 			r.Get("/usertopgenres", blendHandler.GetUserTopGenres)

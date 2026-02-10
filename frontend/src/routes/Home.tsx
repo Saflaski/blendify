@@ -606,6 +606,14 @@ async function generateNewLinkSomehow() {
     const baseURL = `${API_BASE_URL}/blend/generatelink`;
     const url = new URL(baseURL);
     const response = await fetch(url, { credentials: "include" });
+    if (response.status == 429) {
+      console.log("Error: Rate limit exceeded");
+      // setTimeout(() => {
+      //   generateNewLinkSomehow();
+      // }, 1000);
+      // return;
+      return "Woah calm down";
+    }
     if (!response.ok) {
       throw new Error(
         `Backend request error on generating new outward link. Status: ${response.status}`,
