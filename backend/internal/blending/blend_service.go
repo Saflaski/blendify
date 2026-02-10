@@ -708,10 +708,10 @@ func (s *BlendService) AddUsersToBlend(context context.Context, id blendId, user
 
 	//Time to cache the overall blend num for retrieval later
 	//It does not need to be atomic
-	err = s.RefreshOverallBlendInCache(context, id)
-	if err != nil {
-		return fmt.Errorf(" During refresh blend: %w", err)
-	}
+	// err = s.RefreshOverallBlendInCache(context, id)
+	// if err != nil {
+	// 	return fmt.Errorf(" During refresh blend: %w", err)
+	// }
 	return nil
 }
 
