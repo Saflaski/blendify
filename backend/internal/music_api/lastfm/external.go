@@ -24,7 +24,7 @@ type LastFMAPIExternal struct {
 
 type Period string
 
-var requestLimiter = rate.NewLimiter(rate.Every(150*time.Millisecond), 1)
+var requestLimiter = rate.NewLimiter(rate.Every(200*time.Millisecond), 1)
 
 const (
 	YEAR         Period = "12month"
