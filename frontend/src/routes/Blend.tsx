@@ -184,6 +184,7 @@ export function Blend() {
   //   USER_B_TOP_ARTISTS_KEY,
   //   [],
   // );
+  const sentInviteIdExchange = useRef(false);
 
   const currentTime = new Date().getTime();
   type LocationState = {
@@ -223,10 +224,13 @@ export function Blend() {
     console.log("BlendId after checking 3 places: ", blendId);
   }, [blendId]);
   useEffect(() => {
+    if (sentInviteIdExchange.current) return;
+    sentInviteIdExchange.current = true; //To make sure only one invite exchange is sent
+
     const getBlendIdFromInviteLink = async () => {
       //From URL Paste
       const params = new URLSearchParams(location.search);
-      const urlInvite = params.get("invite");
+      const urlInvite = params.get("singleinvite");
 
       //From Add button
       const value = location.state;

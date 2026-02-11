@@ -57,7 +57,7 @@ export function Home() {
     let url: URL | RequestInfo;
     // let value: any;
     const parsedGivenURL = new URL(givenURL);
-    const inviteValue = parsedGivenURL.searchParams.get("invite");
+    const inviteValue = parsedGivenURL.searchParams.get("singleinvite");
     let inviteCode: string | undefined;
     let mode: string;
     console.log("GIVEN URL: ", givenURL);
@@ -251,7 +251,7 @@ export function Home() {
 
           <div className="w-1/2 border-t my-4 mx-auto justify-center"></div>
           <p className="text-sm text-slate-500">
-            Generate a Blendify link and send it to someone
+            Generate a one-time Blendify link and send it to someone
           </p>
           <section>
             <GenerateLink />
@@ -732,7 +732,7 @@ async function generateNewLinkSomehow() {
     const newLink = data["linkId"];
     console.log("API response data: ", data);
     console.log("Blend Link: ", newLink);
-    return `${FRONTEND_URL}/blend/?invite=` + newLink;
+    return `${FRONTEND_URL}/blend/?singleinvite=` + newLink;
   } catch (err) {
     console.error("API erorr: ", err);
     return "Error no API connection";

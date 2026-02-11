@@ -611,7 +611,7 @@ func (s *BlendService) MakeBlendFromPermaLink(context context.Context, userA use
 		return "0", nil //0 is code for consuming user being the same user as creating user
 	}
 
-	id, err := s.GenerateNewBlendId(context, []userid{userA, userB}) //Should this make the whole blend or?
+	id, err := s.GenerateNewBlendId(context, string(link), []userid{userA, userB}) //Should this make the whole blend or?
 	if err != nil {
 		return "", fmt.Errorf(" error during making a blend with users %s and %s: %w", userA, userB, err)
 	}
@@ -626,19 +626,18 @@ func (s *BlendService) AddOrMakeBlendFromLink(context context.Context, userA use
 	//Then if it is a new link, create a new blendId object
 	//MakeNewBlend([]users{userA, userB})
 
-	id, err := s.repo.IsExistingBlendFromLink(context, link)
+	id, err := s.repo.IsExistingBlendFromLink(context, string(link))
 	if err != nil {
 		return "", fmt.Errorf(" error during checking if blendlink existed: %w", err)
-
 	}
-	glog.Infof("Found blend from link: %s", link)
+
 	if id == "" { //It's not an existing blend. Go forth with making a new blend
 		//TODO : THIS IS MAKING PROBLEMS
+		glog.Infof("Link %s is not an existing blend link. Making new blend", link)
 		userB, err := s.repo.GetLinkCreator(context, link) //Fetch user who created link
 		if err != nil {
 			return "", fmt.Errorf(" error during getting user (creator) from link : %w", err)
 		}
-		glog.Infof("Blend created by: %s", userB)
 
 		//Safety net to make sure userA != userB
 		if userB == userA {
@@ -662,13 +661,15 @@ func (s *BlendService) AddOrMakeBlendFromLink(context context.Context, userA use
 		// We only create the blend id for now as generating a whole new blend might time out
 		// and if we tried to make it async, then there will be a race condition between
 		// frontend loading blend page + backend trying to hydrate the blend
-		id, err = s.GenerateNewBlendId(context, []userid{userA, userB}) //Should this make the whole blend or?
+		id, err = s.GenerateNewBlendId(context, string(link), []userid{userA, userB}) //Should this make the whole blend or?
 		if err != nil {
 			return "", fmt.Errorf(" error during making a blend with users %s and %s: %w", userA, userB, err)
 		}
 		glog.Infof("Generating new blend: %s", id)
 		return id, nil
 	} else {
+		glog.Infof("DEBUG: Link %s is an existing blend link. Adding user to existing blend %s", link, id)
+
 		//Check if user is already in this blend
 		ok, err := s.repo.IsUserInBlend(context, userA, id)
 		if err != nil {
@@ -679,10 +680,10 @@ func (s *BlendService) AddOrMakeBlendFromLink(context context.Context, userA use
 			if err != nil {
 				return "", fmt.Errorf(" could not add user to blend: %w", err)
 			}
-			// glog.Infof("User does not exist in blend. Adding %s", userA)
+			glog.Infof("User does not exist in blend. Adding %s", userA)
 			return id, nil
 		} else {
-			// glog.Infof("User already exists in blend")
+			glog.Infof("User already exists in blend")
 			//Nothing to see here, just return the existing blend id
 			return id, nil
 		}
@@ -730,9 +731,10 @@ func (s *BlendService) RefreshOverallBlendInCache(context context.Context, id bl
 	return nil
 }
 
-func (s *BlendService) GenerateNewBlendId(context context.Context, userids []userid) (blendId, error) {
-	id := blendId(uuid.New().String())
-	err := s.AddUsersToBlend(context, id, userids)
+func (s *BlendService) GenerateNewBlendId(context context.Context, link string, userids []userid) (blendId, error) {
+	id := blendId(uuid.New().String())                 //Generate new blend ID
+	err := s.repo.AssignBlendToLink(context, link, id) //Assign blend to this link, ie consuming it.
+	err = s.AddUsersToBlend(context, id, userids)      //Add Users to blend
 	if err != nil {
 		return "", fmt.Errorf(" error during inserting new blend frame: %w", err)
 	}

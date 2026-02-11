@@ -345,8 +345,9 @@ func NewBlendStore(redisClient *redis.Client, psqlClient *sqlx.DB) *BlendStore {
 
 }
 
-func (r *BlendStore) IsExistingBlendFromLink(context context.Context, linkValue blendLinkValue) (blendId, error) {
+func (r *BlendStore) IsExistingBlendFromLink(context context.Context, linkValue string) (blendId, error) {
 	key := fmt.Sprintf("%s:%s:%s:%s", r.blendPrefix, "invite", linkValue, "id")
+	glog.Infof("DEBUG: Checking existing blend for link %s", linkValue)
 	res, err := r.redisClient.Get(context, key).Result()
 	if err != nil && err != redis.Nil {
 		return "", fmt.Errorf(" could not fetch blend's id from link in redis: %w", err)
@@ -354,6 +355,17 @@ func (r *BlendStore) IsExistingBlendFromLink(context context.Context, linkValue 
 		return "", nil
 	} else {
 		return blendId(res), nil
+	}
+}
+
+func (r *BlendStore) AssignBlendToLink(context context.Context, linkValue string, blendId blendId) error {
+	key := fmt.Sprintf("%s:%s:%s:%s", r.blendPrefix, "invite", linkValue, "id")
+	glog.Infof("Assigning blend %s to link %s", blendId, linkValue)
+	err := r.redisClient.Set(context, key, string(blendId), INVITE_EXPIRY).Err()
+	if err != nil {
+		return fmt.Errorf(" could not set blend's id from link into redis: %w", err)
+	} else {
+		return nil
 	}
 }
 
