@@ -684,7 +684,7 @@ function GenerateLink() {
   );
 }
 
-async function GetPermaLink() {
+export async function GetPermaLink() {
   console.log("Fetching outward perma blend link");
   try {
     const baseURL = `${API_BASE_URL}/blend/getpermalink`;

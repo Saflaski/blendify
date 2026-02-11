@@ -24,6 +24,21 @@ type BlendService struct {
 	MBService      *musicbrainz.MBService
 }
 
+func (s BlendService) RefreshPermanentLinkForUser(context context.Context, userA userid) (string, error) {
+	//Generate new permanent link
+	linkID, err := gonanoid.New(10)
+
+	if err != nil {
+		return "", fmt.Errorf(" could not generate new permanent link from userid %s due to nanoid error: %w", userA, err)
+	}
+	newLinkValue := permaLinkValue(linkID)
+	err = s.repo.AssignPermanentLinkToUser(context, userA, newLinkValue)
+	if err != nil {
+		return "", fmt.Errorf(" could not assign new permanent link from userid %s due to repo error: %w", userA, err)
+	}
+	return linkID, nil
+}
+
 func (s *BlendService) GetPermanentLinkForUser(context context.Context, userA userid) (permaLinkValue, error) {
 
 	//Check if the user has a current permanent link

@@ -122,6 +122,7 @@ func (app *application) mount() http.Handler {
 				5*time.Second,
 			)).Get("/generatelink", blendHandler.GenerateNewLink)
 			r.Get("/getpermalink", blendHandler.GetPermanentLink)
+			r.Post("/refreshpermalink", blendHandler.RefreshPermanentLink)
 			r.Get("/userinfo", blendHandler.GetUserInfo)
 			r.Get("/usertopgenres", blendHandler.GetUserTopGenres)
 			r.Get("/blendtopgenres", blendHandler.GetBlendTopGenres)
