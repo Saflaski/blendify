@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { replace, useNavigate, useParams } from "react-router-dom";
 import React from "react";
 import { API_BASE_URL, BLEND_ID_KEY } from "../constants";
@@ -13,9 +13,11 @@ type ApiResponse = {
 export function InviteRedirect() {
   const { inviteCode } = useParams<InviteParams>();
   const navigate = useNavigate();
-
+  const hasRun = useRef(false);
   useEffect(() => {
-    if (!inviteCode) return;
+    if (!inviteCode || hasRun.current) return;
+    hasRun.current = true;
+
     async function handleInvite() {
       try {
         const url = new URL(`${API_BASE_URL}/blend/add`);
@@ -48,7 +50,7 @@ export function InviteRedirect() {
 
         console.log("Adding new blend from Blend Add URL Value:", blendId);
         localStorage.setItem(BLEND_ID_KEY, blendId);
-        // navigate("/blend");
+        navigate("/blend");
         // navigate("/blend", {
         //   state: { id: data.blendId },
         //   replace: true,

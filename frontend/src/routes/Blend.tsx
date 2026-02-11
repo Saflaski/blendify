@@ -263,6 +263,7 @@ export function Blend() {
             const data = await res.json().catch(() => ({}));
             setError(data.message || "Invite is invalid.");
             // setLoading(false);
+            navigate("/home", { replace: true });
             return;
           }
 
@@ -275,6 +276,7 @@ export function Blend() {
         } catch (err) {
           console.error(err);
           setError("Something went wrong. Please try again.");
+
           // setCardLoading(false);
         }
       };

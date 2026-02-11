@@ -256,6 +256,14 @@ export function Home() {
           <section>
             <GenerateLink />
           </section>
+
+          <div className="w-1/6 border-t my-2 mx-auto justify-center"></div>
+          <p className="text-sm text-slate-500">
+            Or use the permanent link below to invite anyone anytime
+          </p>
+          <section>
+            <GeneratePermaLink />
+          </section>
         </header>
 
         <section className="w-full flex flex-col gap-3">
@@ -498,9 +506,13 @@ function TopUserInfoSectionSkeleton() {
 function AddNewBlendBar({ AddBlend }) {
   const [value, setValue] = useState("");
   var prefix = `${FRONTEND_URL}/blend/`;
+  var prefix2 = `${FRONTEND_URL}/invite/`;
   const isValid = (value: string) => {
     //Simple URL check for now. Change slice num and url for prod
-    if (value.slice(0, prefix.length) == prefix) {
+    if (
+      value.slice(0, prefix.length) == prefix ||
+      value.slice(0, prefix2.length) == prefix2
+    ) {
       return true;
     } else return false;
   };
@@ -512,7 +524,7 @@ function AddNewBlendBar({ AddBlend }) {
       >
         <textarea
           name="newBlend"
-          placeholder={prefix}
+          placeholder={`${FRONTEND_URL}/`}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           rows={1}
@@ -535,6 +547,69 @@ function AddNewBlendBar({ AddBlend }) {
       >
         Add
       </button>
+    </div>
+  );
+}
+
+function GeneratePermaLink() {
+  const [copied, setCopied] = useState(false);
+  const hideTimer = useRef<number | null>(null);
+  const [link, setLink] = useState("");
+  async function handleGetPermaLink() {
+    const newLink = await GetPermaLink();
+    setLink(newLink);
+  }
+
+  useEffect(() => {
+    handleGetPermaLink();
+  }, []);
+
+  const handleCopy = async () => {
+    setCopied(false);
+    if (!link) return;
+    await navigator.clipboard.writeText(link); // full URL
+    setCopied(true);
+    if (hideTimer.current !== null) {
+      clearTimeout(hideTimer.current);
+    }
+    // clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => setCopied(false), 1400);
+  };
+
+  return (
+    <div className="flex w-full gap-2">
+      <textarea
+        name="newLink"
+        value={link}
+        readOnly={true}
+        rows={1}
+        className="flex-1 text-[11px] sm:text-xs resize-none overflow-hidden text-nowrap  border opacity-90 border-slate-300 bg-slate-50 focus:outline-none focus:ring-0 focus:border-slate-300 px-3 py-2 text-xs font-['Roboto_Mono'] cursor-default"
+      ></textarea>
+
+      <div className="relative">
+        {copied && (
+          <div
+            className="absolute right-14.5 bg-gray-500 text-white 
+        text-[10px] px-2 py-0.5 shadow animate-fade-in-out"
+          >
+            Copied!
+          </div>
+        )}
+        <button
+          onClick={handleCopy}
+          className={`flex items-center justify-center border border-slate-900 home-slate-button px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide  focus:outline-none focus:border-black`}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            height="18px"
+            viewBox="0 -960 960 960"
+            width="24px"
+            fill="#F6E8CB"
+          >
+            <path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z" />
+          </svg>
+        </button>
+      </div>
     </div>
   );
 }
@@ -607,6 +682,31 @@ function GenerateLink() {
       </button>
     </div>
   );
+}
+
+async function GetPermaLink() {
+  console.log("Fetching outward perma blend link");
+  try {
+    const baseURL = `${API_BASE_URL}/blend/getpermalink`;
+    const url = new URL(baseURL);
+    const response = await fetch(url, { credentials: "include" });
+    if (response.status == 429) {
+      console.log("Error: Rate limit exceeded");
+      return "Woah calm down";
+    }
+    if (!response.ok) {
+      throw new Error(
+        `Backend request error on generating new outward link. Status: ${response.status}`,
+      );
+    }
+    const data = await response.json();
+    const newLink = data["permaLinkId"];
+    console.log("Perma blend Link: ", newLink);
+    return `${FRONTEND_URL}/invite/` + newLink;
+  } catch (err) {
+    console.error("API erorr: ", err);
+    return "Error no API connection";
+  }
 }
 
 async function generateNewLinkSomehow() {
