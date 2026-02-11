@@ -101,7 +101,7 @@ export function Account() {
               Revoke and refresh your permanent invite link. Doing this will
               cause all your old invite links to stop working.
             </p>
-            <div className="flex w-2/3 h-10 flex-row items-center space-x-4">
+            <div className="flex w-4/5 h-10 flex-row items-center space-x-4">
               <textarea
                 name="newLink"
                 value={link}
