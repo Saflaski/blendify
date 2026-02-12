@@ -15,6 +15,7 @@ type Blend = {
   blendid: string;
   value: number;
   user: string[];
+  cached: boolean;
   timestamp: string;
 };
 
@@ -126,6 +127,7 @@ export function Home() {
         });
         const json = await res.json();
         setBlends(json.blends);
+        console.log("Fetched blends:", json.blends);
       } catch (err) {
         console.error("Error fetching blends:", err);
       } finally {
@@ -164,7 +166,7 @@ export function Home() {
     fetchUserInfo();
   }, []);
 
-  function navToBlendPage(blendid: string) {
+  function navToBlendPage(blendid: string, cached: boolean = false) {
     // const navigate = useNavigate();
     console.log(
       "func: navToBlendPage - Navigating to blend page with blendid:",
@@ -172,10 +174,9 @@ export function Home() {
     );
     localStorage.setItem(BLEND_ID_KEY, blendid);
     navigate("/blend", {
-      // state: {
-      //   id: "blendid",
-      //   value: blendid,
-      // },
+      state: {
+        cached: cached,
+      },
     });
   }
 
@@ -291,7 +292,7 @@ function BlendSkeleton() {
 
 type ListOfBlendsProps = {
   setEachBlend: React.Dispatch<React.SetStateAction<Blend[]>>;
-  funcNav: (blendid: string) => void;
+  funcNav: (blendid: string, cached: boolean) => void;
   blends: Blend[];
   loading: boolean;
 };
@@ -312,7 +313,7 @@ function ListOfBlends({
     );
   }
 
-  const renderCategory = (title, blendsArray) => {
+  const renderCategory = (title, blendsArray: Blend[]) => {
     if (blendsArray.length === 0) return null;
 
     return (
@@ -327,7 +328,7 @@ function ListOfBlends({
               <button
                 className=" flex flex-1 w-full text-left items-center transition-all duration-300 ease-in-out
             justify-between border border-slate-200 px-3 py-2 hover:bg-slate-50"
-                onClick={() => funcNav(blend.blendid)}
+                onClick={() => funcNav(blend.blendid, blend.cached)}
               >
                 <span className="truncate font-['Roboto_Mono'] text-sm">
                   {blend.user.join(" + ")} // {blend.value}%

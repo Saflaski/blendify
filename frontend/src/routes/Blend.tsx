@@ -1,7 +1,14 @@
 // import { DropDownMenu } from "../components/blend-options/dropdownmenu";
 import { ControlPanel } from "../components/blend-options/ControlPanel";
 import { useLocation, useNavigate } from "react-router-dom";
-import React, { useRef, useState, useEffect, useMemo, Dispatch } from "react";
+import React, {
+  useRef,
+  useState,
+  useEffect,
+  useMemo,
+  Dispatch,
+  cache,
+} from "react";
 import CardBackground from "@/assets/images/topography.svg";
 import CopyIcon from "@/assets/images/copy.svg";
 import LastfmIcon from "@/assets/images/lastfm.svg";
@@ -190,6 +197,7 @@ export function Blend() {
   type LocationState = {
     id?: string;
     value?: string;
+    cached?: boolean;
   };
 
   function getInitialBlendId(
@@ -201,11 +209,9 @@ export function Blend() {
 
     return localStorage.getItem(BLEND_ID_KEY);
   }
-
   console.log(location.state);
   useEffect(() => {
     const state = location.state as LocationState | null;
-
     if (state?.id === "blendid" && state.value) {
       setBlendId(state.value);
       navigate(location.pathname, { replace: true });
@@ -302,7 +308,17 @@ export function Blend() {
         setCardLoading(true);
         setCatalogueLoading(true);
         // setGenreLoading(true);
-        //await getCardBlendData(); // runs BEFORE all catalogue calls
+
+        if (locationState?.cached) {
+          getCardBlendData(); //If it is cached, fire this request asyncly
+          console.log("Cached blend data, loading card data async");
+        } else {
+          //If it is not cached, then await this first without sending further requests
+          //to avoid concurrent requests on backend as there will be a race condition
+          await getCardBlendData();
+          console.log("Not fully cached data, loading card data first");
+        }
+        // runs BEFORE all catalogue calls
 
         await Promise.all([
           getCatalogueBlendData(
@@ -360,7 +376,7 @@ export function Blend() {
             setError,
           ),
         ]);
-	await getCardBlendData();
+        // getCardBlendData();
         // await getTopMutualGenreData();
         setCatArt1Year(false);
         setCatArt3Month(false);
@@ -965,7 +981,7 @@ export function Blend() {
           <div
             className={`text-black font-[Roboto_Mono] italic    ${!catalogueLoading && !cardLoading ? "hidden" : "lg:hidden block"} `}
           >
-            <p className="text-lg font-semibold">Loading data</p>
+            <p className="text-lg font-semibold">Loading Data</p>
             <p
               className={`${showHint ? "hidden" : "block"} text-sm transition ease-in`}
             >
@@ -1196,7 +1212,7 @@ export function Blend() {
           <div
             className={`text-black font-[Roboto_Mono] italic   ${!catalogueLoading && !cardLoading ? "hidden" : "hidden lg:block"} `}
           >
-            <p className="text-lg font-semibold">Loading data</p>
+            <p className="text-lg font-semibold">Loading Data</p>
             <p
               className={`${showHint ? "hidden" : "block"} text-sm transition ease-in`}
             >

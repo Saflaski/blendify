@@ -230,6 +230,8 @@ func (s *BlendService) GetUserBlends(context context.Context, user userid) (Blen
 		if err != nil {
 			return Blends{}, fmt.Errorf(" could not find blendusers from blendid %s : %v", v, err)
 		}
+
+		cached := true //True until proven otherwise
 		blendPlatformUsernames := make([]platformid, len(blendUsers))
 		for j, v_2 := range blendUsers {
 			platformUser, err := s.repo.GetLFMByUserId(context, string(v_2))
@@ -238,7 +240,23 @@ func (s *BlendService) GetUserBlends(context context.Context, user userid) (Blen
 			}
 			blendPlatformUsernames[j] = platformid(platformUser)
 
+			userCached, err := s.repo.IsBlendCachedFully(context, string(v_2))
+			if err != nil {
+				glog.Errorf(" could not get cached status for blendid %s : %v", v, err)
+			} else {
+				if !userCached {
+					cached = false
+				}
+			}
+
 		}
+		if cached { //Since all or some portion of the users' music data is uncached, we say uncached
+			//Refer Home.tsx blends[]
+			blendAccumulator[i].Cached = true
+		} else {
+			blendAccumulator[i].Cached = false
+		}
+
 		blendAccumulator[i].Users = blendPlatformUsernames
 
 		//REMOVE this part when LIMIT>2
@@ -308,7 +326,14 @@ func (s *BlendService) GetDuoBlendData(context context.Context, blendId blendId)
 	// allBlends := make([]DuoBlend, 0, totalPairs)
 	// for i := 0; i < size; i++ {
 	// 	for j := i + 1; j < size; j++ {
+	now := time.Now()
 	duoBlend, err := s.GenerateBlendOfTwo(context, userids[0], userids[1])
+	difference := time.Now().UnixMilli() - now.UnixMilli()
+	glog.Info(" Time taken to generate blend: " + strconv.FormatInt(difference, 10) + " ms")
+	if difference > 10000 {
+		glog.Info(" CAUTION: LONG TIME TAKEN TO GENERATE BLEND FOR BLENDID: " + string(blendId))
+	}
+
 	// 		allBlends = append(allBlends, duoBlend)
 	// 		errSum += errAddition
 	// 	}

@@ -62,6 +62,7 @@ type Blend struct {
 	Value     int          `json:"value"`
 	Users     []platformid `json:"user"`
 	CreatedAt time.Time    `json:"timestamp"`
+	Cached    bool         `json:"cached"`
 }
 
 type Blends struct {

@@ -29,6 +29,21 @@ type BlendStore struct {
 	blendIndexPrefix string
 }
 
+func (r *BlendStore) IsBlendCachedFully(context context.Context, id string) (bool, error) {
+	totalKeys := len(categoryRange) * len(durationRange) //The total number of keys we expect = 3x3
+	pattern := fmt.Sprintf("%s:%s:%s", r.musicPrefix, id, "*")
+	iter, err := r.redisClient.Keys(context, pattern).Result()
+	if err != nil {
+		return false, fmt.Errorf(" error during checking full cache expiry: %w", err)
+	}
+	if len(iter) == totalKeys {
+		return true, nil
+	} else {
+		return false, nil
+	}
+
+}
+
 func (r *BlendStore) GetPermanentLinkByUser(context context.Context, userA userid) (permaLinkValue, error) {
 	key := fmt.Sprintf("%s:%s", r.userPrefix, string(userA))
 	res, err := r.redisClient.HGet(context, key, "Perma Invite").Result()
