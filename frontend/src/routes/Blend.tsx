@@ -309,18 +309,9 @@ export function Blend() {
         setCatalogueLoading(true);
         // setGenreLoading(true);
 
-        if (locationState?.cached) {
-          getCardBlendData(); //If it is cached, fire this request asyncly
-          console.log("Cached blend data, loading card data async");
-        } else {
-          //If it is not cached, then await this first without sending further requests
-          //to avoid concurrent requests on backend as there will be a race condition
-          await getCardBlendData();
-          console.log("Not fully cached data, loading card data first");
-        }
         // runs BEFORE all catalogue calls
 
-        await Promise.all([
+        const cataloguePromise = Promise.all([
           getCatalogueBlendData(
             "3month",
             "artist",
@@ -376,6 +367,25 @@ export function Blend() {
             setError,
           ),
         ]);
+
+        if (locationState?.cached) {
+          getCardBlendData(); //If it is cached, fire this request asyncly
+          // cataloguePromise.catch((err) => {
+          //   console.error("Error loading catalogue data:", err);
+          //   setError(
+          //     "Something went wrong loading catalogue data. Please try again.",
+          //   );
+          // });
+          console.log("Cached blend data, loading card data async");
+        } else {
+          //If it is not cached, then await this first without sending further requests
+          //to avoid concurrent requests on backend as there will be a race condition
+          await getCardBlendData();
+
+          console.log("Not fully cached data, loading card data first");
+        }
+        await cataloguePromise;
+
         // getCardBlendData();
         // await getTopMutualGenreData();
         setCatArt1Year(false);
