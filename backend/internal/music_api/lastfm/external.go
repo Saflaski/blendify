@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/glog"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 )
@@ -345,7 +344,7 @@ func (h *LastFMAPIExternal) GetUserTopTracksAsync(context context.Context, userN
 			mu.Lock()
 			completeTracks = append(completeTracks, tracks...)
 			mu.Unlock()
-			fmt.Println("Fetched page ", page)
+			// fmt.Println("Fetched page ", page)
 			return nil
 
 		})
@@ -408,7 +407,7 @@ func (h *LastFMAPIExternal) GetUserTopArtistsAsync(context context.Context, user
 			mu.Lock()
 			completeArtists = append(completeArtists, artists...)
 			mu.Unlock()
-			fmt.Println("Fetched page ", page)
+			// fmt.Println("Fetched page ", page)
 			return nil
 
 		})
@@ -471,7 +470,7 @@ func (h *LastFMAPIExternal) GetUserTopAlbumsAsync(context context.Context, userN
 			mu.Lock()
 			completeAlbums = append(completeAlbums, albums...)
 			mu.Unlock()
-			fmt.Println("Fetched page ", page)
+			// fmt.Println("Fetched page ", page)
 			return nil
 
 		})
@@ -497,7 +496,7 @@ func (h *LastFMAPIExternal) MakeRequest(ctx context.Context, extraURLParams map[
 	// q.Set("api_key", string(h.apiKey))
 
 	requestLimiter.Wait(context.Background()) //For delaying every request made by the backend at minimum 200ms from each other.
-	glog.Infof("Making LFM API Request: %s", extraURLParams)
+	// glog.Infof("Making LFM API Request: %s", extraURLParams)
 	u, err := url.Parse(h.lastFMURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid base URL: %w", err)

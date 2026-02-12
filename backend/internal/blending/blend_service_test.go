@@ -260,6 +260,7 @@ func TestDownloadAndCache(t *testing.T) {
 		blendService.GetNewDataForUser(t.Context(), userA)
 		blendService.GetNewDataForUser(t.Context(), userB)
 		blend, err := blendService.GenerateBlendOfTwo(t.Context(),
+			"0000", //mock jobid
 			userB,
 			userA,
 		)

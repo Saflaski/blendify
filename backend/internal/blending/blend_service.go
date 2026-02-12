@@ -24,6 +24,82 @@ type BlendService struct {
 	MBService      *musicbrainz.MBService
 }
 
+type JobId string
+
+type ProgressTracker struct {
+	mu       sync.RWMutex
+	progress map[JobId]int
+}
+
+var globalProgress = &ProgressTracker{
+	progress: make(map[JobId]int),
+}
+var globalProgressMaxValue = 10
+
+func (s *BlendService) ReadJobProgress(context context.Context, jobId JobId) (int, error) {
+
+	globalProgress.mu.RLock()
+	defer globalProgress.mu.RUnlock()
+
+	value, ok := globalProgress.progress[jobId]
+
+	if !ok {
+		return 0, fmt.Errorf(" job id %s not found in progress tracker", jobId)
+	}
+	return value, nil
+}
+
+func (s *BlendService) QueryJobProgress(context context.Context, jobId JobId) (float64, error) {
+
+	value, err := s.ReadJobProgress(context, jobId)
+	if err != nil {
+		return 0.0, fmt.Errorf(" job id %s not found in progress tracker", jobId)
+	}
+	return float64(value) / float64(globalProgressMaxValue), nil
+}
+
+func (s *BlendService) UpdateJobProgress(context context.Context, jobId JobId) error {
+	globalProgress.mu.Lock()
+	defer globalProgress.mu.Unlock()
+
+	val, ok := globalProgress.progress[jobId]
+
+	if !ok {
+		return fmt.Errorf(" job id %s not found in progress tracker", jobId)
+	}
+
+	glog.Infof("Updating job progress to %f for id: "+string(jobId), float64(globalProgress.progress[jobId]+1)/float64(globalProgressMaxValue))
+	//Idempotentcy
+	if val >= globalProgressMaxValue {
+		glog.Errorf(" job id %s has already reached maximum progress value", jobId)
+		return nil
+	}
+
+	globalProgress.progress[jobId] += 1
+	return nil
+}
+
+func (s *BlendService) AddNewJob(context context.Context, jobId JobId) error {
+
+	glog.Info("Added new job with id: " + string(jobId))
+	globalProgress.mu.Lock()
+	defer globalProgress.mu.Unlock()
+
+	globalProgress.progress[jobId] = 0
+
+	return nil
+}
+
+func (s *BlendService) ConsumeJob(context context.Context, jobId JobId) error {
+	glog.Info("Consumed job with id: " + string(jobId))
+	globalProgress.mu.Lock()
+	defer globalProgress.mu.Unlock()
+
+	delete(globalProgress.progress, jobId)
+
+	return nil
+}
+
 func (s BlendService) RefreshPermanentLinkForUser(context context.Context, userA userid) (string, error) {
 	//Generate new permanent link
 	linkID, err := gonanoid.New(10)
@@ -286,22 +362,25 @@ func (s *BlendService) GetUserBlends(context context.Context, user userid) (Blen
 
 const BLEND_USER_LIMIT = 2
 
-func (s *BlendService) GetBlendAndRefreshCache(context context.Context, blendId blendId) (DuoBlend, error) {
-	duoBlend, err := s.GetDuoBlendData(context, blendId)
+func (s *BlendService) GetBlendAndRefreshCache(context context.Context, blendId blendId, jobId JobId) (DuoBlend, error) {
+
+	AddNewJobErr := s.AddNewJob(context, jobId)
+	if AddNewJobErr != nil {
+		glog.Errorf(" could not add new job for blend cache refresh: %w", AddNewJobErr)
+	}
+	duoBlend, err := s.GetDuoBlendData(context, blendId, jobId)
 	if err != nil {
 		return DuoBlend{}, fmt.Errorf(" could not get duoblend data: %w", err)
 	}
 
-	// //Refresh cache after getting data
-	// err = s.RefreshOverallBlendInCache(context, blendId)
-	// if err != nil {
-	// 	glog.Infof(" could not refresh overall blend in cache: %w", err)
-	// 	//Not a fatal error
-	// }
+	ConsumeJobErr := s.ConsumeJob(context, jobId)
+	if ConsumeJobErr != nil {
+		glog.Errorf(" could not consume job for blend cache refresh: %w", ConsumeJobErr)
+	}
 
 	return duoBlend, nil
 }
-func (s *BlendService) GetDuoBlendData(context context.Context, blendId blendId) (DuoBlend, error) {
+func (s *BlendService) GetDuoBlendData(context context.Context, blendId blendId, jobId JobId) (DuoBlend, error) {
 
 	//Get json data for percentage data of 3x3 data
 	//Get json data for percentage data of distribution of art/alb/tra
@@ -327,7 +406,7 @@ func (s *BlendService) GetDuoBlendData(context context.Context, blendId blendId)
 	// for i := 0; i < size; i++ {
 	// 	for j := i + 1; j < size; j++ {
 	now := time.Now()
-	duoBlend, err := s.GenerateBlendOfTwo(context, userids[0], userids[1])
+	duoBlend, err := s.GenerateBlendOfTwo(context, jobId, userids[0], userids[1])
 	difference := time.Now().UnixMilli() - now.UnixMilli()
 	glog.Info(" Time taken to generate blend: " + strconv.FormatInt(difference, 10) + " ms")
 	if difference > 10000 {
@@ -362,7 +441,7 @@ func (s *BlendService) getLFM(ctx context.Context, userID string) (string, error
 	return username, nil
 }
 
-func (s *BlendService) GenerateBlendOfTwo(context context.Context, userA userid, userB userid) (DuoBlend, error) {
+func (s *BlendService) GenerateBlendOfTwo(context context.Context, jobId JobId, userA userid, userB userid) (DuoBlend, error) {
 
 	usernameA, err := s.getLFM(context, string(userA))
 	if err != nil {
@@ -374,15 +453,17 @@ func (s *BlendService) GenerateBlendOfTwo(context context.Context, userA userid,
 		return DuoBlend{}, fmt.Errorf(" could not get username %s", userB)
 	}
 
-	artistBlend, err := s.buildArtistBlend(context, userA, userB)
+	artistBlend, err := s.buildArtistBlend(context, userA, userB, jobId)
 	if err != nil {
 		return DuoBlend{}, fmt.Errorf(" failed to get artist blend: %w", err)
 	}
-	albumBlend, err := s.buildAlbumBlend(context, userA, userB)
+
+	albumBlend, err := s.buildAlbumBlend(context, userA, userB, jobId)
 	if err != nil {
 		return DuoBlend{}, fmt.Errorf(" failed to get album blend: %w", err)
 	}
-	trackBlend, err := s.buildTrackBlend(context, userA, userB)
+
+	trackBlend, err := s.buildTrackBlend(context, userA, userB, jobId)
 	if err != nil {
 		return DuoBlend{}, fmt.Errorf(" failed to get track blend: %w", err)
 	}
@@ -391,6 +472,7 @@ func (s *BlendService) GenerateBlendOfTwo(context context.Context, userA userid,
 	if err != nil {
 		return DuoBlend{}, fmt.Errorf("could not get overall blend with %s and %s: %w", userA, userB, err)
 	}
+	s.UpdateJobProgress(context, jobId)
 
 	// blendedArtists, err := s.BuildBlendedEntries(
 	// 	context,
@@ -554,7 +636,7 @@ func (s *BlendService) buildOverallBlend(artistBlend, albumBlend, trackBlend Typ
 	return overallBlend, nil
 }
 
-func (s *BlendService) buildArtistBlend(context context.Context, usernameA, usernameB userid) (TypeBlend, error) {
+func (s *BlendService) buildArtistBlend(context context.Context, usernameA, usernameB userid, jobId JobId) (TypeBlend, error) {
 	var (
 		b   TypeBlend
 		err error
@@ -564,21 +646,24 @@ func (s *BlendService) buildArtistBlend(context context.Context, usernameA, user
 		glog.Errorf("Could not get 1-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf(" could not get 1-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 	}
+	s.UpdateJobProgress(context, jobId)
 
 	if b.ThreeMonth, err = s.getArtistBlend(context, usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
 		glog.Errorf("Could not get 3-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf(" could not get 3-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 	}
+	s.UpdateJobProgress(context, jobId)
 
 	if b.OneYear, err = s.getArtistBlend(context, usernameA, usernameB, BlendTimeDurationYear); err != nil {
 		glog.Errorf("Could not get 12-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf(" could not get 12-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 	}
+	s.UpdateJobProgress(context, jobId)
 
 	return b, nil
 }
 
-func (s *BlendService) buildAlbumBlend(context context.Context, usernameA, usernameB userid) (TypeBlend, error) {
+func (s *BlendService) buildAlbumBlend(context context.Context, usernameA, usernameB userid, jobId JobId) (TypeBlend, error) {
 	var (
 		b   TypeBlend
 		err error
@@ -588,21 +673,24 @@ func (s *BlendService) buildAlbumBlend(context context.Context, usernameA, usern
 		glog.Errorf("Could not get 1-month album blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf(" could not get 1-month album blend for %s, %s: %v", usernameA, usernameB, err)
 	}
+	s.UpdateJobProgress(context, jobId)
 
 	if b.ThreeMonth, err = s.getAlbumBlend(context, usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
 		glog.Errorf("Could not get 3-month album blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf(" could not get 3-month album blend for %s, %s: %v", usernameA, usernameB, err)
 	}
+	s.UpdateJobProgress(context, jobId)
 
 	if b.OneYear, err = s.getAlbumBlend(context, usernameA, usernameB, BlendTimeDurationYear); err != nil {
 		glog.Errorf("Could not get 12-month album blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf(" could not get 12-month album blend for %s, %s: %v", usernameA, usernameB, err)
 	}
+	s.UpdateJobProgress(context, jobId)
 
 	return b, nil
 }
 
-func (s *BlendService) buildTrackBlend(context context.Context, usernameA, usernameB userid) (TypeBlend, error) {
+func (s *BlendService) buildTrackBlend(context context.Context, usernameA, usernameB userid, jobId JobId) (TypeBlend, error) {
 	var (
 		b   TypeBlend
 		err error
@@ -614,15 +702,19 @@ func (s *BlendService) buildTrackBlend(context context.Context, usernameA, usern
 
 	}
 
+	s.UpdateJobProgress(context, jobId)
+
 	if b.ThreeMonth, err = s.getTrackBlend(context, usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
 		glog.Errorf("Could not get 3-month track blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf(" could not get 3-month track blend for %s, %s: %v", usernameA, usernameB, err)
 	}
+	s.UpdateJobProgress(context, jobId)
 
 	if b.OneYear, err = s.getTrackBlend(context, usernameA, usernameB, BlendTimeDurationYear); err != nil {
 		glog.Errorf("Could not get 12-month track blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf(" could not get 12-month track blend for %s, %s: %v", usernameA, usernameB, err)
 	}
+	s.UpdateJobProgress(context, jobId)
 
 	return b, nil
 }
@@ -756,20 +848,20 @@ func (s *BlendService) AddUsersToBlend(context context.Context, id blendId, user
 	return nil
 }
 
-func (s *BlendService) RefreshOverallBlendInCache(context context.Context, id blendId) error {
+// func (s *BlendService) RefreshOverallBlendInCache(context context.Context, id blendId) error {
 
-	duoblend, err := s.GetDuoBlendData(context, id)
-	if err != nil {
-		glog.Infof(" could not generate duoblend data during adding users to blend: %s: %w", id, err)
-		return nil //This is not a fatal error and we can live without it happening but still need to log
-	}
-	err = s.repo.AssignOverallBlendToBlend(context, id, duoblend.OverallBlendNum)
-	if err != nil {
-		glog.Infof(" could not assign duoblend integer value during adding users to blend:%s: %w", id, err)
-		return nil //This is not a fatal error and we can live without it happening but still need to log
-	}
-	return nil
-}
+// 	duoblend, err := s.GetDuoBlendData(context, id)
+// 	if err != nil {
+// 		glog.Infof(" could not generate duoblend data during adding users to blend: %s: %w", id, err)
+// 		return nil //This is not a fatal error and we can live without it happening but still need to log
+// 	}
+// 	err = s.repo.AssignOverallBlendToBlend(context, id, duoblend.OverallBlendNum)
+// 	if err != nil {
+// 		glog.Infof(" could not assign duoblend integer value during adding users to blend:%s: %w", id, err)
+// 		return nil //This is not a fatal error and we can live without it happening but still need to log
+// 	}
+// 	return nil
+// }
 
 func (s *BlendService) GenerateNewBlendId(context context.Context, link string, userids []userid) (blendId, error) {
 	id := blendId(uuid.New().String())                 //Generate new blend ID
@@ -988,7 +1080,7 @@ func (s *BlendService) cacheLFMData(ctx context.Context, user userid, category b
 		cacheTime *= 5
 	}
 
-	glog.Info("Caching data: \n", " duration:", duration, " category:", category, " with cache time (hours):", cacheTime.Hours())
+	// glog.Info("Caching data: \n", " duration:", duration, " category:", category, " with cache time (hours):", cacheTime.Hours())
 
 	err := s.repo.CacheUserMusicDataV2(
 		ctx,

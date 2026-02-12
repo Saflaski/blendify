@@ -121,6 +121,7 @@ func (app *application) mount() http.Handler {
 				5,
 				5*time.Second,
 			)).Get("/generatelink", blendHandler.GenerateNewLink)
+			r.Get("/getjobprogress", blendHandler.QueryJobProgress)
 			r.Get("/getpermalink", blendHandler.GetPermanentLink)
 			r.Post("/refreshpermalink", blendHandler.RefreshPermanentLink)
 			r.Get("/userinfo", blendHandler.GetUserInfo)

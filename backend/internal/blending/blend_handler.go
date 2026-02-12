@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/golang/glog"
+	gonanoid "github.com/matoous/go-nanoid/v2"
 )
 
 type BlendHandler struct {
@@ -35,6 +36,22 @@ type BlendRequest struct {
 	category     string
 	timeDuration string
 	user         string
+}
+
+func (h *BlendHandler) QueryJobProgress(w http.ResponseWriter, r *http.Request) {
+	glog.Info("Entered QueryJobProgress")
+	response := r.URL.Query()
+	jobId := response.Get("jobId")
+
+	jobProgress, err := h.svc.QueryJobProgress(r.Context(), JobId(jobId))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, " could not get job progress. Contact Admin")
+		glog.Error("Error during getting job progress for job:%s, %w", jobId, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(jobProgress)
 }
 
 func (h *BlendHandler) GetUserTopItems(w http.ResponseWriter, r *http.Request) {
@@ -325,7 +342,14 @@ func (h *BlendHandler) GetBlendPageData(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	blendData, err := h.svc.GetBlendAndRefreshCache(r.Context(), blendId)
+	mockJobId, err := gonanoid.New(10)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Could not generate mock job id. Contact Admin")
+		glog.Errorf("Could not generate mock job id for blend page data %s for user %s with error: %w", blendId, id, err)
+		return
+	}
+	blendData, err := h.svc.GetBlendAndRefreshCache(r.Context(), blendId, JobId(mockJobId))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "could not get blend data ")
