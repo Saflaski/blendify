@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/golang/glog"
-	gonanoid "github.com/matoous/go-nanoid/v2"
 )
 
 type BlendHandler struct {
@@ -50,8 +50,12 @@ func (h *BlendHandler) QueryJobProgress(w http.ResponseWriter, r *http.Request) 
 		glog.Error("Error during getting job progress for job:%s, %w", jobId, err)
 		return
 	}
+
+	resp := map[string]string{
+		"progress": strconv.FormatFloat(jobProgress, 'f', -1, 64),
+	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(jobProgress)
+	json.NewEncoder(w).Encode(resp)
 }
 
 func (h *BlendHandler) GetUserTopItems(w http.ResponseWriter, r *http.Request) {
@@ -318,6 +322,7 @@ func (h *BlendHandler) GetBlendPageData(w http.ResponseWriter, r *http.Request) 
 	response := r.URL.Query()
 
 	blendId := blendId(response.Get("blendId"))
+	jobId := JobId(response.Get("jobId"))
 	id, err := h.GetUserIdFromContext(r.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -342,14 +347,14 @@ func (h *BlendHandler) GetBlendPageData(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	mockJobId, err := gonanoid.New(10)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Could not generate mock job id. Contact Admin")
-		glog.Errorf("Could not generate mock job id for blend page data %s for user %s with error: %w", blendId, id, err)
-		return
-	}
-	blendData, err := h.svc.GetBlendAndRefreshCache(r.Context(), blendId, JobId(mockJobId))
+	// mockJobId, err := gonanoid.New(10)
+	// if err != nil {
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// 	fmt.Fprintf(w, "Could not generate mock job id. Contact Admin")
+	// 	glog.Errorf("Could not generate mock job id for blend page data %s for user %s with error: %w", blendId, id, err)
+	// 	return
+	// }
+	blendData, err := h.svc.GetBlendAndRefreshCache(r.Context(), blendId, JobId(jobId))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "could not get blend data ")

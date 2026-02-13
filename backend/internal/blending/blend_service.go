@@ -58,7 +58,7 @@ func (s *BlendService) QueryJobProgress(context context.Context, jobId JobId) (f
 	return float64(value) / float64(globalProgressMaxValue), nil
 }
 
-func (s *BlendService) UpdateJobProgress(context context.Context, jobId JobId) error {
+func (s *BlendService) IncrementJobProgress(context context.Context, jobId JobId) error {
 	globalProgress.mu.Lock()
 	defer globalProgress.mu.Unlock()
 
@@ -472,7 +472,7 @@ func (s *BlendService) GenerateBlendOfTwo(context context.Context, jobId JobId, 
 	if err != nil {
 		return DuoBlend{}, fmt.Errorf("could not get overall blend with %s and %s: %w", userA, userB, err)
 	}
-	s.UpdateJobProgress(context, jobId)
+	s.IncrementJobProgress(context, jobId)
 
 	// blendedArtists, err := s.BuildBlendedEntries(
 	// 	context,
@@ -646,19 +646,19 @@ func (s *BlendService) buildArtistBlend(context context.Context, usernameA, user
 		glog.Errorf("Could not get 1-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf(" could not get 1-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 	}
-	s.UpdateJobProgress(context, jobId)
+	s.IncrementJobProgress(context, jobId)
 
 	if b.ThreeMonth, err = s.getArtistBlend(context, usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
 		glog.Errorf("Could not get 3-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf(" could not get 3-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 	}
-	s.UpdateJobProgress(context, jobId)
+	s.IncrementJobProgress(context, jobId)
 
 	if b.OneYear, err = s.getArtistBlend(context, usernameA, usernameB, BlendTimeDurationYear); err != nil {
 		glog.Errorf("Could not get 12-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf(" could not get 12-month artist blend for %s, %s: %v", usernameA, usernameB, err)
 	}
-	s.UpdateJobProgress(context, jobId)
+	s.IncrementJobProgress(context, jobId)
 
 	return b, nil
 }
@@ -673,19 +673,19 @@ func (s *BlendService) buildAlbumBlend(context context.Context, usernameA, usern
 		glog.Errorf("Could not get 1-month album blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf(" could not get 1-month album blend for %s, %s: %v", usernameA, usernameB, err)
 	}
-	s.UpdateJobProgress(context, jobId)
+	s.IncrementJobProgress(context, jobId)
 
 	if b.ThreeMonth, err = s.getAlbumBlend(context, usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
 		glog.Errorf("Could not get 3-month album blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf(" could not get 3-month album blend for %s, %s: %v", usernameA, usernameB, err)
 	}
-	s.UpdateJobProgress(context, jobId)
+	s.IncrementJobProgress(context, jobId)
 
 	if b.OneYear, err = s.getAlbumBlend(context, usernameA, usernameB, BlendTimeDurationYear); err != nil {
 		glog.Errorf("Could not get 12-month album blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf(" could not get 12-month album blend for %s, %s: %v", usernameA, usernameB, err)
 	}
-	s.UpdateJobProgress(context, jobId)
+	s.IncrementJobProgress(context, jobId)
 
 	return b, nil
 }
@@ -701,20 +701,19 @@ func (s *BlendService) buildTrackBlend(context context.Context, usernameA, usern
 		return TypeBlend{}, fmt.Errorf(" could not get 1-month track blend for %s, %s: %v", usernameA, usernameB, err)
 
 	}
-
-	s.UpdateJobProgress(context, jobId)
+	s.IncrementJobProgress(context, jobId)
 
 	if b.ThreeMonth, err = s.getTrackBlend(context, usernameA, usernameB, BlendTimeDurationThreeMonth); err != nil {
 		glog.Errorf("Could not get 3-month track blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf(" could not get 3-month track blend for %s, %s: %v", usernameA, usernameB, err)
 	}
-	s.UpdateJobProgress(context, jobId)
+	s.IncrementJobProgress(context, jobId)
 
 	if b.OneYear, err = s.getTrackBlend(context, usernameA, usernameB, BlendTimeDurationYear); err != nil {
 		glog.Errorf("Could not get 12-month track blend for %s, %s: %v", usernameA, usernameB, err)
 		return TypeBlend{}, fmt.Errorf(" could not get 12-month track blend for %s, %s: %v", usernameA, usernameB, err)
 	}
-	s.UpdateJobProgress(context, jobId)
+	s.IncrementJobProgress(context, jobId)
 
 	return b, nil
 }

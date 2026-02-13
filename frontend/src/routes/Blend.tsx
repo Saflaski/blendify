@@ -9,6 +9,8 @@ import React, {
   Dispatch,
   cache,
 } from "react";
+import { nanoid } from "nanoid";
+
 import CardBackground from "@/assets/images/topography.svg";
 import CopyIcon from "@/assets/images/copy.svg";
 import LastfmIcon from "@/assets/images/lastfm.svg";
@@ -229,6 +231,66 @@ export function Blend() {
   useEffect(() => {
     console.log("BlendId after checking 3 places: ", blendId);
   }, [blendId]);
+
+  //Make a jobId, then send to backend
+
+  const jobIdRef = useRef(nanoid(10));
+  const jobId = jobIdRef.current;
+  console.log("Job ID: ", jobId);
+
+  const [jobProgress, setJobProgress] = useState<number>(0);
+  useEffect(() => {
+    if (!blendId || !cardLoading) return;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let isCancelled = false;
+    const updateJobProgress = async () => {
+      try {
+        const encodedValue = encodeURIComponent(blendId as string);
+        const res = await fetch(
+          `${API_BASE_URL}/blend/getjobprogress?jobId=${jobId}`,
+          {
+            method: "GET",
+            credentials: "include",
+            priority: "high",
+          },
+        );
+
+        if (res.status == 401) {
+          navigate(
+            `/login?redirectTo=${encodeURIComponent(location.pathname + location.search)}`,
+          );
+          return;
+        }
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const progress = data["progress"];
+
+        if (!isCancelled) {
+          timeoutId = setTimeout(updateJobProgress, 500);
+        }
+
+        setJobProgress(progress);
+        console.log("Job progress updated to:", progress);
+        // if (progress >= 1.0) return;
+
+        // Schedule next poll AFTER request completes
+        // timeoutId = setTimeout(updateJobProgress, 1000);
+      } catch (err) {
+        if (!isCancelled) {
+          console.error("Poll error, retrying...", err);
+          timeoutId = setTimeout(updateJobProgress, 1000); // Back off on error
+        }
+      }
+    };
+    updateJobProgress();
+    return () => {
+      isCancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, []);
+
   useEffect(() => {
     if (sentInviteIdExchange.current) return;
     sentInviteIdExchange.current = true; //To make sure only one invite exchange is sent
@@ -310,8 +372,24 @@ export function Blend() {
         // setGenreLoading(true);
 
         // runs BEFORE all catalogue calls
+        if (locationState?.cached) {
+          getCardBlendData(jobId); //If it is cached, fire this request asyncly
+          // cataloguePromise.catch((err) => {
+          //   console.error("Error loading catalogue data:", err);
+          //   setError(
+          //     "Something went wrong loading catalogue data. Please try again.",
+          //   );
+          // });
+          console.log("Cached blend data, loading card data async");
+        } else {
+          //If it is not cached, then await this first without sending further requests
+          //to avoid concurrent requests on backend as there will be a race condition
+          await getCardBlendData(jobId);
 
-        const cataloguePromise = Promise.all([
+          console.log("Not fully cached data, loading card data first");
+        }
+
+        await Promise.all([
           getCatalogueBlendData(
             "3month",
             "artist",
@@ -368,23 +446,7 @@ export function Blend() {
           ),
         ]);
 
-        if (locationState?.cached) {
-          getCardBlendData(); //If it is cached, fire this request asyncly
-          // cataloguePromise.catch((err) => {
-          //   console.error("Error loading catalogue data:", err);
-          //   setError(
-          //     "Something went wrong loading catalogue data. Please try again.",
-          //   );
-          // });
-          console.log("Cached blend data, loading card data async");
-        } else {
-          //If it is not cached, then await this first without sending further requests
-          //to avoid concurrent requests on backend as there will be a race condition
-          await getCardBlendData();
-
-          console.log("Not fully cached data, loading card data first");
-        }
-        await cataloguePromise;
+        // await cataloguePromise;
 
         // getCardBlendData();
         // await getTopMutualGenreData();
@@ -443,13 +505,13 @@ export function Blend() {
   //   }
   // };
   // console.log("Getting data for blendId (1): ", blendId);
-  const getCardBlendData = async () => {
+  const getCardBlendData = async (jobId: string) => {
     console.log("Getting data for blendId (2): ", blendId);
 
     try {
       const encodedValue = encodeURIComponent(blendId as string);
       const res = await fetch(
-        `${API_BASE_URL}/blend/carddata?blendId=${encodedValue}`,
+        `${API_BASE_URL}/blend/carddata?blendId=${encodedValue}&jobId=${jobId}`,
         {
           method: "GET",
           credentials: "include",
@@ -987,18 +1049,14 @@ export function Blend() {
         {/* <div className="md:flex md:flex-wrap pr-2 mt-8 lg:grid lg:grid-cols-2 "> Old*/}
         {/* LEFT CONTENT AREA */}
         {/* This card bit was enhanced from its previous version with AI. I am not that artistic to have come up with it myself lmao. */}
-        <div className="  md:w-[40%] flex flex-col flex-wrap items-center justify-baseline gap-y-5">
+        <div className="  md:w-[40%] flex flex-col flex-wrap items-center justify-baseline gap-y-0">
           <div
-            className={`text-black font-[Roboto_Mono] italic    ${!catalogueLoading && !cardLoading ? "hidden" : "lg:hidden block"} `}
+            className={`text-black font-[Roboto_Mono] italic  ${!cardLoading || !catalogueLoading ? "hidden" : "lg:hidden block"} `}
           >
-            <p className="text-lg font-semibold">Loading Data</p>
-            <p
-              className={`${showHint ? "hidden" : "block"} text-sm transition ease-in`}
-            >
-              Sometimes it takes a while to fetch all your data (while staying
-              nice to LastFM).
-            </p>
+            {/* ${!cardLoading ? "hidden" : "lg:hidden block"} */}
+            <DataLoadingBit jobProgress={jobProgress} />
           </div>
+
           {/* Player card */}
           <div className="w-full flex justify-center p-8">
             <div
@@ -1220,15 +1278,15 @@ export function Blend() {
         {/* RIGHT CONTENT AREA */}
         <div className=" md:w-[60%] outline-amber-600 flex flex-col flex-wrap items-center justify-baseline gap-y-5 mt-10">
           <div
-            className={`text-black font-[Roboto_Mono] italic   ${!catalogueLoading && !cardLoading ? "hidden" : "hidden lg:block"} `}
+            className={`text-black font-[Roboto_Mono] italic   ${!cardLoading || !catalogueLoading ? "hidden" : "hidden lg:block"} `}
           >
-            <p className="text-lg font-semibold">Loading Data</p>
-            <p
+            {/* <p
               className={`${showHint ? "hidden" : "block"} text-sm transition ease-in`}
             >
               Sometimes it takes a while to fetch all your data (while staying
               nice to LastFM).
-            </p>
+            </p> */}
+            <DataLoadingBit jobProgress={jobProgress} />
           </div>
 
           {/* New genre thingy  */}
@@ -1521,6 +1579,29 @@ export function Blend() {
     </div>
   );
 }
+
+type DataLoadingBitProps = {
+  jobProgress: number;
+};
+export const DataLoadingBit = ({ jobProgress }: DataLoadingBitProps) => {
+  return (
+    <div className="w-full">
+      <p className="mb-2 text-lg w-full font-extrabold uppercase tracking-wide">
+        {jobProgress < 0.7 ? "Loading Data" : "Generating Blend"}:{" "}
+        {Math.round(jobProgress * 100)}%
+      </p>
+
+      <div className="relative border-4 w-full  border-black bg-white h-8">
+        <div className="absolute inset-0 translate-x-1 translate-y-1 bg-black -z-10"></div>
+
+        <div
+          className="h-6 bg-yellow-400 border-r-4 border-black transition-all duration-300"
+          style={{ width: `${jobProgress * 100}%` }}
+        />
+      </div>
+    </div>
+  );
+};
 
 const fetchBlendPercentage = async (label) => {
   await new Promise((r) => setTimeout(r, 500));
