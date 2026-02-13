@@ -108,6 +108,16 @@ func (s BlendService) RefreshPermanentLinkForUser(context context.Context, userA
 		return "", fmt.Errorf(" could not generate new permanent link from userid %s due to nanoid error: %w", userA, err)
 	}
 	newLinkValue := permaLinkValue(linkID)
+	currLink, err := s.repo.GetPermanentLinkByUser(context, userA)
+	if err != nil {
+		return "", fmt.Errorf(" could not get current permanent link from userid %s due to repo error: %w", userA, err)
+	}
+	//Delete old link
+	err = s.repo.DeletePermanentLink(context, currLink)
+	if err != nil {
+		return "", fmt.Errorf(" could not delete old permanent link %s from userid %s due to repo error: %w", currLink, userA, err)
+	}
+	//Assign new link
 	err = s.repo.AssignPermanentLinkToUser(context, userA, newLinkValue)
 	if err != nil {
 		return "", fmt.Errorf(" could not assign new permanent link from userid %s due to repo error: %w", userA, err)

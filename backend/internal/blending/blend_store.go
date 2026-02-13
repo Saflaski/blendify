@@ -29,6 +29,17 @@ type BlendStore struct {
 	blendIndexPrefix string
 }
 
+func (r *BlendStore) DeletePermanentLink(context context.Context, currLink permaLinkValue) error {
+	keyIndex := fmt.Sprintf("%s:%s:%s", r.blendPrefix, "perma_invite", string(currLink))
+
+	err := r.redisClient.Del(context, keyIndex).Err()
+	if err != nil {
+		return fmt.Errorf(" could not delete blend's user from permalink in redis: %w", err)
+	} else {
+		return nil
+	}
+}
+
 func (r *BlendStore) IsBlendCachedFully(context context.Context, id string) (bool, error) {
 	totalKeys := len(categoryRange) * len(durationRange) //The total number of keys we expect = 3x3
 	pattern := fmt.Sprintf("%s:%s:%s", r.musicPrefix, id, "*")
