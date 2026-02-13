@@ -253,8 +253,14 @@ export function Blend() {
             method: "GET",
             credentials: "include",
             priority: "high",
+            keepalive: true,
           },
         );
+
+        if (res.status == 404) {
+          if (!isCancelled) timeoutId = setTimeout(updateJobProgress, 1000);
+          return;
+        }
 
         if (res.status == 401) {
           navigate(

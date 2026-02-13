@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/golang/glog"
 )
@@ -44,7 +45,13 @@ func (h *BlendHandler) QueryJobProgress(w http.ResponseWriter, r *http.Request) 
 	jobId := response.Get("jobId")
 
 	jobProgress, err := h.svc.QueryJobProgress(r.Context(), JobId(jobId))
-	if err != nil {
+
+	if strings.Contains(err.Error(), "not found") {
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, " job id not found")
+		glog.Error("Job id not found during getting job progress for job:%s, %w", jobId, err)
+		return
+	} else if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, " could not get job progress. Contact Admin")
 		glog.Error("Error during getting job progress for job:%s, %w", jobId, err)
