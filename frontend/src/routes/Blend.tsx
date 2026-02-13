@@ -296,7 +296,7 @@ export function Blend() {
       isCancelled = true;
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [jobSent]);
+  }, []);
 
   useEffect(() => {
     if (sentInviteIdExchange.current) return;
