@@ -239,8 +239,9 @@ export function Blend() {
   console.log("Job ID: ", jobId);
 
   const [jobProgress, setJobProgress] = useState<number>(0);
+  const [jobSent, setJobSent] = useState(false);
   useEffect(() => {
-    if (!blendId || !cardLoading) return;
+    if (!cardLoading || !jobSent) return;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let isCancelled = false;
     const updateJobProgress = async () => {
@@ -289,7 +290,7 @@ export function Blend() {
       isCancelled = true;
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, []);
+  }, [jobSent]);
 
   useEffect(() => {
     if (sentInviteIdExchange.current) return;
@@ -505,9 +506,10 @@ export function Blend() {
   //   }
   // };
   // console.log("Getting data for blendId (1): ", blendId);
+
   const getCardBlendData = async (jobId: string) => {
     console.log("Getting data for blendId (2): ", blendId);
-
+    setJobSent(true);
     try {
       const encodedValue = encodeURIComponent(blendId as string);
       const res = await fetch(
