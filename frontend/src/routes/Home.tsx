@@ -293,7 +293,7 @@ export const PlayStatElement = ({ number, label, color = "bg-white" }) => {
       transition-all
     `}
     >
-      <span className="text-3xl font-black leading-none">
+      <span className="text-xl font-black leading-none">
         {Number(number).toLocaleString()}
       </span>
       <span className="text-[10px] uppercase font-bold tracking-tighter mt-1 text-black/60">
