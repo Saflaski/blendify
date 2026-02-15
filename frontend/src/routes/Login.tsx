@@ -44,26 +44,32 @@ export function Login() {
         </div>
       </div>
       {/* Mobile and desktop preview */}
-      <div className="flex flex-row flex-wrap items-end justify-center gap-10 my-10">
-        <div className="flex flex-col items-center">
-          <h3 className="font-[Roboto_Mono] font-medium text-black bg-[#FF8C00] ring-3 px-2 ring-black text-md mb-2">
-            Mobile Preview
-          </h3>
-          <img
-            src={mobilePreview}
-            alt="Mobile Preview"
-            className="w-[250px] md:w-[200px] h-auto border-4 border-black shadow-[6px_6px_0_0_#FF8C00]"
-          />
-        </div>
-        <div className="flex flex-col items-center mb-10 ">
-          <h3 className="font-[Roboto_Mono] font-medium text-black bg-[#FF8C00] ring-3 px-2 ring-black text-md mb-2">
-            Desktop Preview
-          </h3>
-          <img
-            src={desktopPreview}
-            alt="Desktop Preview"
-            className="md:w-[600px] w-[300px] h-auto border-4 border-black shadow-[6px_6px_0_0_#FF8C00]"
-          />
+      <div
+        className="bg-[#00CDE1] border-4 w-fit mx-auto border-black shadow-[8px_8px_0_0_#000000]
+      my-20
+       p-6 md:py-10 md:px-16"
+      >
+        <div className="flex flex-row flex-wrap items-end justify-center gap-10 my-10">
+          <div className="flex flex-col items-center">
+            <h3 className="font-[Roboto_Mono] font-medium text-black bg-[#FF8C00] shadow-[4px_4px_0_0_#000] ring-3 px-2 ring-black text-md mb-2">
+              Mobile Preview
+            </h3>
+            <img
+              src={mobilePreview}
+              alt="Mobile Preview"
+              className="w-[250px] md:w-[200px] h-auto border-4 border-black shadow-[6px_6px_0_0_#000]"
+            />
+          </div>
+          <div className="flex flex-col items-center mb-10">
+            <h3 className="font-[Roboto_Mono] font-medium text-black bg-[#FF8C00] shadow-[4px_4px_0_0_#000] ring-3 px-2 ring-black text-md mb-2">
+              Desktop Preview
+            </h3>
+            <img
+              src={desktopPreview}
+              alt="Desktop Preview"
+              className="md:w-[600px] w-[300px] h-auto border-4 border-black shadow-[6px_6px_0_0_#000]"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -118,7 +124,9 @@ function loginButton(platform) {
         hover:shadow-[4px_4px_0_0_#000]
         hover:translate-[2px]
         transition-all duration-100 
-        active:translate-x-[1px] active:translate-y-[1px]
+        active:translate-x-[4px] active:translate-y-[4px]
+        active:shadow-[2px_2px_0_0_#000]
+
       "
       onClick={config.handleFunc}
     >

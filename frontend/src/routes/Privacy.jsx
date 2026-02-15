@@ -4,7 +4,9 @@ export function Privacy() {
       <div className="w-full max-w-3xl ring-2 ring-black  px-8 py-10">
         <div className="text-black font-[Roboto_Mono] space-y-10">
           <header className="text-center space-y-2">
-            <h1 className="text-3xl font-semibold">Privacy Policy</h1>
+            <h1 className="text-center font-[Sora] text-black text-3xl font-bold">
+              Privacy Policy
+            </h1>
             <p className="text-sm">
               <strong>Last updated:</strong> January 1, 2026
             </p>

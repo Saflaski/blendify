@@ -5,7 +5,7 @@ export function About() {
   return (
     <div className="w-full flex justify-center py-12 px-4">
       <div className="w-full max-w-3xl ring-2 ring-black  px-8 py-10">
-        <h2 className="text-center font-[Roboto_Mono] text-black text-3xl font-semibold">
+        <h2 className="text-center font-[Sora] text-black text-3xl font-bold">
           About
         </h2>
 
@@ -20,7 +20,7 @@ export function About() {
             <span>Made by</span>
 
             <a
-              href="https://sabeehislam.com"
+              href="https://github.com/saflaski"
               target="_blank"
               rel="noopener noreferrer"
               className="font-bold underline underline-offset-4 hover:opacity-100 transition"

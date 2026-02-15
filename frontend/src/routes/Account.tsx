@@ -91,7 +91,7 @@ export function Account() {
   return (
     <div className="w-full flex justify-center py-12 px-4">
       <div className="w-full max-w-3xl ring-2 ring-black  px-8 py-10">
-        <h2 className="text-center font-[Roboto_Mono] text-black text-3xl font-semibold">
+        <h2 className="text-center font-[Sora] text-black text-3xl font-bold">
           Account
         </h2>
         <div>
@@ -101,17 +101,26 @@ export function Account() {
               Revoke and refresh your permanent invite link. Doing this will
               cause all your old invite links to stop working.
             </p>
-            <div className="flex w-4/5 h-10 flex-row items-center space-x-4">
+            <div className="flex w-4/5 flex-col items-center space-x-4">
               <textarea
                 name="newLink"
                 value={link}
                 readOnly={true}
                 rows={1}
-                className="flex-1 text-[12px] h-full ring-1 text-black sm:text-xs resize-none overflow-hidden whitespace-nowrap opacity-90 ring-slate-300 bg-slate-50 focus:outline-none focus:ring-0 px-3 py-2.5 font-['Roboto_Mono'] cursor-default"
+                className="resize-none 
+        flex w-full border-2 border-[#bbc2cb] text-center bg-gray-100 px-3 py-2 
+        
+         overflow-hidden text-nowrap text-slate-600 text-sm font-bold placeholder:text-slate-400"
               />
               <button
                 onClick={handleRefreshLink}
-                className="flex-shrink-0 px-4 bg-white ring-1 h-full text-black font-bold font-[Roboto_Mono] hover:bg-slate-50 active:bg-slate-100 transition-colors"
+                className={`border-2 mt-2 border-black bg-[#FFD700] px-6 py-2 
+        text-sm font-black uppercase tracking-tighter
+        shadow-[4px_4px_0_0_#000]
+        hover:bg-[#00CED1] 
+        text-black
+        active:shadow-none active:translate-x-[4px] active:translate-y-[4px]
+        transition-all`}
               >
                 Refresh Link
               </button>
@@ -128,7 +137,13 @@ export function Account() {
             This is an <b>irreversible action.</b>
           </p>
           <button
-            className="p-2 bg-red-600 ring-1 hover:bg-red-500 active:bg-red-700 text-black font-bold font-[Roboto_Mono]"
+            className={`border-2 mt-2 border-black bg-[#f00] px-6 py-2 
+        text-sm font-black uppercase tracking-tighter
+        shadow-[4px_4px_0_0_#000]
+        hover:bg-[#00CED1] 
+        text-black
+        active:shadow-none active:translate-x-[4px] active:translate-y-[4px]
+        transition-all`}
             onClick={DeleteAccount}
           >
             Delete Account
