@@ -17,11 +17,11 @@
 ---
 ## Screenshots
 ### Home page
-<img width="1466" height="798" alt="blendify_home_page" src="https://github.com/user-attachments/assets/52c97608-550d-4213-8a92-2fe1b2bbc305" />
+<img width="1920" height="1080" alt="Screen Shot 2026-02-15 at 20 35 07" src="https://github.com/user-attachments/assets/b9bcd5f5-ba9b-474a-bab3-b4a76af7c4d2" />
 
 ### Blend page
+<img width="1920" height="1080" alt="Screen Shot 2026-02-15 at 20 35 21" src="https://github.com/user-attachments/assets/f32704ba-e835-4fa3-864c-824f4d05b896" />
 
-<img width="1466" height="795" alt="blendify_blend_page" src="https://github.com/user-attachments/assets/d699d256-2d72-4812-bf1e-dff6c4c7d75e" />
 
 ---
 ## How It Works
