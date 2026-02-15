@@ -50,7 +50,7 @@ export function Navbar() {
                 min-h-[5px]
                 text-center
                 text-[#F6E8CB]
-                font-['Roboto_Mono','monospace']
+                font-['Sora','monospace']
                 [text-shadow:2px_2px_0_#000]
                 [drop-shadow:2px_2px_0_#000]
                 transition-all duration-75 ease-in-out

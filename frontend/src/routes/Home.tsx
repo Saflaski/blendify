@@ -188,54 +188,45 @@ export function Home() {
     tracks: 0,
   });
   return (
-    <div className="min-h-screen w-full flex items-start justify-center py-5 font-[Roboto_Mono]">
+    <div
+      className="min-h-fit w-full flex items-start 
+    
+    
+    justify-center py-5 font-[Roboto_Mono]"
+    >
       <div
-        className={`w-full max-w-xl slate-bg  border border-slate-300 px-5 py-6 flex flex-col gap-y-4 text-slate-900`}
+        className={`w-full max-w-xl slate-bg  border-2 border-slate-900 
+          shadow-[4px_4px_0_0_#000] 
+          px-5 py-6 flex flex-col gap-y-4 text-slate-900`}
       >
         <header className="w-full flex flex-col gap-1">
           {!statLoading ? (
-            <section className="w-full flex flex-col gap-4 mb-6">
-              <h1 className="text-3xl font-bold tracking-tight">
-                Hi,{" "}
-                <span className="text-slate-600">{userName.toUpperCase()}</span>
+            <section className="w-full  flex flex-col gap-6 mb-8 ">
+              <h1 className="text-4xl font-black  font-[Roboto_Mono] uppercase tracking-tighter ">
+                Hi, <span className="text-[#FF3E00]">{userName}</span>
               </h1>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="flex flex-col">
-                  <span className="text-2xl font-semibold">
-                    {Number(stats.plays).toLocaleString()}
-                  </span>
-                  <span className="text-xs uppercase tracking-wide text-slate-500">
-                    Plays
-                  </span>
-                </div>
-
-                <div className="flex flex-col">
-                  <span className="text-2xl font-semibold">
-                    {Number(stats.artists).toLocaleString()}
-                  </span>
-                  <span className="text-xs uppercase tracking-wide text-slate-500">
-                    Artists
-                  </span>
-                </div>
-
-                <div className="flex flex-col">
-                  <span className="text-2xl font-semibold">
-                    {Number(stats.tracks).toLocaleString()}
-                  </span>
-                  <span className="text-xs uppercase tracking-wide text-slate-500">
-                    Tracks
-                  </span>
-                </div>
-
-                <div className="flex flex-col">
-                  <span className="text-2xl font-semibold">
-                    {Number(blends.length).toLocaleString()}
-                  </span>
-                  <span className="text-xs uppercase tracking-wide text-slate-500">
-                    Blends
-                  </span>
-                </div>
+              <div className="grid grid-cols-2 font-[Sora] sm:grid-cols-4 gap-4">
+                <PlayStatElement
+                  number={stats.plays}
+                  label="Plays"
+                  color="bg-[#A7F3D0]"
+                />
+                <PlayStatElement
+                  number={stats.artists}
+                  label="Artists"
+                  color="bg-[#BAE6FD]"
+                />
+                <PlayStatElement
+                  number={stats.tracks}
+                  label="Tracks"
+                  color="bg-[#DDD6FE]"
+                />
+                <PlayStatElement
+                  number={blends.length}
+                  label="Blends"
+                  color="bg-[#FDE68A]"
+                />
               </div>
             </section>
           ) : (
@@ -290,6 +281,28 @@ function BlendSkeleton() {
   );
 }
 
+export const PlayStatElement = ({ number, label, color = "bg-white" }) => {
+  return (
+    <div
+      className={`
+      flex flex-col justify-center
+      p-4 border-2 border-black 
+      ${color} 
+      shadow-[4px_4px_0_0_#000] 
+      hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] 
+      transition-all
+    `}
+    >
+      <span className="text-3xl font-black leading-none">
+        {Number(number).toLocaleString()}
+      </span>
+      <span className="text-[10px] uppercase font-bold tracking-tighter mt-1 text-black/60">
+        {label}
+      </span>
+    </div>
+  );
+};
+
 type ListOfBlendsProps = {
   setEachBlend: React.Dispatch<React.SetStateAction<Blend[]>>;
   funcNav: (blendid: string, cached: boolean) => void;
@@ -318,66 +331,64 @@ function ListOfBlends({
 
     return (
       <div w-full>
-        <h3 className="text-xs pl-2 font-bold  text-gray-700 mb-2">{title}</h3>
-        <div className="space-y-1">
+        <h3 className=" pl-2 font-bold  text-gray-700 mb-2">{title}</h3>
+        <div className="space-y-2 flex-1 ">
           {blendsArray.map((blend) => (
             <div
               key={blend.blendid}
-              className="flex overflow-hidden w-full group relative"
+              className="
+    flex w-full group relative 
+    bg-black border-[3px] border-black 
+    shadow-[4px_4px_0px_0px_#000]
+    active:translate-[2px]
+    active:shadow-[2px_2px_0px_0px_#000]
+    transition-all duration-100 mb-4
+  "
             >
               <button
-                className=" flex flex-1 w-full text-left items-center transition-all duration-300 ease-in-out
-            justify-between border border-slate-200 px-3 py-2 hover:bg-slate-50"
+                className="
+      flex-1 flex items-center justify-between
+      bg-white p-3 text-left 
+      hover:bg-yellow-50 active:bg-yellow-100
+      transition-colors duration-75
+      min-w-0 
+    "
                 onClick={() => funcNav(blend.blendid, blend.cached)}
               >
-                <span className="truncate font-['Roboto_Mono'] text-sm">
-                  {blend.user.join(" + ")} // {blend.value}%
+                <span className="truncate font-['Roboto_Mono'] text-sm font-black uppercase">
+                  {blend.user.join(" + ")}{" "}
+                  <span className="text-blue-600">//</span> {blend.value}%
                 </span>
 
-                <span className="text-[12px] text-right text-slate-400 ml-2 shrink-0">
+                <span className="ml-4 text-[10px] font-bold uppercase bg-black text-white px-2 py-1 shrink-0">
                   {daysAgo(blend.timestamp) === 0
-                    ? "added today"
-                    : `added ${daysAgo(blend.timestamp)}d ago`}
+                    ? "TODAY"
+                    : `${daysAgo(blend.timestamp)}D`}
                 </span>
               </button>
               <button
-                onClick={() => {
-                  console.log("Deleting blend:", blend.blendid);
+                onClick={(e) => {
+                  e.stopPropagation();
                   handleDelete(blend.blendid);
                 }}
                 className="
-                        translate-x-0
-                opacity-100
-                w-auto
-                pl-1
-                pointer-events-auto
-                text-xs
-                text-white
-                transition-all duration-100 ease-in-out
-
-                lg:-translate-x-4
-                lg:opacity-0
-                lg:w-0
-                lg:pointer-events-none
-
-                lg:group-hover:opacity-100
-                lg:group-hover:translate-x-0
-                lg:group-hover:pointer-events-auto
-                lg:group-hover:w-auto
-                lg:group-hover:px-1
-
-                lg:group-focus-within:opacity-100
-                lg:group-focus-within:translate-x-0
-                lg:group-focus-within:pointer-events-auto
-                lg:group-focus-within:w-auto
-
-                lg:hover:bg-red-100
-                lg:hover:border
-                lg:focus:border
-
-        "
+      flex items-center justify-center bg-red-500
+      hover:bg-red-600 active:bg-red-700
+      border-l-[3px] border-black
+      
+      w-12 opacity-100
+      
+      lg:w-0 lg:opacity-0 lg:border-l-0
+      lg:group-hover:w-14 lg:group-hover:opacity-100 lg:group-hover:border-l-[3px]
+      
+      transition-all duration-200 ease-in-out overflow-hidden
+    "
               >
-                <img src={Delete} className="bg-inherit" alt="Go to blend" />
+                <img
+                  src={Delete}
+                  className="md:w-7 md:h-7 invert min-w-[20px]"
+                  alt="Delete"
+                />
               </button>
             </div>
           ))}
@@ -490,13 +501,13 @@ function RecentOrTop() {
 function TopUserInfoSectionSkeleton() {
   return (
     <section className="w-full flex flex-col gap-4 mb-6 animate-pulse">
-      <div className="h-8 w-48 bg-slate-200 rounded-md" />
+      <div className="h-8 w-48 bg-slate-200" />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[...Array(4)].map((_, i) => (
           <div key={i} className="flex flex-col gap-2">
-            <div className="h-7 w-20 bg-slate-200 rounded-md" />
-            <div className="h-3 w-14 bg-slate-200 rounded-md" />
+            <div className="h-7 w-20 bg-slate-200 " />
+            <div className="h-3 w-14 bg-slate-200 " />
           </div>
         ))}
       </div>
@@ -519,9 +530,14 @@ function AddNewBlendBar({ AddBlend }) {
   };
 
   return (
-    <div className="flex  w-full gap-2">
+    <div className="flex w-full gap-3 font-mono">
       <div
-        className={`flex w-full border border-slate-600 bg-white px-3 py-2 text-xs font-['Roboto_Mono'] focus:outline-none focus:border-slate-900`}
+        className={`
+        flex w-full border-2 border-black bg-white px-3 py-2 
+        shadow-[4px_4px_0_0_#000] transition-all
+        focus-within:translate-x-[-2px] focus-within:translate-y-[-2px] 
+        focus-within:shadow-[6px_6px_0_0_#000]
+      `}
       >
         <textarea
           name="newBlend"
@@ -529,22 +545,29 @@ function AddNewBlendBar({ AddBlend }) {
           value={value}
           onChange={(e) => setValue(e.target.value)}
           rows={1}
-          className="resize-none w-full focus:outline-none overflow-hidden text-nowrap flex
-         
-          "
-        ></textarea>
+          className="resize-none w-full focus:outline-none overflow-hidden text-nowrap bg-transparent text-sm font-bold placeholder:text-slate-400"
+        />
+
         {value.length > 0 && !isValid(value) && (
           <img
             src={cross}
-            alt={isValid(value) ? "Valid" : "Invalid"}
-            className="justify-end relative w-6 h-4 pl-1 align-middle content-center"
+            alt="Invalid"
+            className="w-5 h-5 self-center ml-2 invert"
           />
         )}
       </div>
 
       <button
         onClick={() => AddBlend(value)}
-        className={`border home-slate-button   border-slate-900  px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide  focus:outline-none focus:border-black`}
+        className={`
+        border-2 border-black bg-[#FFD700] px-6 py-2 
+        text-sm font-black uppercase tracking-tighter
+        shadow-[4px_4px_0_0_#000]
+        hover:bg-[#00CED1] 
+        
+        active:shadow-none active:translate-x-[4px] active:translate-y-[4px]
+        transition-all
+      `}
       >
         Add
       </button>
@@ -584,7 +607,10 @@ function GeneratePermaLink() {
         value={link}
         readOnly={true}
         rows={1}
-        className="flex-1 text-[11px] sm:text-xs resize-none overflow-hidden text-nowrap  border opacity-90 border-slate-300 bg-slate-50 focus:outline-none focus:ring-0 focus:border-slate-300 px-3 py-2 text-xs font-['Roboto_Mono'] cursor-default"
+        className="resize-none 
+        flex w-full border-2 border-[#bbc2cb] bg-gray-100 px-3 py-2 
+         
+         overflow-hidden text-nowrap text-slate-600 text-sm font-bold placeholder:text-slate-400"
       ></textarea>
 
       <div className="relative">
@@ -596,20 +622,7 @@ function GeneratePermaLink() {
             Copied!
           </div>
         )}
-        <button
-          onClick={handleCopy}
-          className={`flex items-center justify-center border border-slate-900 home-slate-button px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide  focus:outline-none focus:border-black`}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            height="18px"
-            viewBox="0 -960 960 960"
-            width="24px"
-            fill="#F6E8CB"
-          >
-            <path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z" />
-          </svg>
-        </button>
+        <CopyButton onClick={handleCopy} />
       </div>
     </div>
   );
@@ -642,48 +655,71 @@ function GenerateLink() {
   };
 
   return (
-    <div className="flex w-full gap-2">
+    <div className="flex flex-col w-full gap-2">
       <textarea
         name="newLink"
         value={link}
         readOnly={true}
         rows={1}
-        className="flex-1 text-[11px] sm:text-xs resize-none overflow-hidden text-nowrap  border opacity-90 border-slate-300 bg-slate-50 focus:outline-none focus:ring-0 focus:border-slate-300 px-3 py-2 text-xs font-['Roboto_Mono'] cursor-default"
+        className="resize-none 
+        flex w-full border-2 border-[#bbc2cb] bg-gray-100 px-3 py-2 
+        
+         overflow-hidden text-nowrap text-slate-600 text-sm font-bold placeholder:text-slate-400"
       ></textarea>
 
-      <div className="relative">
-        {copied && (
-          <div
-            className="absolute right-14.5 bg-gray-500 text-white 
+      <div className="flex flex-row gap-2 items-center justify-end">
+        <div className="relative">
+          {copied && (
+            <div
+              className="absolute right-14.5 bg-gray-500 text-white 
         text-[10px] px-2 py-0.5 shadow animate-fade-in-out"
-          >
-            Copied!
-          </div>
-        )}
+            >
+              Copied!
+            </div>
+          )}
+          <CopyButton onClick={handleCopy} />
+        </div>
         <button
-          onClick={handleCopy}
-          className={`flex items-center justify-center border border-slate-900 home-slate-button px-4 py-2 text-xs font-['Roboto_Mono'] font-bold tracking-wide  focus:outline-none focus:border-black`}
+          onClick={handleGenerateLink}
+          className={`border-2 border-black bg-[#FFD700] px-6 py-2 
+        text-sm font-black uppercase tracking-tighter
+        shadow-[4px_4px_0_0_#000]
+        hover:bg-[#00CED1] 
+        
+        active:shadow-none active:translate-x-[4px] active:translate-y-[4px]
+        transition-all`}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            height="18px"
-            viewBox="0 -960 960 960"
-            width="24px"
-            fill="#F6E8CB"
-          >
-            <path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z" />
-          </svg>
+          Refresh
         </button>
       </div>
-      <button
-        onClick={handleGenerateLink}
-        className={`border border-slate-900 px-4 py-2 text-xs font-['Roboto_Mono'] home-slate-button  font-bold tracking-wide  focus:outline-none focus:border-black`}
-      >
-        Refresh
-      </button>
     </div>
   );
 }
+
+export const CopyButton = ({ onClick }) => {
+  return (
+    <button
+      onClick={onClick}
+      className={`border-2 border-black bg-[#FFD700] px-4 py-2 
+        text-sm font-black uppercase tracking-tighter
+        shadow-[4px_4px_0_0_#000]
+        hover:bg-[#00CED1] 
+        
+        active:shadow-none active:translate-x-[4px] active:translate-y-[4px]
+        transition-all`}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        height="18px"
+        viewBox="0 -960 960 960"
+        width="24px"
+        fill="#000"
+      >
+        <path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z" />
+      </svg>
+    </button>
+  );
+};
 
 export async function GetPermaLink() {
   console.log("Fetching outward perma blend link");
